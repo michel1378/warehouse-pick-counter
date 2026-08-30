@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { validAgentToken } from "@/lib/scanner-agent";
-import { createAdminClient } from "@/lib/supabase";
+import { createAdminClient, logSupabaseError } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({ employee_identifier: z.string().trim().min(1).max(120), action: z.enum(["start", "pause", "resume", "finish"]) });
@@ -36,8 +36,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ message: "Неверный токен" }, { status: 401 }); const parsed = bodySchema.safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ message: "Некорректный запрос" }, { status: 400 });
   const found = await employee(parsed.data.employee_identifier); if (!found) return NextResponse.json({ message: "Сотрудник не найден" }, { status: 403 }); const db = createAdminClient();
-  let shift = (await db.from("work_shifts").select("*").eq("employee_id", found.id).is("ended_at", null).maybeSingle()).data;
-  if (parsed.data.action === "start") { if (shift) return NextResponse.json({ message: "Смена уже начата" }, { status: 409 }); shift = (await db.from("work_shifts").insert({ employee_id: found.id }).select("*").single()).data; }
+  const lookup = await db.from("work_shifts").select("*").eq("employee_id", found.id).is("ended_at", null).maybeSingle();
+  if (lookup.error) { logSupabaseError("shift lookup failed", lookup.error); return NextResponse.json({ message: "Не удалось прочитать смены. Проверьте, что миграция work_shifts применена." }, { status: 503 }); }
+  let shift = lookup.data;
+  if (parsed.data.action === "start") {
+    // Start is idempotent: a repeated click or a lost first response returns the open shift.
+    if (!shift) {
+      const created = await db.from("work_shifts").insert({ employee_id: found.id, status: "active" }).select("*").single();
+      if (created.error || !created.data) { if (created.error) logSupabaseError("shift start failed", created.error); return NextResponse.json({ message: "Не удалось начать смену. Проверьте миграцию work_shifts и права service role." }, { status: 500 }); }
+      shift = created.data;
+    }
+  }
   else if (!shift) return NextResponse.json({ message: "Активная смена не найдена" }, { status: 409 });
   else if (parsed.data.action === "pause" && shift.status === "active") { await db.from("work_shift_pauses").insert({ shift_id: shift.id }); shift = (await db.from("work_shifts").update({ status: "paused", pause_count: Number(shift.pause_count) + 1 }).eq("id", shift.id).select("*").single()).data; }
   else if (parsed.data.action === "resume" && shift.status === "paused") { const pause = (await db.from("work_shift_pauses").select("*").eq("shift_id", shift.id).is("ended_at", null).single()).data; const now = new Date(); const added = pause ? Math.floor((now.getTime() - new Date(pause.started_at).getTime()) / 1000) : 0; if (pause) await db.from("work_shift_pauses").update({ ended_at: now.toISOString() }).eq("id", pause.id); shift = (await db.from("work_shifts").update({ status: "active", pause_seconds: Number(shift.pause_seconds) + added }).eq("id", shift.id).select("*").single()).data; }
