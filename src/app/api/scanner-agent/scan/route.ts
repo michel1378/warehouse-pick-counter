@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
     ordersToday: Number(row.orders_today),
     earningsToday: Number(row.earnings_today),
     message: row.message,
+    lastIntervalSeconds: row.last_interval_seconds == null ? null : Number(row.last_interval_seconds),
+    medianIntervalSeconds: row.median_interval_seconds == null ? null : Number(row.median_interval_seconds),
+    intervalCount: Number(row.interval_count ?? 0),
   });
 }
 

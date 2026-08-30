@@ -28,6 +28,9 @@ internal sealed class ScanResponse
     public int OrdersToday { get; set; }
     public decimal EarningsToday { get; set; }
     public string Message { get; set; } = "";
+    public double? LastIntervalSeconds { get; set; }
+    public double? MedianIntervalSeconds { get; set; }
+    public int IntervalCount { get; set; }
 }
 
 internal sealed class ShiftState
@@ -45,4 +48,5 @@ internal sealed class ShiftState
     public int Orders { get; set; }
     public decimal Earnings { get; set; }
     public double? MedianIntervalSeconds { get; set; }
+    public int IntervalCount { get; set; }
 }
