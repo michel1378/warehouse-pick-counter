@@ -5,6 +5,7 @@ const schema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
   WAREHOUSE_TIMEZONE: z.string().default("Europe/Moscow"),
+  SCANNER_AGENT_API_TOKEN: z.string().min(32),
 });
 
 export function env() {

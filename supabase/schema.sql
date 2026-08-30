@@ -141,6 +141,9 @@ $$;
 
 revoke all on function public.employee_stats(timestamptz, timestamptz) from public, anon, authenticated;
 
+-- Поддержка Windows scanner-agent и идемпотентных event_id находится в
+-- migrations/20260830_scanner_agent.sql (примените после этого файла).
+
 -- Создание первого администратора (замените значения; PIN в открытом виде не хранится):
 -- insert into public.admins (name, pin_hash)
 -- values ('Администратор', crypt('ВАШ_СЛОЖНЫЙ_PIN', gen_salt('bf', 12)));
