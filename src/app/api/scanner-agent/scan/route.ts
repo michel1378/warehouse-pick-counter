@@ -16,6 +16,7 @@ const bodySchema = z.object({
   source: z.literal("windows-agent"),
   scanner_device: z.string().min(1).max(1024),
   timestamp: z.string().datetime({ offset: true }),
+  shift_id: z.string().uuid(),
 });
 
 export async function POST(request: NextRequest) {
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     p_duration_ms: parsed.data.duration_ms,
     p_scanner_device: parsed.data.scanner_device,
     p_timezone: config.WAREHOUSE_TIMEZONE,
+    p_shift_id: parsed.data.shift_id,
   });
   if (error || !data?.[0]) {
     if (error) logSupabaseError("agent scan failed", error);

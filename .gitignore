@@ -8,3 +8,6 @@ out/
 npm-debug.log*
 *.tsbuildinfo
 .DS_Store
+scanner-agent/bin/
+scanner-agent/obj/
+scanner-agent/publish/

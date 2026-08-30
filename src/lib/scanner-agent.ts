@@ -1,8 +1,9 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
 const buckets = new Map<string, { started: number; count: number }>();
-const WINDOW_MS = 60_000;
-const LIMIT = 120;
+// Large burst allowance for real scanners; this is spam protection, not a cooldown.
+const WINDOW_MS = 10_000;
+const LIMIT = 100;
 
 export function validAgentToken(value: string | null, expected: string) {
   if (!value) return false;

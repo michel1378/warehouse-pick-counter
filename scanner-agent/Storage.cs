@@ -6,6 +6,7 @@ namespace ScannerAgent;
 
 internal static class Storage
 {
+    private static readonly object QueueLock = new();
     private static readonly string Folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WarehouseScannerAgent");
     private static readonly string ConfigPath = Path.Combine(Folder, "config.json");
     private static readonly string QueuePath = Path.Combine(Folder, "pending-scans.json");
@@ -14,8 +15,12 @@ internal static class Storage
 
     public static AgentConfig? LoadConfig() => Read<AgentConfig>(ConfigPath);
     public static void SaveConfig(AgentConfig config, string token) { Directory.CreateDirectory(Folder); File.WriteAllText(ConfigPath, JsonSerializer.Serialize(config, Json)); SaveToken(token); }
-    public static List<ScanEvent> LoadQueue() => Read<List<ScanEvent>>(QueuePath) ?? [];
-    public static void SaveQueue(List<ScanEvent> queue) { Directory.CreateDirectory(Folder); File.WriteAllText(QueuePath, JsonSerializer.Serialize(queue, Json)); }
+    public static List<ScanEvent> LoadQueue() { lock (QueueLock) return Read<List<ScanEvent>>(QueuePath) ?? []; }
+    public static void SaveQueue(List<ScanEvent> queue) { lock (QueueLock) WriteQueue(queue); }
+    public static void Enqueue(ScanEvent item) { lock (QueueLock) { var queue = Read<List<ScanEvent>>(QueuePath) ?? []; if (queue.All(x => x.EventId != item.EventId)) queue.Add(item); WriteQueue(queue); } }
+    public static ScanEvent? PeekQueue() { lock (QueueLock) return (Read<List<ScanEvent>>(QueuePath) ?? []).FirstOrDefault(); }
+    public static void RemoveFromQueue(Guid eventId) { lock (QueueLock) { var queue = Read<List<ScanEvent>>(QueuePath) ?? []; queue.RemoveAll(x => x.EventId == eventId); WriteQueue(queue); } }
+    private static void WriteQueue(List<ScanEvent> queue) { Directory.CreateDirectory(Folder); File.WriteAllText(QueuePath, JsonSerializer.Serialize(queue, Json)); }
     private static T? Read<T>(string path) { try { return File.Exists(path) ? JsonSerializer.Deserialize<T>(File.ReadAllText(path), Json) : default; } catch { return default; } }
 
     public static string LoadToken()
