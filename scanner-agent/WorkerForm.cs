@@ -2,20 +2,20 @@ namespace ScannerAgent;
 
 internal sealed class WorkerForm : Form
 {
-    private readonly Label _employee = V("—"), _orders = V("0"), _earnings = V("0 ₽"), _scanner = V("Готов"), _server = V("Проверка…"), _timer = V("Смена не начата"), _median = V("—"), _notice = V("");
+    private readonly Label _employee = V("—"), _orders = V("0"), _earnings = V("0 ₽"), _scanner = V("Готов"), _server = V("Проверка…"), _timer = V("Смена не начата"), _median = V("—"), _pending = V("Ожидают отправки: 0"), _notice = V("");
     private readonly Button _start = new() { Text = "Начать смену", AutoSize = true }, _pause = new() { Text = "Пауза", AutoSize = true }, _resume = new() { Text = "Продолжить", AutoSize = true }, _finish = new() { Text = "Завершить смену", AutoSize = true }, _settings = new() { Text = "Настройки", AutoSize = true };
     public event Action<string>? ShiftActionRequested;
     public event Action? SettingsRequested;
     public WorkerForm()
     {
-        Text = "Складской scanner-agent"; Width = 390; Height = 430; MinimumSize = new Size(360, 390); StartPosition = FormStartPosition.Manual;
+        Text = $"Складской scanner-agent v{AgentLog.Version}"; Width = 410; Height = 470; MinimumSize = new Size(380, 430); StartPosition = FormStartPosition.Manual;
         var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1200, 800); Location = new Point(area.Right - Width - 16, area.Top + 16);
-        var grid = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 2, RowCount = 10 };
+        var grid = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 2, RowCount = 11 };
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48)); grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52));
         Add(grid, 0, "Сотрудник", _employee); Add(grid, 1, "Заказов сегодня", _orders); Add(grid, 2, "Заработано сегодня", _earnings); Add(grid, 3, "Сканер", _scanner); Add(grid, 4, "Сервер", _server); Add(grid, 5, "Текущая смена", _timer); Add(grid, 6, "Медианное время сборки сегодня", _median);
-        _notice.Font = new Font(Font, FontStyle.Bold); grid.Controls.Add(_notice, 0, 7); grid.SetColumnSpan(_notice, 2);
-        var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true }; buttons.Controls.AddRange([_start, _pause, _resume, _finish, _settings]); grid.Controls.Add(buttons, 0, 8); grid.SetColumnSpan(buttons, 2);
-        var top = new CheckBox { Text = "Поверх остальных окон", AutoSize = true }; top.CheckedChanged += (_, _) => TopMost = top.Checked; grid.Controls.Add(top, 0, 9); grid.SetColumnSpan(top, 2); Controls.Add(grid);
+        grid.Controls.Add(_pending, 0, 7); grid.SetColumnSpan(_pending, 2); _notice.Font = new Font(Font, FontStyle.Bold); grid.Controls.Add(_notice, 0, 8); grid.SetColumnSpan(_notice, 2);
+        var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true }; buttons.Controls.AddRange([_start, _pause, _resume, _finish, _settings]); grid.Controls.Add(buttons, 0, 9); grid.SetColumnSpan(buttons, 2);
+        var top = new CheckBox { Text = "Поверх остальных окон", AutoSize = true }; top.CheckedChanged += (_, _) => TopMost = top.Checked; grid.Controls.Add(top, 0, 10); grid.SetColumnSpan(top, 2); Controls.Add(grid);
         _start.Click += (_, _) => ShiftActionRequested?.Invoke("start"); _pause.Click += (_, _) => ShiftActionRequested?.Invoke("pause"); _resume.Click += (_, _) => ShiftActionRequested?.Invoke("resume"); _finish.Click += (_, _) => ShiftActionRequested?.Invoke("finish"); _settings.Click += (_, _) => SettingsRequested?.Invoke();
         FormClosing += (_, e) => { if (e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); } };
         SetShift(new ShiftState());
@@ -24,6 +24,8 @@ internal sealed class WorkerForm : Form
     private static void Add(TableLayoutPanel g, int row, string title, Control value) { g.Controls.Add(new Label { Text = title, AutoSize = true, ForeColor = Color.DimGray, Anchor = AnchorStyles.Left }, 0, row); g.Controls.Add(value, 1, row); }
     public void SetConnection(bool online) { _server.Text = online ? "Подключён" : "Нет связи"; _server.ForeColor = online ? Color.Green : Color.Firebrick; }
     public void SetAuthorizationError() { _server.Text = "Ошибка авторизации"; _server.ForeColor = Color.Firebrick; }
+    public void SetPending(int count) { _pending.Text = count == 0 ? "Все данные синхронизированы" : $"Ожидают отправки: {count}"; _pending.ForeColor = count == 0 ? Color.Green : Color.DarkOrange; }
+    public void SetServerState(ConnectionState state) { _server.Text = state switch { ConnectionState.Connected => "Подключён", ConnectionState.NoInternet => "Нет интернета", ConnectionState.ServerUnavailable => "Сервер недоступен", ConnectionState.AuthorizationError => "Ошибка авторизации", ConnectionState.NotFound => "Backend HTTP 404", ConnectionState.ServerError => "Backend HTTP 5xx", _ => "Ожидание связи" }; _server.ForeColor = state == ConnectionState.Connected ? Color.Green : Color.Firebrick; }
     private static string WorkDuration(double seconds) { var value = TimeSpan.FromSeconds(Math.Max(0, Math.Round(seconds))); return value.TotalHours >= 1 ? $"{(int)value.TotalHours}:{value.Minutes:00}:{value.Seconds:00}" : $"{value.Minutes:00}:{value.Seconds:00}"; }
     public void SetScan(ScanResponse r) { _orders.Text = r.OrdersToday.ToString(); _earnings.Text = $"{r.EarningsToday:N2} ₽"; _median.Text = r.MedianIntervalSeconds.HasValue ? WorkDuration(r.MedianIntervalSeconds.Value) : "—"; _notice.Text = r.Result switch { "counted" when r.LastIntervalSeconds.HasValue => $"+1 заказ · Последний заказ: {WorkDuration(r.LastIntervalSeconds.Value)}", "counted" => "+1 заказ", "duplicate" => "Дубль — не засчитан", _ => r.Message.Length > 0 ? r.Message : "Скан отклонен" }; _notice.ForeColor = r.Result == "counted" ? Color.Green : Color.Firebrick; }
     public void SetNotice(string value, bool error = false) { _notice.Text = value; _notice.ForeColor = error ? Color.Firebrick : Color.Green; }

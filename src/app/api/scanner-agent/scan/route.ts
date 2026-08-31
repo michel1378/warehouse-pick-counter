@@ -12,10 +12,12 @@ const bodySchema = z.object({
   barcode: z.string().trim().regex(/^\d{8,512}$/),
   employee_identifier: z.string().trim().min(1).max(120),
   duration_ms: z.number().int().min(0).max(600_000),
+  input_metadata: z.object({ average_interval_ms: z.number().min(0).max(600_000), source: z.literal("windows-agent") }).optional(),
   average_interval_ms: z.number().min(0).max(600_000).optional(),
-  source: z.literal("windows-agent"),
+  source: z.literal("windows-agent").optional(),
   scanner_device: z.string().min(1).max(1024),
-  timestamp: z.string().datetime({ offset: true }),
+  scanned_at: z.string().datetime({ offset: true }).optional(),
+  timestamp: z.string().datetime({ offset: true }).optional(),
   shift_id: z.string().uuid(),
 });
 
@@ -59,6 +61,8 @@ export async function POST(request: NextRequest) {
     p_scanner_device: parsed.data.scanner_device,
     p_timezone: config.WAREHOUSE_TIMEZONE,
     p_shift_id: parsed.data.shift_id,
+    p_scanned_at_client: parsed.data.scanned_at ?? parsed.data.timestamp ?? new Date().toISOString(),
+    p_input_metadata: parsed.data.input_metadata ?? { average_interval_ms: parsed.data.average_interval_ms ?? 0, source: parsed.data.source ?? "windows-agent" },
   });
   if (error || !data?.[0]) {
     if (error) logSupabaseError("agent scan failed", error);

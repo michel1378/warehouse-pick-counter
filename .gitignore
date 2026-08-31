@@ -11,3 +11,4 @@ npm-debug.log*
 scanner-agent/bin/
 scanner-agent/obj/
 scanner-agent/publish/
+public/ScannerAgent.exe

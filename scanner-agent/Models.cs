@@ -15,11 +15,19 @@ internal sealed record ScanEvent(
     [property: JsonPropertyName("barcode")] string Barcode,
     [property: JsonPropertyName("employee_identifier")] string EmployeeIdentifier,
     [property: JsonPropertyName("duration_ms")] int DurationMs,
-    [property: JsonPropertyName("average_interval_ms")] double AverageIntervalMs,
-    [property: JsonPropertyName("source")] string Source,
     [property: JsonPropertyName("scanner_device")] string ScannerDevice,
-    [property: JsonPropertyName("timestamp")] DateTimeOffset Timestamp,
-    [property: JsonPropertyName("shift_id")] Guid? ShiftId);
+    [property: JsonPropertyName("scanned_at")] DateTimeOffset? ScannedAt,
+    [property: JsonPropertyName("input_metadata")] ScanInputMetadata? InputMetadata,
+    [property: JsonPropertyName("shift_id")] Guid? ShiftId,
+    [property: JsonPropertyName("timestamp")] DateTimeOffset? LegacyTimestamp = null,
+    [property: JsonPropertyName("average_interval_ms")] double? LegacyAverageIntervalMs = null,
+    [property: JsonPropertyName("source")] string? LegacySource = null);
+
+internal sealed record ScanInputMetadata(
+    [property: JsonPropertyName("average_interval_ms")] double AverageIntervalMs,
+    [property: JsonPropertyName("source")] string Source);
+
+internal enum ConnectionState { Connected, NoInternet, ServerUnavailable, AuthorizationError, NotFound, ServerError, Waiting }
 
 internal sealed class ScanResponse
 {

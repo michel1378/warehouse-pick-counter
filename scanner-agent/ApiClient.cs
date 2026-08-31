@@ -9,7 +9,7 @@ internal sealed class AgentApiException(string message, System.Net.HttpStatusCod
 
 internal sealed class ApiClient : IDisposable
 {
-    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
     public Task<ScanResponse> SendAsync(AgentConfig config, ScanEvent item, CancellationToken ct = default) => Send<ScanResponse>(config, HttpMethod.Post, "api/scanner-agent/scan", item, allowErrorResponse: true, ct);
     public Task<ShiftState> GetShiftAsync(AgentConfig config, CancellationToken ct = default) => Send<ShiftState>(config, HttpMethod.Get, $"api/scanner-agent/shift?employee_identifier={Uri.EscapeDataString(config.EmployeeIdentifier)}", null, false, ct);
@@ -25,9 +25,13 @@ internal sealed class ApiClient : IDisposable
         using var request = new HttpRequestMessage(method, new Uri(new Uri(config.BackendUrl.TrimEnd('/') + "/"), path));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Storage.LoadToken());
         if (body is not null) request.Content = JsonContent.Create(body);
-        using var response = await _http.SendAsync(request, ct);
+        HttpResponseMessage response;
+        try { response = await _http.SendAsync(request, ct); }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException) { AgentLog.Error($"{method} {request.RequestUri} network/timeout", ex); throw; }
+        using (response)
+        {
         var responseBody = await response.Content.ReadAsStringAsync(ct);
-        Debug.WriteLine($"[ScannerAgent HTTP] {method} {request.RequestUri} -> {(int)response.StatusCode} {response.StatusCode}; body={responseBody}");
+        AgentLog.Info($"{method} {request.RequestUri} -> {(int)response.StatusCode}");
         if (!response.IsSuccessStatusCode && !allowErrorResponse)
         {
             var message = TryMessage(responseBody) ?? $"Backend вернул HTTP {(int)response.StatusCode}";
@@ -38,6 +42,7 @@ internal sealed class ApiClient : IDisposable
         catch (JsonException ex) { throw new HttpRequestException("Backend вернул некорректный JSON.", ex, response.StatusCode); }
         if (result is null) throw new HttpRequestException("Backend вернул пустой ответ.", null, response.StatusCode);
         return result;
+        }
     }
     private static string? TryMessage(string body)
     {

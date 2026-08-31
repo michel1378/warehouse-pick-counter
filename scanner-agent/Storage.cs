@@ -20,7 +20,7 @@ internal static class Storage
     public static void Enqueue(ScanEvent item) { lock (QueueLock) { var queue = Read<List<ScanEvent>>(QueuePath) ?? []; if (queue.All(x => x.EventId != item.EventId)) queue.Add(item); WriteQueue(queue); } }
     public static ScanEvent? PeekQueue() { lock (QueueLock) return (Read<List<ScanEvent>>(QueuePath) ?? []).FirstOrDefault(); }
     public static void RemoveFromQueue(Guid eventId) { lock (QueueLock) { var queue = Read<List<ScanEvent>>(QueuePath) ?? []; queue.RemoveAll(x => x.EventId == eventId); WriteQueue(queue); } }
-    private static void WriteQueue(List<ScanEvent> queue) { Directory.CreateDirectory(Folder); File.WriteAllText(QueuePath, JsonSerializer.Serialize(queue, Json)); }
+    private static void WriteQueue(List<ScanEvent> queue) { Directory.CreateDirectory(Folder); var temporary = QueuePath + ".tmp"; File.WriteAllText(temporary, JsonSerializer.Serialize(queue, Json)); File.Move(temporary, QueuePath, true); }
     private static T? Read<T>(string path) { try { return File.Exists(path) ? JsonSerializer.Deserialize<T>(File.ReadAllText(path), Json) : default; } catch { return default; } }
 
     public static string LoadToken()
