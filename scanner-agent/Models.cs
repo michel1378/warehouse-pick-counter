@@ -19,9 +19,9 @@ internal sealed record ScanEvent(
     [property: JsonPropertyName("scanned_at")] DateTimeOffset? ScannedAt,
     [property: JsonPropertyName("input_metadata")] ScanInputMetadata? InputMetadata,
     [property: JsonPropertyName("shift_id")] Guid? ShiftId,
-    [property: JsonPropertyName("timestamp")] DateTimeOffset? LegacyTimestamp = null,
-    [property: JsonPropertyName("average_interval_ms")] double? LegacyAverageIntervalMs = null,
-    [property: JsonPropertyName("source")] string? LegacySource = null);
+    [property: JsonPropertyName("timestamp"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTimeOffset? LegacyTimestamp = null,
+    [property: JsonPropertyName("average_interval_ms"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? LegacyAverageIntervalMs = null,
+    [property: JsonPropertyName("source"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LegacySource = null);
 
 internal sealed record ScanInputMetadata(
     [property: JsonPropertyName("average_interval_ms")] double AverageIntervalMs,
