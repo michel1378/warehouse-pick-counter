@@ -17,15 +17,16 @@ export async function loginEmployee(_: FormState, formData: FormData): Promise<F
   const parsed = pinSchema.safeParse(formData.get("pin"));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const db = createAdminClient();
-  const { data, error } = await db.from("employees").select("id,name,pin_hash").eq("active", true);
+  const { data, error } = await db.from("employees").select("id,name,pin_hash,role,permissions").eq("active", true);
   if (error) {
     logSupabaseError("employee login query failed", error);
     return { error: "Не удалось подключиться к базе" };
   }
   for (const employee of data ?? []) {
     if (await bcrypt.compare(parsed.data, employee.pin_hash)) {
-      await createSession({ sub: employee.id, name: employee.name, role: "employee" });
-      redirect("/scan");
+      const permissions = employee.permissions ?? (employee.role === "online" ? ["attendance"] : ["picking"]);
+      await createSession({ sub: employee.id, name: employee.name, role: "employee", employeeRole: employee.role, permissions });
+      redirect(permissions.includes("attendance") ? "/attendance" : "/scan");
     }
   }
   return { error: "Неверный PIN или сотрудник отключен" };
@@ -56,7 +57,7 @@ export async function logout() {
 
 export async function registerBarcode(barcode: string, durationMs: number, wasPaste: boolean): Promise<ScanResult> {
   const session = await getSession();
-  if (!session || session.role !== "employee") throw new Error("UNAUTHORIZED");
+  if (!session || session.role !== "employee" || (session.permissions && !session.permissions.includes("picking"))) throw new Error("UNAUTHORIZED");
   const clean = barcode.trim();
   if (!clean || clean.length > 512) throw new Error("INVALID_BARCODE");
   const safeDurationMs = Math.max(0, Math.min(Math.round(durationMs), 600_000));
@@ -88,13 +89,16 @@ export async function saveEmployee(_: FormState, formData: FormData): Promise<Fo
     id: z.string().uuid().optional().or(z.literal("")),
     name: z.string().trim().min(1, "Введите имя").max(120),
     pin: z.string().trim().max(32),
+    role: z.enum(["warehouse", "online"]),
   });
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { id, name, pin } = parsed.data;
+  const { id, name, pin, role } = parsed.data;
   if (!id && !pinSchema.safeParse(pin).success) return { error: "Для нового сотрудника задайте PIN от 4 символов" };
   const db = createAdminClient();
-  const values: { name: string; pin_hash?: string } = { name };
+  const permissions = formData.getAll("permissions").filter((x): x is string => typeof x === "string");
+  if (!permissions.length) return { error: "Выберите хотя бы один доступ" };
+  const values: { name: string; role: string; permissions: string[]; pin_hash?: string } = { name, role, permissions };
   if (pin) values.pin_hash = await bcrypt.hash(pin, 12);
   const result = id
     ? await db.from("employees").update(values).eq("id", id)
@@ -111,6 +115,26 @@ export async function toggleEmployee(formData: FormData) {
   const { error } = await createAdminClient().from("employees").update({ active }).eq("id", id);
   if (error) throw new Error("Не удалось изменить статус");
   revalidatePath("/admin/employees");
+}
+
+async function requireAttendanceEmployee() {
+  const session = await getSession();
+  if (!session || session.role !== "employee" || !session.permissions?.includes("attendance")) throw new Error("UNAUTHORIZED");
+  return session;
+}
+
+export async function startTimeSession() {
+  const session = await requireAttendanceEmployee();
+  const { error } = await createAdminClient().rpc("start_employee_time_session", { p_employee_id: session.sub });
+  if (error) throw new Error(error.message);
+  revalidatePath("/attendance");
+}
+
+export async function finishTimeSession() {
+  const session = await requireAttendanceEmployee();
+  const { error } = await createAdminClient().rpc("finish_employee_time_session", { p_employee_id: session.sub });
+  if (error) throw new Error(error.message);
+  revalidatePath("/attendance");
 }
 
 export async function updatePrice(_: FormState, formData: FormData): Promise<FormState> {

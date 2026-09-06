@@ -4,6 +4,8 @@ export type AppSession = {
   sub: string;
   name: string;
   role: SessionRole;
+  employeeRole?: "warehouse" | "online";
+  permissions?: string[];
 };
 
 export type ScanResult =
@@ -16,6 +18,8 @@ export type Employee = {
   name: string;
   active: boolean;
   created_at: string;
+  role: "warehouse" | "online";
+  permissions: string[];
 };
 
 export type StatsRow = {
@@ -24,4 +28,5 @@ export type StatsRow = {
   successful: number;
   amount: number;
   duplicates: number;
+  too_fast: number;
 };

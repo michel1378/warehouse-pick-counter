@@ -3,7 +3,7 @@
 html, body { margin:0; min-height:100%; }
 body { background:var(--bg); color:var(--text); font-family:Arial, Helvetica, sans-serif; }
 a { color:inherit; }
-button, input { font:inherit; }
+button, input, select { font:inherit; }
 button { cursor:pointer; }
 h1 { margin:.15rem 0 1.5rem; font-size:clamp(2rem,4vw,3rem); letter-spacing:-.035em; }
 h2 { margin-top:0; }
@@ -15,6 +15,7 @@ h2 { margin-top:0; }
 label { color:var(--muted); font-weight:700; font-size:.9rem; display:grid; gap:7px; }
 input { width:100%; border:2px solid var(--line); border-radius:10px; padding:12px 14px; color:var(--text); background:#fff; }
 input:focus { outline:3px solid rgba(19,122,68,.17); border-color:var(--green); }
+select { width:100%; border:2px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff; }
 .login-form input { font-size:1.6rem; letter-spacing:.2em; text-align:center; }
 .primary,.secondary,.danger { border:0; border-radius:10px; padding:11px 18px; font-weight:800; }
 .primary { color:#fff; background:var(--green); }
@@ -65,6 +66,22 @@ td a { color:var(--green); font-weight:800; }
 tr:last-child td { border-bottom:0; }
 .section { padding:24px; margin-bottom:22px; }
 .employee-form { display:grid; grid-template-columns:2fr 2fr auto; align-items:flex-end; gap:12px; }
+.employee-form fieldset { border:1px solid var(--line); border-radius:10px; display:flex; gap:14px; }
+.employee-form fieldset label { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.employee-form fieldset input { width:auto; }
+.employee-links { display:flex; align-items:center; gap:16px; }
+.employee-links a { color:var(--green); font-weight:800; }
+.attendance-clock { padding:32px; margin-bottom:22px; }
+.attendance-clock h2 { font-size:1.8rem; }
+.time-metrics { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:24px 0; }
+.time-metrics div { background:var(--bg); border-radius:12px; padding:20px; }
+.time-metrics span { display:block; color:var(--muted); font-weight:700; }
+.time-metrics strong,.total-time { display:block; margin-top:8px; font-size:1.8rem; }
+.work-button { width:100%; padding:18px; font-size:1.2rem; }
+.session-list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.session-list li { display:flex; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border-radius:8px; }
+.attendance-grid,.placeholder-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.employee-status { display:flex; justify-content:space-between; gap:12px; }
 .employee-form p { grid-column:1/-1; margin:0; }
 .employee-list { display:grid; gap:12px; }
 .employee-card { padding:18px 22px; }
@@ -79,4 +96,4 @@ tr:last-child td { border-bottom:0; }
 .result.accepted { color:var(--green); background:var(--green-light); }
 .result.duplicate,.result.rejected { color:var(--red); background:var(--red-light); }
 .pagination { display:flex; justify-content:center; gap:24px; margin-top:22px; }
-@media (max-width:700px) { .metric-grid{grid-template-columns:1fr}.metric{padding:24px}.scanner-form{align-items:stretch;flex-direction:column}.admin-header{flex-wrap:wrap}.admin-header nav{order:3;flex-basis:100%}.admin-name{display:none}.title-row{display:block}.price-form{margin-bottom:18px}.employee-form{grid-template-columns:1fr}.filters{align-items:stretch}.filters label{flex:1}.metric strong{font-size:3.5rem} }
+@media (max-width:700px) { .metric-grid,.time-metrics,.attendance-grid,.placeholder-grid{grid-template-columns:1fr}.metric{padding:24px}.scanner-form{align-items:stretch;flex-direction:column}.admin-header{flex-wrap:wrap}.admin-header nav{order:3;flex-basis:100%;overflow:auto}.admin-name{display:none}.title-row{display:block}.price-form{margin-bottom:18px}.employee-form{grid-template-columns:1fr}.filters{align-items:stretch}.filters label{flex:1}.metric strong{font-size:3.5rem} }

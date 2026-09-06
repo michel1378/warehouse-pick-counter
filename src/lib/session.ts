@@ -7,7 +7,7 @@ const COOKIE_NAME = "warehouse_session";
 const secret = () => new TextEncoder().encode(env().SESSION_SECRET);
 
 export async function createSession(user: AppSession) {
-  const token = await new SignJWT({ name: user.name, role: user.role })
+  const token = await new SignJWT({ name: user.name, role: user.role, employeeRole: user.employeeRole, permissions: user.permissions })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.sub)
     .setIssuedAt()
@@ -29,7 +29,9 @@ export async function getSession(): Promise<AppSession | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
     if (!payload.sub || typeof payload.name !== "string" || (payload.role !== "employee" && payload.role !== "admin")) return null;
-    return { sub: payload.sub, name: payload.name, role: payload.role as SessionRole };
+    return { sub: payload.sub, name: payload.name, role: payload.role as SessionRole,
+      employeeRole: payload.employeeRole === "online" ? "online" : payload.employeeRole === "warehouse" ? "warehouse" : undefined,
+      permissions: Array.isArray(payload.permissions) ? payload.permissions.filter((x): x is string => typeof x === "string") : undefined };
   } catch {
     return null;
   }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
 import { Scanner } from "@/components/Scanner";
@@ -8,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase";
 export default async function ScanPage() {
   const session = await getSession();
   if (!session || session.role !== "employee") redirect("/");
+  if (session.permissions && !session.permissions.includes("picking")) redirect("/attendance");
   const db = createAdminClient();
   const { data: employee } = await db.from("employees").select("active,name").eq("id", session.sub).single();
   if (!employee?.active) redirect("/logout");
@@ -17,5 +19,5 @@ export default async function ScanPage() {
     db.from("settings").select("price_per_order").eq("id", 1).single(),
   ]);
   const price = Number(settings?.price_per_order ?? 23); const total = count ?? 0;
-  return <main className="scan-page"><header className="scan-header"><div><p className="eyebrow">Сотрудник</p><h1>{employee.name}</h1></div><form action={logout}><button className="secondary">Выйти</button></form></header><Scanner initialCount={total} initialAmount={total * price} price={price} /></main>;
+  return <main className="scan-page"><header className="scan-header"><div><p className="eyebrow">Сотрудник</p><h1>{employee.name}</h1></div><div className="employee-links">{session.permissions?.includes("attendance")&&<Link href="/attendance">Отметки</Link>}<form action={logout}><button className="secondary">Выйти</button></form></div></header><Scanner initialCount={total} initialAmount={total * price} price={price} /></main>;
 }
