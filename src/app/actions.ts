@@ -26,7 +26,7 @@ export async function loginEmployee(_: FormState, formData: FormData): Promise<F
     if (await bcrypt.compare(parsed.data, employee.pin_hash)) {
       const permissions = employee.permissions ?? (employee.role === "online" ? ["attendance"] : ["picking"]);
       await createSession({ sub: employee.id, name: employee.name, role: "employee", employeeRole: employee.role, permissions });
-      redirect(permissions.includes("attendance") ? "/attendance" : "/scan");
+      redirect(permissions.includes("attendance") ? "/attendance" : permissions.includes("picking") ? "/scan" : "/reviews");
     }
   }
   return { error: "Неверный PIN или сотрудник отключен" };

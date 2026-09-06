@@ -6,7 +6,7 @@ import { getSession } from "@/lib/session";
 
 export default async function LoginPage() {
   const session = await getSession();
-  if (session?.role === "employee") redirect(session.permissions?.includes("attendance") ? "/attendance" : "/scan");
+  if (session?.role === "employee") redirect(session.permissions?.includes("attendance") ? "/attendance" : session.permissions?.includes("reviews") && !session.permissions.includes("picking") ? "/reviews" : "/scan");
   if (session?.role === "admin") redirect("/admin");
   return (
     <main className="center-page">
