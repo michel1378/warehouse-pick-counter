@@ -83,6 +83,13 @@ tr:last-child td { border-bottom:0; }
 .session-list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
 .session-list li { display:flex; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border-radius:8px; }
 .attendance-grid,.placeholder-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.session-list li.attendance-interval { display:grid; min-width:0; }
+.interval-summary,.interval-buttons { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.interval-edit { display:grid; gap:12px; }
+.interval-edit fieldset { display:flex; flex-wrap:wrap; gap:12px; border:1px solid var(--line); border-radius:8px; min-width:0; }
+.interval-edit label { display:grid; gap:6px; }
+.interval-edit textarea { width:100%; min-height:70px; }
+.interval-audit { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; overflow-wrap:anywhere; }
 .employee-status { display:flex; justify-content:space-between; gap:12px; }
 .review-tabs { display:flex; gap:8px; margin-bottom:18px; }
 .review-tabs button { border:0; border-radius:10px; padding:12px 18px; font-weight:800; background:#e8ece9; }
