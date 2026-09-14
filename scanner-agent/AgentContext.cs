@@ -1,97 +1,268 @@
 namespace ScannerAgent;
+
 internal sealed class AgentContext : ApplicationContext
 {
-    private readonly RawInput _raw = new(); private readonly ApiClient _api = new(); private readonly NotifyIcon _tray; private readonly SemaphoreSlim _sending = new(1, 1);
-    private readonly System.Windows.Forms.Timer _retry = new() { Interval = 15_000 }, _clock = new() { Interval = 1000 }; private readonly EventWaitHandle _activate = new(false, EventResetMode.AutoReset, Program.ActivateEventName); private readonly RegisteredWaitHandle _activationWait;
-    private AgentConfig _config = new(); private WorkerForm? _worker; private SettingsForm? _settings; private ShiftState _shift = new(); private bool _detectionMode; private string? _detectionDevice; private bool _exiting; private int _flushRequested;
+    private readonly RawInput _raw = new();
+    private readonly ApiClient _api = new();
+    private readonly WorkerForm _worker = new();
+    private readonly NotifyIcon _tray;
+    private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1000 };
+    private readonly EventWaitHandle _activate = new(false, EventResetMode.AutoReset, Program.ActivateEventName);
+    private readonly RegisteredWaitHandle _activationWait;
+    private readonly SemaphoreSlim _sending = new(1, 1);
+    private AgentConfig _config = new();
+    private EmployeeSession? _employee;
+    private ShiftState _shift = new();
+    private SettingsForm? _settings;
+    private string? _device;
+    private bool _detect, _busy, _healthBusy, _restoreBusy, _online, _exiting, _loginOpen;
+    private int _attempt, _ticks, _generation;
+    private DateTimeOffset _nextHealth = DateTimeOffset.MinValue;
+
     public AgentContext()
     {
         AgentLog.Info($"startup version={AgentLog.Version}");
-        _tray = new NotifyIcon { Icon = SystemIcons.Application, Visible = true, Text = "Складской scanner-agent" }; _tray.ContextMenuStrip = BuildMenu(); _tray.DoubleClick += (_, _) => ShowMainWindow();
-        _activationWait = ThreadPool.RegisterWaitForSingleObject(_activate, (_, _) => { var form = _settings as Form ?? _worker; if (form is { IsHandleCreated: true }) form.BeginInvoke(ShowMainWindow); }, null, Timeout.Infinite, false);
-        _raw.ScanReceived += OnRawScan; _raw.RawKeyReceived += OnRawKey; _retry.Tick += async (_, _) => await FlushQueue(); _retry.Start(); _clock.Tick += (_, _) => _worker?.UpdateTimer(_shift); _clock.Start();
-        var existing = Storage.LoadConfig(); if (existing is null || !existing.IsComplete || string.IsNullOrWhiteSpace(Storage.LoadToken())) OpenSettings(existing, true); else { _config = existing; ShowWorker(); _ = RestoreShift(); }
-    }
-    private ContextMenuStrip BuildMenu() { var m = new ContextMenuStrip(); m.Items.Add("Открыть настройки", null, (_, _) => OpenSettings(_config)); m.Items.Add("Статус", null, (_, _) => ShowMainWindow()); m.Items.Add("Сменить сотрудника", null, (_, _) => OpenSettings(_config)); m.Items.Add(new ToolStripSeparator()); m.Items.Add("Выход", null, (_, _) => Exit()); return m; }
-    private void OpenSettings(AgentConfig? config = null, bool required = false)
-    {
-        if (_settings is { IsDisposed: false }) { ShowFront(_settings); return; }
-        _settings = new SettingsForm(config); _settings.DetectionRequested += () => { _detectionDevice = null; _detectionMode = true; }; _settings.FormClosing += (_, e) => { if (required && _settings.DialogResult != DialogResult.OK && !_exiting) { e.Cancel = true; ShowFront(_settings); } }; _settings.FormClosed += async (_, _) => { _detectionMode = false; _detectionDevice = null; var form = _settings; if (form?.DialogResult == DialogResult.OK && form.Result is { } result) { _config = result; Storage.SaveConfig(_config, form.Token); ShowWorker(); await RestoreShift(); } _settings = null; }; _settings.Show(); ShowFront(_settings);
-    }
-    private void ShowWorker() { if (_worker is null || _worker.IsDisposed) { _worker = new WorkerForm(); _worker.ShiftActionRequested += async action => await ChangeShift(action); _worker.SettingsRequested += () => OpenSettings(_config); } _worker.ShowFront(); UpdateTooltip("Работает"); }
-    private void ShowMainWindow() { if (_settings is { IsDisposed: false, Visible: true }) ShowFront(_settings); else if (_config.IsComplete) ShowWorker(); else OpenSettings(_config, true); }
-    private static void ShowFront(Form f) { if (!f.Visible) f.Show(); if (f.WindowState == FormWindowState.Minimized) f.WindowState = FormWindowState.Normal; f.TopMost = true; f.Activate(); f.BringToFront(); f.BeginInvoke(() => f.TopMost = false); }
-    private async Task RestoreShift() { try { _shift = await _api.GetShiftAsync(_config); _worker?.SetServerState(ConnectionState.Connected); _worker?.SetShift(_shift); _worker?.SetPending(Storage.LoadQueue().Count); await FlushQueue(); } catch (HttpRequestException ex) { SetFailure(ex); } }
-    private async Task ChangeShift(string action)
-    {
-        try { var finished = action == "finish"; _worker?.SetServerState(ConnectionState.Waiting); _shift = await RetryShift(action); _worker?.SetConnection(true); _worker?.SetShift(_shift); if (finished) MessageBox.Show($"Активное время: {TimeSpan.FromSeconds(_shift.ActiveSeconds):hh\\:mm\\:ss}\nОбщее время: {TimeSpan.FromSeconds(_shift.TotalSeconds):hh\\:mm\\:ss}\nЗаказов: {_shift.Orders}\nЗаработано: {_shift.Earnings:N2} ₽\nПауз: {_shift.PauseCount}\nВремя пауз: {TimeSpan.FromSeconds(_shift.PauseSeconds):hh\\:mm\\:ss}\nМедианный интервал: {(_shift.MedianIntervalSeconds.HasValue ? TimeSpan.FromSeconds(_shift.MedianIntervalSeconds.Value).ToString(@"hh\:mm\:ss") : "—")}", "Итоги смены"); }
-        catch (AgentApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized) { SetAuthorizationError(); _worker?.SetNotice(ex.Message, true); }
-        catch (AgentApiException ex) { SetFailure(ex); _worker?.SetNotice(ex.Message, true); }
-        catch (Exception ex) { _worker?.SetServerState(ConnectionState.Waiting); _worker?.SetNotice($"Ожидание связи: {ex.Message}", true); }
-    }
-    private async Task<ShiftState> RetryShift(string action)
-    {
-        var delays = new[] { 0, 2, 5, 10, 15 };
-        HttpRequestException? last = null;
-        foreach (var seconds in delays) { if (seconds > 0) await Task.Delay(TimeSpan.FromSeconds(seconds)); try { return await _api.ShiftActionAsync(_config, action); } catch (HttpRequestException ex) when (ex.StatusCode is null || (int)ex.StatusCode >= 500) { last = ex; SetFailure(ex); } }
-        throw last ?? new HttpRequestException("Ожидание связи");
-    }
-    private void OnRawScan(RawScan scan)
-    {
-        if (_detectionMode)
-        {
-            _detectionMode = false; _detectionDevice = null; AgentLog.Scan(scan, "scanner detected"); _settings?.CompleteDetection(scan.DevicePath);
-            return;
-        }
-        var reason = Validate(scan);
-        AgentLog.Scan(scan, reason ?? "accepted");
-        if (reason is not null) { ShowRejection(reason); return; }
-        var item = new ScanEvent(Guid.NewGuid(), scan.Barcode, _config.EmployeeIdentifier, scan.ElapsedMs, scan.DevicePath, DateTimeOffset.Now, new ScanInputMetadata(scan.AverageIntervalMs, "windows-agent"), _shift.Id);
-        Storage.Enqueue(item); _worker?.SetPending(Storage.LoadQueue().Count); AgentLog.Info($"queued event_id={item.EventId} queue={Storage.LoadQueue().Count}"); _ = FlushQueue();
-    }
-    private void OnRawKey(string device, Keys key, bool keyDown)
-    {
-        if (!_detectionMode || !keyDown || string.IsNullOrWhiteSpace(device)) return;
-        _detectionDevice ??= device;
-        if (key is not (Keys.Enter or Keys.Return or Keys.Tab) || !string.Equals(device, _detectionDevice, StringComparison.OrdinalIgnoreCase)) return;
-        _detectionMode = false; var detected = _detectionDevice; _detectionDevice = null;
-        AgentLog.Info($"scanner_detected_from_raw_terminator device_path={detected}"); _settings?.CompleteDetection(detected);
-    }
-    private string? Validate(RawScan scan)
-    {
-        if (!string.Equals(scan.DevicePath, _config.ScannerDevice, StringComparison.OrdinalIgnoreCase)) return "unknown device";
-        if (scan.Barcode.Length < 8) return "too short";
-        if (scan.Barcode.Length > 20) return "too long";
-        if (!scan.Barcode.All(char.IsDigit)) return "non-digit";
-        if (scan.RawCharCount < 2 || scan.ElapsedMs > 2_500 || scan.AverageIntervalMs > 100) return "manual input";
-        if (_shift.Status != "active" || !_shift.Id.HasValue) return "no active shift";
-        return null;
-    }
-    private void ShowRejection(string reason)
-    {
-        var text = reason switch { "too short" => "Штрихкод слишком короткий", "too long" => "Штрихкод слишком длинный", "non-digit" => "Штрихкод должен содержать только цифры", "manual input" => "Ручной ввод не засчитан", "unknown device" => "Неизвестное устройство", "no active shift" when _shift.Status == "paused" => "Смена на паузе", "no active shift" => "Сначала начните смену", _ => "Скан отклонён" };
-        _worker?.SetNotice(text, true);
-    }
-    private async Task FlushQueue(bool announce = false)
-    {
-        if (!_config.IsComplete) return;
-        if (!await _sending.WaitAsync(0)) { Interlocked.Exchange(ref _flushRequested, 1); return; }
+        _tray = new NotifyIcon { Icon = SystemIcons.Application, Visible = true, Text = "ScannerAgent v1.2.0" };
+        var menu = new ContextMenuStrip();
+        menu.Items.Add("Открыть", null, (_, _) => _worker.ShowFront());
+        menu.Items.Add("Сменить сотрудника", null, (_, _) => Login());
+        menu.Items.Add("Расширенные настройки", null, (_, _) => OpenSettings());
+        menu.Items.Add("Выход", null, (_, _) => Exit()); _tray.ContextMenuStrip = menu;
+        _tray.DoubleClick += (_, _) => _worker.ShowFront();
+        _worker.SettingsRequested += Login;
+        _worker.ShiftActionRequested += async action => await ChangeShift(action);
+        _worker.ShowFront();
+        _activationWait = ThreadPool.RegisterWaitForSingleObject(_activate, (_, _) => {
+            if (!_exiting && _worker.IsHandleCreated) _worker.BeginInvoke(() => _worker.ShowFront());
+        }, null, Timeout.Infinite, false);
+        _raw.ScanReceived += OnRawScan; _raw.DevicesChanged += Discover;
         try
         {
-            while (Storage.PeekQueue() is { } item)
+            _config = Storage.LoadConfig() ?? new();
+            _employee = Storage.LoadEmployee();
+            if (_employee is not null && Guid.TryParse(_employee.Id, out _))
             {
-                ScanResponse response; try { response = await _api.SendAsync(_config, item); } catch (HttpRequestException ex) { SetFailure(ex); return; }
-                Storage.RemoveFromQueue(item.EventId); _worker?.SetConnection(true); _worker?.SetPending(Storage.LoadQueue().Count); AgentLog.Info($"synced event_id={item.EventId} device_path={item.ScannerDevice} normalized_barcode={item.Barcode} barcode_length={item.Barcode.Length} validation_result={response.Result}"); _worker?.SetScan(response);
-                if (response.Result == "counted") { _shift.Orders++; _shift.Earnings = response.EarningsToday; }
-                Notify(response.Message.Length > 0 ? response.Message : "Скан отклонен", response.Result == "counted" ? ToolTipIcon.Info : ToolTipIcon.Warning);
+                _config.EmployeeIdentifier = _employee.Id; _shift = _employee.Shift;
+                _worker.SetShift(_shift);
             }
-            if (announce) Notify("Соединение с сервером работает", ToolTipIcon.Info);
+            _worker.SetPending(Storage.LoadQueue().Count);
         }
-        finally { _sending.Release(); if (Interlocked.Exchange(ref _flushRequested, 0) != 0) _ = FlushQueue(); }
+        catch (Exception ex) { AgentLog.Error("storage startup", ex); _worker.SetNotice("Не удалось прочитать настройки/очередь. Обратитесь к настройщику.", true); }
+        Discover();
+        _timer.Tick += async (_, _) => {
+            _worker.UpdateTimer(_shift);
+            if (++_ticks % 3 == 0) Discover();
+            if (DateTimeOffset.UtcNow >= _nextHealth) await CheckConnection();
+        };
+        _timer.Start();
+        _worker.BeginInvoke(() => {
+            if (!_config.IsComplete) _worker.SetNotice("Ноутбук ещё не настроен. Обратитесь к настройщику.", true);
+            else if (_employee is null) Login();
+        });
     }
-    private void Notify(string text, ToolTipIcon icon) { _tray.BalloonTipTitle = "Складской сканер"; _tray.BalloonTipText = text; _tray.BalloonTipIcon = icon; _tray.ShowBalloonTip(3500); }
-    private void SetAuthorizationError() { UpdateTooltip("Ошибка авторизации"); _worker?.SetAuthorizationError(); }
-    private void SetFailure(HttpRequestException ex) { var state = ex.StatusCode switch { System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden => ConnectionState.AuthorizationError, System.Net.HttpStatusCode.NotFound => ConnectionState.NotFound, { } code when (int)code >= 500 => ConnectionState.ServerError, _ => System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() ? ConnectionState.ServerUnavailable : ConnectionState.NoInternet }; _worker?.SetServerState(state); _worker?.SetPending(Storage.LoadQueue().Count); AgentLog.Error($"connection state={state}", ex); }
-    private void SetOffline() { UpdateTooltip("Нет связи"); _worker?.SetConnection(false); } private void UpdateTooltip(string status) { var t = $"{status} · {_config.EmployeeIdentifier}"; _tray.Text = t[..Math.Min(63, t.Length)]; }
-    private void Exit() { _exiting = true; _retry.Stop(); _clock.Stop(); _activationWait.Unregister(null); _activate.Dispose(); _tray.Visible = false; _tray.Dispose(); _raw.Dispose(); _api.Dispose(); _settings?.Dispose(); _worker?.Dispose(); ExitThread(); }
+
+    private void Discover()
+    {
+        if (_exiting) return;
+        try
+        {
+            var devices = RawInput.Devices().Select(path => (Path: path, Fingerprint: ScannerFingerprint.Read(path)))
+                .Where(d => d.Fingerprint is not null).Select(d => (d.Path, Fingerprint: d.Fingerprint!)).ToArray();
+            if (_config.Fingerprint is null)
+            {
+                _detect = true; _worker.SetScanner("Первичная настройка");
+                if (!_loginOpen) _worker.SetNotice("Первичная настройка сканера. Пикните любой штрихкод.");
+                return;
+            }
+            var resolved = ScannerFingerprint.Resolve(_config.Fingerprint, devices);
+            if (!string.Equals(resolved, _device, StringComparison.OrdinalIgnoreCase))
+            {
+                AgentLog.Info($"HID {(resolved is null ? "disconnect" : "reconnect")} fingerprint={System.Text.Json.JsonSerializer.Serialize(_config.Fingerprint)} current_path={resolved}");
+                _device = resolved;
+            }
+            _worker.SetScanner(_device is null ? "Отключён / устройство не определено" : "Готов");
+        }
+        catch (Exception ex) { AgentLog.Error("HID discovery failed", ex); _device = null; _worker.SetScanner("Отключён"); }
+    }
+
+    private void Login()
+    {
+        if (_busy || _loginOpen || _settings is not null) return;
+        if (!_config.IsComplete) { _worker.SetNotice("Требуется первичная настройка ноутбука.", true); return; }
+        if (_shift.Status is "active" or "paused" && MessageBox.Show("Текущая смена останется открытой. Сменить сотрудника?", "Сменить сотрудника", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+        _loginOpen = true;
+        try
+        {
+            using var form = new EmployeeLoginForm(_api, Snapshot());
+            if (form.ShowDialog(_worker) != DialogResult.OK || form.Employee is null) return;
+            _generation++; _employee = form.Employee; _config.EmployeeIdentifier = _employee.Id;
+            _shift = new ShiftState { EmployeeName = _employee.Name };
+            PersistEmployee(); _worker.SetShift(_shift); _ = RestoreShift();
+        }
+        catch (Exception ex) { AgentLog.Error("employee login storage failed", ex); _worker.SetNotice("Не удалось сохранить вход.", true); }
+        finally { _loginOpen = false; }
+    }
+
+    private void OpenSettings()
+    {
+        if (_busy || _loginOpen || _settings is not null) return;
+        if (MessageBox.Show("Это настройки ноутбука для ответственного за установку. Продолжить?", "Расширенные настройки", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        _settings = new SettingsForm(_config);
+        _settings.DetectionRequested += () => _detect = true;
+        _settings.FormClosed += (_, _) => {
+            try
+            {
+                if (_settings?.DialogResult == DialogResult.OK && _settings.Result is { } result)
+                {
+                    if (Storage.LoadQueue().Count > 0 && !string.Equals(result.BackendUrl, _config.BackendUrl, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Сначала синхронизируйте очередь перед сменой сервера.");
+                    result.EmployeeIdentifier = _config.EmployeeIdentifier;
+                    Storage.SaveConfig(result, _settings.Token); _config = result; _generation++;
+                    _device = null; _nextHealth = DateTimeOffset.MinValue;
+                }
+            }
+            catch (Exception ex) { AgentLog.Error("machine configuration save failed", ex); _worker.SetNotice("Настройки не сохранены. Проверьте права установки и очередь.", true); }
+            finally { _settings = null; _detect = _config.Fingerprint is null; Discover(); }
+        };
+        _settings.Show(_worker);
+    }
+
+    private AgentConfig Snapshot() => new() { BackendUrl = _config.BackendUrl, EmployeeIdentifier = _config.EmployeeIdentifier, ScannerDevice = _device ?? "", Fingerprint = _config.Fingerprint };
+    private void PersistEmployee() { if (_employee is null) return; _employee.Shift = _shift; Storage.SaveEmployee(_employee); }
+    private async Task RestoreShift()
+    {
+        if (_restoreBusy || _busy || _employee is null || _exiting) return;
+        _restoreBusy = true; var generation = _generation;
+        try
+        {
+            var state = await _api.GetShiftAsync(Snapshot());
+            if (_exiting || generation != _generation || _busy) return;
+            _shift = state; if (_employee is not null) _employee.ShiftUncertain = false; PersistEmployee(); _worker.SetShift(_shift);
+        }
+        catch (HttpRequestException ex)
+        {
+            if (generation == _generation && !_exiting)
+            {
+                if (ex.StatusCode == System.Net.HttpStatusCode.Forbidden) { _employee = null; _config.EmployeeIdentifier = ""; _shift = new(); Storage.ClearEmployee(); _worker.SetShift(_shift); }
+                Failure(ex);
+            }
+        }
+        catch (Exception ex) { AgentLog.Error("restore shift/cache failed", ex); }
+        finally { _restoreBusy = false; }
+    }
+
+    private async Task CheckConnection()
+    {
+        if (_healthBusy || !_config.IsComplete || _exiting) return;
+        _healthBusy = true;
+        try
+        {
+            await _api.PingAsync(Snapshot());
+            if (_exiting) return;
+            _online = true; _attempt = 0;
+            _worker.SetServerState(ConnectionState.Connected);
+            _nextHealth = DateTimeOffset.UtcNow.AddSeconds(15);
+            _ = FlushQueue();
+            _ = RestoreShift();
+        }
+        catch (HttpRequestException ex) { Failure(ex); }
+        catch (Exception ex) { AgentLog.Error("connection check failed", ex); _nextHealth = DateTimeOffset.UtcNow.AddSeconds(15); }
+        finally { _healthBusy = false; }
+    }
+
+    private void Failure(HttpRequestException ex)
+    {
+        if (_exiting) return;
+        _online = false;
+        var delay = new[] { 2, 5, 10, 15 }[Math.Min(_attempt++, 3)];
+        _nextHealth = DateTimeOffset.UtcNow.AddSeconds(delay);
+        var state = ex.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden ? ConnectionState.AuthorizationError
+            : System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() ? ConnectionState.ServerUnavailable : ConnectionState.NoInternet;
+        _worker.SetServerState(state); AgentLog.Info($"connection state={state} retry_seconds={delay} http_status={ex.StatusCode}");
+    }
+
+    private async Task ChangeShift(string action)
+    {
+        if (_busy || _loginOpen || _employee is null || _restoreBusy || _settings is not null) return;
+        if (_employee.ShiftUncertain) { _worker.SetNotice("Подтверждаем состояние смены на сервере.", true); await RestoreShift(); return; }
+        _busy = true; _worker.SetBusy(true);
+        try
+        {
+            await FlushQueue();
+            if (Storage.LoadQueue().Any(e => e.ShiftId == _shift.Id)) { _worker.SetNotice("Дождитесь синхронизации заказов перед изменением смены.", true); return; }
+            _employee.ShiftUncertain = true; PersistEmployee();
+            _shift = await _api.ShiftActionAsync(Snapshot(), action);
+            _employee.ShiftUncertain = false;
+            PersistEmployee(); _worker.SetShift(_shift);
+            if (action == "finish") MessageBox.Show($"Заказов: {_shift.Orders}\nЗаработано: {_shift.Earnings:N2} ₽\nАктивное время: {TimeSpan.FromSeconds(_shift.ActiveSeconds)}", "Итоги смены");
+        }
+        catch (HttpRequestException ex) { Failure(ex); _worker.SetNotice("Не удалось подтвердить изменение смены. Проверяем состояние сервера.", true); }
+        catch (Exception ex) { AgentLog.Error("shift action failed", ex); _worker.SetNotice("Не удалось сохранить состояние смены.", true); }
+        finally { _busy = false; if (!_exiting) { _worker.SetBusy(false); _worker.SetShift(_shift); await RestoreShift(); } }
+    }
+
+    private void OnRawScan(RawScan raw)
+    {
+        if (_exiting || _loginOpen || (_settings is not null && !_detect)) return;
+        var scan = raw with { Barcode = BarcodePolicy.Normalize(raw.Barcode) };
+        // Detection never creates an order and never accepts a slowly typed PIN.
+        if (_detect)
+        {
+            if (scan.RawCharCount < 2 || scan.ElapsedMs > 1500 || scan.AverageIntervalMs > 50) return;
+            var fingerprint = ScannerFingerprint.Read(scan.DevicePath);
+            if (fingerprint is null) return;
+            try
+            {
+                if (_settings is not null) _settings.CompleteDetection(scan.DevicePath);
+                else { _config.Fingerprint = fingerprint; _config.ScannerDevice = scan.DevicePath; Storage.SaveMachine(_config); }
+                _detect = false; Discover(); _worker.SetNotice("Сканер настроен");
+            }
+            catch (Exception ex) { AgentLog.Error("scanner detection save failed", ex); _worker.SetNotice("Не удалось сохранить сканер. Проверьте установку ноутбука.", true); }
+            return;
+        }
+        if (!string.Equals(scan.DevicePath, _device, StringComparison.OrdinalIgnoreCase)) return;
+        var type = BarcodePolicy.Type(scan.Barcode);
+        AgentLog.Info($"barcode_validation_type={type} length={scan.Barcode.Length}");
+        if (type == "invalid") { _worker.SetNotice("Недопустимый формат штрихкода", true); return; }
+        if (_employee?.ShiftUncertain == true) { _worker.SetNotice("Подтверждаем состояние смены. Повторите скан после восстановления связи.", true); return; }
+        if (scan.RawCharCount < 2 || scan.ElapsedMs > 2500 || scan.AverageIntervalMs > 100) { _worker.SetNotice("Ручной ввод не засчитан", true); return; }
+        if (_busy || _employee is null || _shift.Status != "active" || _shift.Id is null) { _worker.SetNotice("Сначала начните или продолжите смену", true); return; }
+        try
+        {
+            var item = new ScanEvent(Guid.NewGuid(), scan.Barcode, _employee.Id, scan.ElapsedMs, scan.DevicePath,
+                DateTimeOffset.UtcNow, new ScanInputMetadata(scan.AverageIntervalMs, "windows-agent"), _shift.Id);
+            Storage.Enqueue(item); var size = Storage.LoadQueue().Count;
+            _worker.SetPending(size); _worker.SetNotice($"Принят: {scan.Barcode} · ожидает синхронизации");
+            AgentLog.Info($"queued event_id={item.EventId} queue_size={size}");
+            if (_online) _ = FlushQueue();
+        }
+        catch (Exception ex) { AgentLog.Error("queue write failed", ex); _worker.SetNotice("Заказ НЕ сохранён. Освободите диск и повторите скан.", true); }
+    }
+
+    private async Task FlushQueue()
+    {
+        if (_exiting || !_config.IsComplete || !await _sending.WaitAsync(0)) return;
+        try
+        {
+            while (!_exiting && Storage.PeekQueue() is { } item)
+            {
+                var response = await _api.SendAsync(Snapshot(), item);
+                if (response.Result is not ("counted" or "duplicate" or "rejected")) throw new HttpRequestException("Некорректное подтверждение скана");
+                Storage.RemoveFromQueue(item.EventId);
+                if (_exiting) return;
+                var count = Storage.LoadQueue().Count; _worker.SetPending(count);
+                AgentLog.Info($"synced event_id={item.EventId} result={response.Result} queue_size={count}");
+                if (item.EmployeeIdentifier == _employee?.Id && item.ShiftId == _shift.Id) _worker.SetScan(response);
+            }
+        }
+        catch (HttpRequestException ex) { Failure(ex); }
+        catch (Exception ex) { AgentLog.Error("queue sync failed", ex); if (!_exiting) _worker.SetNotice("Очередь сохранена, синхронизация будет повторена.", true); }
+        finally { _sending.Release(); }
+    }
+
+    private void Exit()
+    {
+        _exiting = true; _timer.Stop(); _timer.Dispose(); _activationWait.Unregister(null); _activate.Dispose();
+        _tray.Visible = false; _tray.Dispose(); _raw.Dispose(); _api.Dispose(); _settings?.Dispose(); _worker.Dispose(); ExitThread();
+    }
 }

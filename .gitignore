@@ -11,4 +11,7 @@ npm-debug.log*
 scanner-agent/bin/
 scanner-agent/obj/
 scanner-agent/publish/
+scanner-agent-tests/bin/
+scanner-agent-tests/obj/
+scanner-agent-tests/artifacts/
 public/ScannerAgent.exe

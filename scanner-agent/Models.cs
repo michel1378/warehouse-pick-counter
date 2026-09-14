@@ -5,9 +5,21 @@ namespace ScannerAgent;
 internal sealed class AgentConfig
 {
     public string BackendUrl { get; set; } = "";
-    public string EmployeeIdentifier { get; set; } = "";
+    [JsonIgnore] public string EmployeeIdentifier { get; set; } = "";
     public string ScannerDevice { get; set; } = "";
-    public bool IsComplete => Uri.TryCreate(BackendUrl, UriKind.Absolute, out _) && !string.IsNullOrWhiteSpace(EmployeeIdentifier) && !string.IsNullOrWhiteSpace(ScannerDevice);
+    public ScannerFingerprint? Fingerprint { get; set; }
+    public bool IsComplete => Uri.TryCreate(BackendUrl, UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.IsLoopback);
+}
+
+internal sealed class EmployeeSession
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Role { get; set; } = "";
+    public string[] Permissions { get; set; } = [];
+    public DateTimeOffset VerifiedAt { get; set; }
+    public ShiftState Shift { get; set; } = new();
+    public bool ShiftUncertain { get; set; }
 }
 
 internal sealed record ScanEvent(
@@ -32,7 +44,7 @@ internal enum ConnectionState { Connected, NoInternet, ServerUnavailable, Author
 internal sealed class ScanResponse
 {
     public bool Success { get; set; }
-    public string Result { get; set; } = "rejected";
+    [JsonRequired] public string Result { get; set; } = "";
     public int OrdersToday { get; set; }
     public decimal EarningsToday { get; set; }
     public string Message { get; set; } = "";
@@ -44,8 +56,8 @@ internal sealed class ScanResponse
 internal sealed class ShiftState
 {
     public Guid? Id { get; set; }
-    public string EmployeeName { get; set; } = "—";
-    public string Status { get; set; } = "none";
+    [JsonRequired] public string EmployeeName { get; set; } = "—";
+    [JsonRequired] public string Status { get; set; } = "none";
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public DateTimeOffset? PauseStartedAt { get; set; }

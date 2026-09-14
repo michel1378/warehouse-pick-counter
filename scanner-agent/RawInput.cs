@@ -12,16 +12,17 @@ internal sealed class RawInput : NativeWindow, IDisposable
     private readonly Dictionary<string, Capture> _captures = new(StringComparer.OrdinalIgnoreCase);
     public event Action<RawScan>? ScanReceived;
     public event Action<string, Keys, bool>? RawKeyReceived;
+    public event Action? DevicesChanged;
     public RawInput()
     {
         CreateHandle(new CreateParams { Caption = "WarehouseScannerAgent.RawInput", Parent = new IntPtr(-3) });
         if (Handle == IntPtr.Zero || !IsWindow(Handle)) throw new InvalidOperationException("Raw Input message window was not created.");
         Register();
     }
-    protected override void WndProc(ref Message m) { if (m.Msg == WM_INPUT) Read(m.LParam); base.WndProc(ref m); }
+    protected override void WndProc(ref Message m) { if (m.Msg == WM_INPUT) Read(m.LParam); if (m.Msg == 0x00FE) { _captures.Clear(); DevicesChanged?.Invoke(); } base.WndProc(ref m); }
     private void Register()
     {
-        var d = new RAWINPUTDEVICE { UsagePage = 0x01, Usage = 0x06, Flags = RIDEV_INPUTSINK, Target = Handle };
+        var d = new RAWINPUTDEVICE { UsagePage = 0x01, Usage = 0x06, Flags = RIDEV_INPUTSINK | 0x2000, Target = Handle };
         if (!RegisterRawInputDevices([d], 1, (uint)Marshal.SizeOf<RAWINPUTDEVICE>())) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "RegisterRawInputDevices failed.");
         AgentLog.Info($"raw_input_registered usage_page=0x01 usage=0x06 flags=RIDEV_INPUTSINK hwnd=0x{Handle.ToInt64():X} hwnd_alive={IsWindow(Handle)}");
     }
@@ -39,7 +40,7 @@ internal sealed class RawInput : NativeWindow, IDisposable
             var keyDown = raw.Keyboard.Message is WM_KEYDOWN or WM_SYSKEYDOWN;
             if (keyDown) ProcessKey(path, key);
             var length = !string.IsNullOrWhiteSpace(path) && _captures.TryGetValue(path, out var capture) ? capture.Text.Length : 0;
-            AgentLog.RawInput(raw.Header.Device, path, key, keyDown, length);
+            // Never log individual keys: Raw Input includes PINs typed on regular keyboards.
             RawKeyReceived?.Invoke(path, key, keyDown);
         }
         finally { Marshal.FreeHGlobal(buffer); }
