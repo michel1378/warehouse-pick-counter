@@ -1,4 +1,12 @@
 -- Read-only: run BEFORE migration, including when migration aborted.
+select a.attname,format_type(a.atttypid,a.atttypmod) as type,a.attgenerated,
+       pg_get_expr(d.adbin,d.adrelid) as generation_expression
+from pg_attribute a
+left join pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum
+where a.attrelid='public.scans'::regclass and a.attname='normalized_barcode'
+  and not a.attisdropped;
+select pg_get_functiondef(oid) from pg_proc
+where pronamespace='public'::regnamespace and proname='normalize_scan_barcode';
 select indexname,indexdef from pg_indexes where schemaname='public' and tablename='scans';
 select conname,pg_get_constraintdef(oid) from pg_constraint where conrelid='public.scans'::regclass;
 select pg_get_functiondef(oid) from pg_proc

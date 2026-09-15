@@ -28,12 +28,88 @@ begin
   end if;
 end $$;
 
--- Generated key protects every INSERT/UPDATE, including direct service-role writes.
--- Keep original barcode and every historical reference intact.
-alter table public.scans
-  add column normalized_barcode text generated always as (public.normalize_scan_barcode(barcode)) stored;
-alter table public.scans
-  add constraint scans_normalized_barcode_key unique (normalized_barcode);
+-- Validate both the stored values and how FUTURE values are generated.
+-- Matching current rows alone is insufficient (especially for an empty table).
+-- Unknown expressions fail closed; no existing column is dropped or rewritten.
+do $$
+declare
+  v_column record;
+  v_expression text;
+  v_mismatches bigint;
+  v_constraint_name text := 'scans_normalized_barcode_key';
+  v_suffix integer := 0;
+begin
+  select a.attnum,a.atttypid,a.attgenerated,a.attcollation,
+         pg_get_expr(d.adbin,d.adrelid) as expression
+    into v_column
+  from pg_attribute a
+  left join pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum
+  where a.attrelid='public.scans'::regclass
+    and a.attname='normalized_barcode' and not a.attisdropped;
+
+  if not found then
+    alter table public.scans add column normalized_barcode text
+      generated always as (public.normalize_scan_barcode(barcode)) stored;
+  else
+    v_expression := v_column.expression;
+    if v_column.atttypid <> 'text'::regtype
+       or v_column.attgenerated <> 's'
+       or coalesce(v_expression,'') not in (
+         'normalize_scan_barcode(barcode)', 'public.normalize_scan_barcode(barcode)'
+       ) then
+      raise exception 'NORMALIZED_BARCODE_DEFINITION_REQUIRES_REVIEW'
+        using detail=format('Existing type=%s, generated=%s, expression=%s',
+          format_type(v_column.atttypid,null),v_column.attgenerated,v_expression),
+        hint='No data changed. Keep this column. Export its definition and inspect its function/trigger dependencies. An alternative expression may be equivalent, but is not automatically trusted. Review a separate migration with a new generated key, audit collisions and switch RPCs/indexes transactionally; preserve the original column.';
+    end if;
+  end if;
+
+  select count(*) into v_mismatches from public.scans
+  where normalized_barcode is distinct from public.normalize_scan_barcode(barcode);
+  if v_mismatches > 0 then
+    raise exception 'NORMALIZED_BARCODE_VALUES_MISMATCH: % rows',v_mismatches
+      using hint='No data changed. Stored generated values may be stale after a function change. Preserve the column and review a separate migration with a new generated key; do not overwrite historical data automatically.';
+  end if;
+
+  select attnum,attcollation into v_column from pg_attribute
+  where attrelid='public.scans'::regclass and attname='normalized_barcode' and not attisdropped;
+
+  -- ON CONFLICT cannot use a deferrable unique arbiter, even if another exists.
+  if exists(select 1 from pg_index i
+    where i.indrelid='public.scans'::regclass and i.indisunique
+      and i.indnkeyatts=1 and i.indkey[0]=v_column.attnum
+      and i.indpred is null and i.indexprs is null and not i.indimmediate
+  ) then
+    raise exception 'NORMALIZED_BARCODE_DEFERRABLE_UNIQUE_REQUIRES_REVIEW'
+      using hint='No data changed. Review replacing the deferrable constraint with an immediate global UNIQUE in a separate transaction; ON CONFLICT requires an immediate arbiter.';
+  end if;
+
+  -- Reuse a valid, immediate, non-partial global index, regardless of its name.
+  -- A composite (employee/shift, barcode) index does NOT satisfy this check.
+  if not exists(select 1 from pg_index i
+    join pg_class c on c.oid=i.indexrelid
+    join pg_am am on am.oid=c.relam
+    join pg_opclass op on op.oid=i.indclass[0]
+    where i.indrelid='public.scans'::regclass and i.indisunique
+      and i.indisvalid and i.indisready and i.indimmediate
+      and i.indnkeyatts=1 and i.indkey[0]=v_column.attnum
+      and i.indpred is null and i.indexprs is null
+      and i.indcollation[0]=v_column.attcollation
+      and am.amname='btree' and op.opcname='text_ops'
+      and op.opcnamespace='pg_catalog'::regnamespace
+  ) then
+    -- Preserve any unrelated index/constraint that already owns the usual name.
+    while exists(select 1 from pg_class
+                 where relnamespace='public'::regnamespace and relname=v_constraint_name)
+       or exists(select 1 from pg_constraint
+                 where conrelid='public.scans'::regclass and conname=v_constraint_name)
+    loop
+      v_suffix := v_suffix+1;
+      v_constraint_name := 'scans_normalized_barcode_key_' || v_suffix;
+    end loop;
+    execute format('alter table public.scans add constraint %I unique (normalized_barcode)',v_constraint_name);
+  end if;
+end $$;
 
 create or replace function public.register_scan(
   p_barcode text,
@@ -123,7 +199,6 @@ declare
   v_median numeric;
   v_interval_count bigint;
   v_received timestamptz := clock_timestamp();
-  v_min_interval integer := 20;
 begin
   perform pg_advisory_xact_lock(hashtextextended(p_event_id::text,0));
   return query
@@ -153,8 +228,6 @@ begin
   if not exists(select 1 from employees where id=p_employee_id and active) then
     raise exception 'EMPLOYEE_INACTIVE';
   end if;
-  select coalesce(s.min_order_interval_seconds,20)
-    into v_min_interval from settings s where s.id=1;
 
   -- Preserve the existing input classification.
   if p_duration_ms is null
@@ -166,7 +239,7 @@ begin
     v_reason := 'manual';
     v_message := 'Scan rejected';
   else
-    -- Duplicate has precedence over the cooldown and remains a separate result.
+    -- Duplicate is determined globally by the normalized barcode.
     select s.* into v_existing from scans s where s.normalized_barcode=v_barcode;
     if v_existing.id is not null then
       v_result := 'duplicate';
@@ -174,7 +247,7 @@ begin
       v_message := 'Duplicate - not counted';
     else
       -- This is the last successful physical scan in this active shift. Rejected
-      -- attempts never enter `scans`, so they never move the cooldown anchor.
+      -- attempts never enter `scans`. Intervals are statistics only.
       select s.scanned_at into v_previous_at
       from scans s
       where s.shift_id=p_shift_id
@@ -187,35 +260,29 @@ begin
         v_interval := extract(epoch from (p_scanned_at_client-v_previous_at));
       end if;
 
-      if v_previous_at is not null and v_interval < v_min_interval then
-        v_result := 'rejected';
-        v_reason := 'too_fast';
-        v_message := 'Scan rejected: too_fast';
-      else
-        insert into scans(barcode,employee_id,scanned_at,received_at_server,shift_id)
-        values(v_barcode,p_employee_id,p_scanned_at_client,v_received,p_shift_id)
-        on conflict(normalized_barcode) do nothing
-        returning * into v_scan;
+      insert into scans(barcode,employee_id,scanned_at,received_at_server,shift_id)
+      values(v_barcode,p_employee_id,p_scanned_at_client,v_received,p_shift_id)
+      on conflict(normalized_barcode) do nothing
+      returning * into v_scan;
 
-        if v_scan.id is null then
-          select s.* into v_existing from scans s where s.normalized_barcode=v_barcode;
-          v_result := 'duplicate';
-          v_reason := 'duplicate';
-          v_message := 'Duplicate - not counted';
+      if v_scan.id is null then
+        select s.* into v_existing from scans s where s.normalized_barcode=v_barcode;
+        v_result := 'duplicate';
+        v_reason := 'duplicate';
+        v_message := 'Duplicate - not counted';
+        v_interval := null;
+      else
+        v_result := 'counted';
+        v_reason := 'counted';
+        v_message := '+1 order';
+        if v_previous_at is not null and exists(
+          select 1 from work_shift_pauses p
+          where p.shift_id=p_shift_id and p.started_at<p_scanned_at_client
+            and coalesce(p.ended_at,v_received)>v_previous_at
+        ) then
           v_interval := null;
-        else
-          v_result := 'counted';
-          v_reason := 'counted';
-          v_message := '+1 order';
-          if v_previous_at is not null and exists(
-            select 1 from work_shift_pauses p
-            where p.shift_id=p_shift_id and p.started_at<p_scanned_at_client
-              and coalesce(p.ended_at,v_received)>v_previous_at
-          ) then
-            v_interval := null;
-          end if;
-          update scans set order_interval_seconds=v_interval where id=v_scan.id;
         end if;
+        update scans set order_interval_seconds=v_interval where id=v_scan.id;
       end if;
     end if;
   end if;

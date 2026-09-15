@@ -19,6 +19,20 @@ excess counts and abort without deleting or changing any rows.
 Deploy the API trim validation fix too. Internal spaces are rejected, leading
 zeros preserved. ScannerAgent.exe does not need an update.
 
+The migration can be rerun. An existing STORED text column using the canonical
+normalizer is reused only if every stored value matches. A different expression
+or a plain column requires review, even if current rows happen to match: future
+writes must also be protected. The error includes the existing definition.
+No column is dropped. Compatible global indexes are reused regardless of name;
+composite/partial indexes do not qualify. Deferrable arbiters require review.
+
+For an incompatible column, preserve it and prepare a separate migration after
+inspecting its definition/dependencies: add a new generated key under a new name,
+audit normalized collisions, install immediate global UNIQUE and switch both
+RPCs atomically. Review other consumers before any rename; keep the original
+column for audit/rollback. Do not automatically rewrite stored generated values
+after changing an immutable function. This migration rolls back on mismatches.
+
 ## Existing collisions
 Export full scans, dependent scan_attempts/scanner_agent_events, all foreign-key
 references and shift totals. Review server receipt times and original events to
@@ -41,7 +55,9 @@ This hotfix does not perform deduplication automatically.
   employee in B before committing A. B waits for UNIQUE; commit A -> B duplicate.
   Rollback A -> B may count. Verify one scans row and both attempts.
 - Retry the same event_id returns the previous response without new rows.
-- Check scanned_at_client, metrics, cooldown, manual and inactive shift rules.
+- Different valid barcodes at 1-second or zero intervals must both count.
+  Intervals affect statistics only; the old cooldown setting is ignored.
+- Check scanned_at_client, metrics, manual and inactive shift rules.
 
 Direct INSERT/UPDATE remains protected by SQLSTATE 23505. Both application RPCs
 use ON CONFLICT on the generated normalized key and atomically audit duplicates.
