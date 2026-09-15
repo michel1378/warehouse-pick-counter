@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   event_id: z.string().uuid(),
-  barcode: z.string().transform(value => value.replace(/\s/g, "").replace(/^p/, "P")).pipe(z.string().max(512).regex(/^(?:[0-9]{8,512}|P[0-9]{8,511})$/)),
+  barcode: z.string().transform(value => value.trim().replace(/^p(?=[0-9]+$)/, "P")).pipe(z.string().max(512).regex(/^(?:[0-9]{8,512}|P[0-9]{8,511})$/)),
   employee_identifier: z.string().trim().min(1).max(120),
   duration_ms: z.number().int().min(0).max(600_000),
   input_metadata: z.object({ average_interval_ms: z.number().min(0).max(600_000), source: z.literal("windows-agent") }).optional(),

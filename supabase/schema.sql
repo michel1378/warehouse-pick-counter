@@ -147,3 +147,7 @@ revoke all on function public.employee_stats(timestamptz, timestamptz) from publ
 -- Создание первого администратора (замените значения; PIN в открытом виде не хранится):
 -- insert into public.admins (name, pin_hash)
 -- values ('Администратор', crypt('ВАШ_СЛОЖНЫЙ_PIN', gen_salt('bf', 12)));
+
+-- Baseline only: after earlier migrations, apply
+-- migrations/20260915_global_barcode_uniqueness.sql for the global normalized
+-- barcode UNIQUE constraint and the current registration RPC implementations.

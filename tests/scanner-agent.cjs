@@ -32,15 +32,15 @@ const body = {
   input_metadata: { average_interval_ms: 10, source: "windows-agent" },
 };
 (async () => {
-  for (const barcode of ["0012345678", "12345678901234567890", "P00119280697", " p00 119280697 "]) {
+  for (const barcode of ["0012345678", "12345678901234567890", "P00119280697", " p00119280697 "]) {
     const response = await scan.POST(new NextRequest("https://example.invalid/api/scanner-agent/scan", { method: "POST", headers: { authorization: "Bearer test-token" }, body: JSON.stringify({ ...body, barcode }) }));
     assert.equal(response.status, 200);
-    assert.equal(calls.at(-1).args.p_barcode, barcode.replace(/\s/g, "").replace(/^p/, "P"));
+    assert.equal(calls.at(-1).args.p_barcode, barcode.trim().replace(/^p(?=[0-9]+$)/, "P"));
     assert.equal(calls.at(-1).args.p_scanned_at_client, body.scanned_at);
     assert.equal(calls.at(-1).args.p_event_id, body.event_id);
   }
   const before = calls.length;
-  for (const barcode of ["ABC123", "TEST123", "P1234567", "Р00119280697", "P0011928069A"]) {
+  for (const barcode of ["p00 119280697", "0012 345678", "ABC123", "TEST123", "P1234567", "Р00119280697", "P0011928069A"]) {
     const response = await scan.POST(new NextRequest("https://example.invalid/api/scanner-agent/scan", { method: "POST", headers: { authorization: "Bearer test-token" }, body: JSON.stringify({ ...body, barcode }) }));
     assert.equal(response.status, 400);
   }
