@@ -4,9 +4,11 @@
 
 ## Запуск
 
-1. Создайте проект Supabase и выполните `supabase/schema.sql` в SQL Editor.
+1. Создайте проект Supabase и выполните `supabase/schema.sql` и все миграции в [порядке зависимостей](docs/scanner-reliability-review.md#fresh-database-installation-order). Один schema.sql недостаточен.
 2. Создайте `.env.local` по образцу `.env.example`.
 3. Создайте первого администратора SQL-командой, описанной в конце `supabase/schema.sql`.
 4. Выполните `npm install`, затем `npm run dev`.
 
 Сервисный ключ Supabase используется только в Server Actions/Server Components и не попадает в браузер.
+
+ScannerAgent 1.3.0: [изменения, тесты и порядок rollout](docs/scanner-reliability-review.md). Production rollout пока не выполнялся.

@@ -10,5 +10,8 @@
     <Compile Include="../scanner-agent/ScanQueue.cs" Link="ScanQueue.cs" />
     <Compile Include="../scanner-agent/Models.cs" Link="Models.cs" />
     <Compile Include="../scanner-agent/ApiClient.cs" Link="ApiClient.cs" />
+    <Compile Include="../scanner-agent/RecoveryPolicy.cs" Link="RecoveryPolicy.cs" />
+    <Compile Include="../scanner-agent/RawInput.cs" Link="RawInput.cs" />
+    <Compile Include="../scanner-agent/WorkerForm.cs" Link="WorkerForm.cs" />
   </ItemGroup>
 </Project>

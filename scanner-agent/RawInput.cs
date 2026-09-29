@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ScannerAgent;
 
-internal sealed record RawScan(string DevicePath, int RawCharCount, string Barcode, int ElapsedMs, double AverageIntervalMs);
+internal sealed record RawScan(string DevicePath, int RawCharCount, string Barcode, int ElapsedMs, double AverageIntervalMs, string? Error = null);
 
 internal sealed class RawInput : NativeWindow, IDisposable
 {
@@ -13,13 +13,25 @@ internal sealed class RawInput : NativeWindow, IDisposable
     public event Action<RawScan>? ScanReceived;
     public event Action<string, Keys, bool>? RawKeyReceived;
     public event Action? DevicesChanged;
-    public RawInput()
+    public RawInput(bool register = true)
     {
+        if (!register) return; // Decoder tests do not create a native window.
         CreateHandle(new CreateParams { Caption = "WarehouseScannerAgent.RawInput", Parent = new IntPtr(-3) });
         if (Handle == IntPtr.Zero || !IsWindow(Handle)) throw new InvalidOperationException("Raw Input message window was not created.");
         Register();
     }
-    protected override void WndProc(ref Message m) { if (m.Msg == WM_INPUT) Read(m.LParam); if (m.Msg == 0x00FE) { _captures.Clear(); DevicesChanged?.Invoke(); } base.WndProc(ref m); }
+    protected override void WndProc(ref Message m) { if (m.Msg == WM_INPUT) Read(m.LParam); if (m.Msg == 0x00FE) { FailCaptures("Подключение устройства изменилось во время скана"); DevicesChanged?.Invoke(); } base.WndProc(ref m); }
+    internal void ExpireCaptures(long now) {
+        foreach (var entry in _captures.ToArray())
+            if (entry.Value.LastAt != 0 && now - entry.Value.LastAt > 2000) FailCapture(entry.Key, entry.Value, "Скан не завершён: нет завершающего символа");
+    }
+    private void FailCaptures(string reason) { foreach (var entry in _captures.ToArray()) FailCapture(entry.Key, entry.Value, reason); }
+    private void FailCapture(string device, Capture capture, string reason) {
+        var scan = new RawScan(device, capture.Text.Length, capture.Text.ToString(), 0, 0, reason);
+        var hasInput = capture.Text.Length > 0 || capture.Error is not null;
+        capture.Reset();
+        if (hasInput) ScanReceived?.Invoke(scan);
+    }
     private void Register()
     {
         var d = new RAWINPUTDEVICE { UsagePage = 0x01, Usage = 0x06, Flags = RIDEV_INPUTSINK | 0x2000, Target = Handle };
@@ -39,33 +51,36 @@ internal sealed class RawInput : NativeWindow, IDisposable
             var path = DeviceName(raw.Header.Device); var key = (Keys)raw.Keyboard.VKey;
             var keyDown = raw.Keyboard.Message is WM_KEYDOWN or WM_SYSKEYDOWN;
             if (keyDown) ProcessKey(path, key);
+            else if (key is Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey && _captures.TryGetValue(path, out var shifted)) shifted.Shift = false;
             var length = !string.IsNullOrWhiteSpace(path) && _captures.TryGetValue(path, out var capture) ? capture.Text.Length : 0;
             // Never log individual keys: Raw Input includes PINs typed on regular keyboards.
             RawKeyReceived?.Invoke(path, key, keyDown);
         }
         finally { Marshal.FreeHGlobal(buffer); }
     }
-    private void ProcessKey(string device, Keys key)
+    internal void ProcessKey(string device, Keys key)
     {
         if (string.IsNullOrWhiteSpace(device)) return;
         if (!_captures.TryGetValue(device, out var capture)) _captures[device] = capture = new Capture();
         var now = Environment.TickCount64;
-        if (capture.LastAt != 0 && now - capture.LastAt > 2_000) capture.Reset();
+        if (capture.LastAt != 0 && now - capture.LastAt > 2_000) FailCapture(device, capture, "Скан прерван: превышено время ожидания");
         if (key is Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey) { capture.Shift = true; capture.LastAt = now; return; }
         if (key is Keys.Enter or Keys.Return or Keys.Tab)
         {
-            if (capture.Text.Length > 0)
+            if (capture.Text.Length > 0 || capture.Error is not null)
             {
                 var elapsed = capture.Times.Count > 1 ? (int)Math.Min(600_000, capture.Times[^1] - capture.Times[0]) : 0;
-                var scan = new RawScan(device, capture.Text.Length, capture.Text.ToString().Trim(), elapsed, capture.Times.Count > 1 ? (double)elapsed / (capture.Times.Count - 1) : 0);
+                var scan = new RawScan(device, capture.Text.Length, capture.Text.ToString(), elapsed, capture.Times.Count > 1 ? (double)elapsed / (capture.Times.Count - 1) : 0, capture.Error);
                 capture.Reset();
                 ScanReceived?.Invoke(scan);
             }
-            else capture.Reset();
+            else { capture.Reset(); ScanReceived?.Invoke(new RawScan(device, 0, "", 0, 0, "Пустой штрихкод")); }
             return;
         }
-        var character = Character(key, capture.Shift); capture.Shift = false; capture.LastAt = now;
-        if (character is >= ' ' and <= '~') { capture.Text.Append(character); capture.Times.Add(now); if (capture.Text.Length > 512) capture.Reset(); }
+        var character = Character(key, capture.Shift); capture.LastAt = now;
+        if (capture.Text.Length >= 512) { capture.Error = "Штрихкод длиннее 512 символов"; return; }
+        if (character is >= ' ' and <= '~') { capture.Text.Append(character); capture.Times.Add(now); }
+        else capture.Error = "Неподдерживаемый символ сканера";
     }
     public static IReadOnlyList<string> Devices()
     {
@@ -82,7 +97,7 @@ internal sealed class RawInput : NativeWindow, IDisposable
         if (key >= Keys.A && key <= Keys.Z) return (char)((shift ? 'A' : 'a') + (int)key - (int)Keys.A);
         return key switch { Keys.OemMinus => shift ? '_' : '-', Keys.Oemplus => shift ? '+' : '=', Keys.Space => ' ', Keys.Decimal => '.', _ => null };
     }
-    private sealed class Capture { public StringBuilder Text { get; } = new(); public List<long> Times { get; } = []; public bool Shift; public long LastAt; public void Reset() { Text.Clear(); Times.Clear(); Shift = false; LastAt = 0; } }
+    private sealed class Capture { public StringBuilder Text { get; } = new(); public List<long> Times { get; } = []; public bool Shift; public long LastAt; public string? Error; public void Reset() { Text.Clear(); Times.Clear(); Shift = false; LastAt = 0; Error = null; } }
     [StructLayout(LayoutKind.Sequential)] private struct RAWINPUTDEVICE { public ushort UsagePage, Usage; public uint Flags; public IntPtr Target; }
     [StructLayout(LayoutKind.Sequential)] private struct RAWINPUTDEVICELIST { public IntPtr Device; public uint Type; }
     [StructLayout(LayoutKind.Sequential)] private struct RAWINPUTHEADER { public uint Type, Size; public IntPtr Device, WParam; }

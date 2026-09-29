@@ -3,84 +3,45 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { agentRateLimited, validAgentToken } from "@/lib/scanner-agent";
-import { createAdminClient, logSupabaseError } from "@/lib/supabase";
-
+import { createAdminClient } from "@/lib/supabase";
+import { databaseFailure } from "@/lib/agent-errors";
+import { normalizeBarcode } from "@/lib/barcode";
 export const runtime = "nodejs";
-
-const bodySchema = z.object({
-  event_id: z.string().uuid(),
-  barcode: z.string().transform(value => value.trim().replace(/^p(?=[0-9]+$)/, "P")).pipe(z.string().max(512).regex(/^(?:[0-9]{8,512}|P[0-9]{8,511})$/)),
-  employee_identifier: z.string().trim().min(1).max(120),
-  duration_ms: z.number().int().min(0).max(600_000),
-  input_metadata: z.object({ average_interval_ms: z.number().min(0).max(600_000), source: z.literal("windows-agent") }).optional(),
-  average_interval_ms: z.number().min(0).max(600_000).optional(),
-  source: z.literal("windows-agent").optional(),
-  scanner_device: z.string().min(1).max(1024),
-  scanned_at: z.string().datetime({ offset: true }).optional(),
-  timestamp: z.string().datetime({ offset: true }).optional(),
-  shift_id: z.string().uuid(),
-});
-
-export async function POST(request: NextRequest) {
-  const config = env();
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? request.headers.get("x-agent-token");
-  if (!validAgentToken(token, config.SCANNER_AGENT_API_TOKEN)) {
-    return NextResponse.json({ success: false, result: "rejected", message: "Неверный токен агента" }, { status: 401 });
-  }
-  const clientKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "scanner-agent";
-  if (agentRateLimited(clientKey)) {
-    return NextResponse.json({ success: false, result: "rejected", message: "Слишком много запросов" }, { status: 429 });
-  }
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ success: false, result: "rejected", message: "Некорректные данные скана" }, { status: 400 });
-  }
-
-  const db = createAdminClient();
-  const identifier = parsed.data.employee_identifier;
-  let employeeId: string | undefined;
-  if (z.string().uuid().safeParse(identifier).success) {
-    const { data } = await db.from("employees").select("id").eq("id", identifier).eq("active", true).maybeSingle();
-    employeeId = data?.id;
-  } else {
-    const { data, error } = await db.from("employees").select("id,pin_hash").eq("active", true);
-    if (error) logSupabaseError("agent employee lookup failed", error);
-    for (const employee of data ?? []) {
-      if (await bcrypt.compare(identifier, employee.pin_hash)) { employeeId = employee.id; break; }
-    }
-  }
-  if (!employeeId) {
-    return NextResponse.json({ success: false, result: "rejected", message: "Сотрудник не найден или отключён" }, { status: 403 });
-  }
-
-  const { data, error } = await db.rpc("register_agent_scan", {
-    p_event_id: parsed.data.event_id,
-    p_barcode: parsed.data.barcode,
-    p_employee_id: employeeId,
-    p_duration_ms: parsed.data.duration_ms,
-    p_scanner_device: parsed.data.scanner_device,
-    p_timezone: config.WAREHOUSE_TIMEZONE,
-    p_shift_id: parsed.data.shift_id,
-    p_scanned_at_client: parsed.data.scanned_at ?? parsed.data.timestamp ?? new Date().toISOString(),
-    p_input_metadata: parsed.data.input_metadata ?? { average_interval_ms: parsed.data.average_interval_ms ?? 0, source: parsed.data.source ?? "windows-agent" },
-  });
-  if (error || !data?.[0]) {
-    if (error) logSupabaseError("agent scan failed", error);
-    return NextResponse.json({ success: false, result: "rejected", message: "Не удалось зарегистрировать скан" }, { status: 500 });
-  }
-  const row = data[0];
-  return NextResponse.json({
-    success: row.result === "counted",
-    result: row.result,
-    ordersToday: Number(row.orders_today),
-    earningsToday: Number(row.earnings_today),
-    message: row.message,
-    lastIntervalSeconds: row.last_interval_seconds == null ? null : Number(row.last_interval_seconds),
-    medianIntervalSeconds: row.median_interval_seconds == null ? null : Number(row.median_interval_seconds),
-    intervalCount: Number(row.interval_count ?? 0),
-  });
+const schema = z.object({ event_id: z.string().uuid(), barcode: z.string().max(4096), employee_identifier: z.string().min(1).max(120), duration_ms: z.number().int().min(0).max(600000), scanner_device: z.string().min(1).max(1024), shift_id: z.string().uuid().nullable().optional(), scanned_at: z.string().datetime({ offset: true }).optional(), timestamp: z.string().datetime({ offset: true }).optional(), input_metadata: z.object({ average_interval_ms: z.number().min(0).max(600000), source: z.literal("windows-agent") }).optional() });
+function requestId(r: NextRequest) { const value = r.headers.get("x-request-id"); return value && /^[0-9a-f-]{36}$/i.test(value) ? value : undefined; }
+function authorized(r: NextRequest) { return validAgentToken(r.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? r.headers.get("x-agent-token"), env().SCANNER_AGENT_API_TOKEN); }
+export async function GET(request: NextRequest) {
+  const started = performance.now();
+  try {
+    if (!authorized(request)) return NextResponse.json({ ready: false, code: "invalid_token" }, { status: 401 });
+    const { data, error } = await createAdminClient().rpc("scanner_scan_v2", { p_request: {}, p_probe: true });
+    if (error) return databaseFailure(error);
+    if (data?.ready !== true || data?.version !== 2) return databaseFailure({ code: "PGRST202" });
+    console.info(JSON.stringify({ endpoint: "scan/readiness", readiness: "ready", request_id: requestId(request), latency_ms: Math.round(performance.now() - started) }));
+    return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
+  } catch { return databaseFailure({ code: "configuration", message: "Readiness initialization failed" }); }
 }
-
-export function GET() {
-  return NextResponse.json({ success: false, result: "rejected", message: "Method not allowed" }, { status: 405, headers: { Allow: "POST" } });
+export async function POST(request: NextRequest) {
+  const started = performance.now();
+  try {
+    if (!authorized(request)) return NextResponse.json({ code: "invalid_token", message: "Неверный токен агента" }, { status: 401 });
+    if (agentRateLimited(request.headers.get("x-forwarded-for")?.split(",")[0] ?? "agent")) return NextResponse.json({ code: "rate_limited" }, { status: 429 });
+    const parsed = schema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return NextResponse.json({ code: "invalid_envelope", message: "Некорректный формат события агента" }, { status: 422 });
+    const body = parsed.data, db = createAdminClient();
+    let employeeId: string | null = z.string().uuid().safeParse(body.employee_identifier).success ? body.employee_identifier : null;
+    if (!employeeId) {
+      const { data, error } = await db.from("employees").select("id,pin_hash").eq("active", true);
+      if (error) return databaseFailure(error);
+      for (const employee of data ?? []) if (await bcrypt.compare(body.employee_identifier, employee.pin_hash)) { employeeId = employee.id; break; }
+    }
+    // PostgreSQL text/jsonb cannot hold NUL or unpaired UTF-16 surrogates. Preserve
+    // the rejection, not an unrepresentable value that would poison queue replay.
+    const barcode = /\u0000|[\uD800-\uDFFF]/u.test(body.barcode) ? "[invalid encoding]" : normalizeBarcode(body.barcode);
+    const { data, error } = await db.rpc("scanner_scan_v2", { p_request: { ...body, employee_identifier: undefined, employee_id: employeeId, barcode, scanned_at: body.scanned_at ?? body.timestamp ?? new Date().toISOString(), timezone: env().WAREHOUSE_TIMEZONE }, p_probe: false });
+    if (error) return databaseFailure(error);
+    if (!data?.acknowledged || data.eventId !== body.event_id) return databaseFailure({ code: "PGRST202" });
+    console.info(JSON.stringify({ endpoint: "scan", request_id: requestId(request), event_id: body.event_id, result: data.result, reason: data.reason, latency_ms: Math.round(performance.now() - started) }));
+    return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
+  } catch { return databaseFailure({ message: "Scan request failed" }); }
 }

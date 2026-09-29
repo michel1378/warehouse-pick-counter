@@ -46,7 +46,7 @@ internal static class Storage
     public static List<ScanEvent> LoadQueue() => Queue.Load();
     public static void Enqueue(ScanEvent item) => Queue.Enqueue(item);
     public static ScanEvent? PeekQueue() => Queue.Load().FirstOrDefault();
-    public static void RemoveFromQueue(Guid eventId) => Queue.Remove(eventId);
+    public static void Acknowledge(ScanEvent item, ScanResponse response) => Queue.Acknowledge(item, response);
     private static void AtomicWrite(string path, byte[] bytes) { var temporary = path + ".tmp"; using (var file = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None)) { file.Write(bytes); file.Flush(true); } File.Move(temporary, path, true); }
     private static T? Read<T>(string path) => File.Exists(path) ? JsonSerializer.Deserialize<T>(File.ReadAllText(path), Json) : default;
 
