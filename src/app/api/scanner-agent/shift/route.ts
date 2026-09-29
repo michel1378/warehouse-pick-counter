@@ -1,3 +1,5 @@
+import { databaseFailure } from "@/lib/agent-errors";
+import { fromZonedTime, formatInTimeZone } from "date-fns-tz";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -6,7 +8,7 @@ import { validAgentToken } from "@/lib/scanner-agent";
 import { createAdminClient, logSupabaseError } from "@/lib/supabase";
 
 export const runtime = "nodejs";
-const bodySchema = z.object({ employee_identifier: z.string().trim().min(1).max(120), action: z.enum(["start", "pause", "resume", "finish"]) });
+const bodySchema = z.object({ employee_identifier: z.string().trim().min(1).max(120), action: z.enum(["start", "pause", "resume", "finish"]), operation_id: z.string().uuid().optional(), shift_id: z.string().uuid().nullable().optional() });
 
 async function employee(identifier: string) {
   const db = createAdminClient();
@@ -25,7 +27,7 @@ async function view(employeeId: string, name: string, shift?: Record<string, unk
   const db = createAdminClient();
   let current = shift;
   if (!current) { const lookup = await db.from("work_shifts").select("*").eq("employee_id", employeeId).is("ended_at", null).maybeSingle(); if (lookup.error) { logSupabaseError("agent shift view", lookup.error); return null; } current = lookup.data; }
-  const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+  const zone = env().WAREHOUSE_TIMEZONE; const today = fromZonedTime(formatInTimeZone(new Date(), zone, "yyyy-MM-dd") + "T00:00:00", zone);
   const { count, error: countError } = await db.from("scans").select("id", { count: "exact", head: true }).eq("employee_id", employeeId).gte("scanned_at", today.toISOString());
   const setting = await db.from("settings").select("price_per_order").eq("id", 1).single(); if (countError || setting.error) { logSupabaseError("agent shift totals", (countError ?? setting.error)!); return null; } const price = Number(setting.data?.price_per_order ?? 0);
   if (!current) return { employeeName: name, status: "none", orders: count ?? 0, earnings: (count ?? 0) * price, activeSeconds: 0, totalSeconds: 0, pauseSeconds: 0, pauseCount: 0 };
@@ -40,27 +42,15 @@ export async function GET(request: NextRequest) {
   const found = await employee(request.nextUrl.searchParams.get("employee_identifier") ?? ""); if (found && "unavailable" in found) return NextResponse.json({ message: "База временно недоступна" }, { status: 503 }); if (!found) return NextResponse.json({ message: "Сотрудник не найден" }, { status: 403 }); const state = await view(found.id, found.name); return NextResponse.json(state ?? { message: "База временно недоступна" }, { status: state ? 200 : 503 });
 }
 export async function POST(request: NextRequest) {
-  if (!authorized(request)) return NextResponse.json({ message: "Неверный токен" }, { status: 401 }); const parsed = bodySchema.safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ message: "Некорректный запрос" }, { status: 400 });
-  const found = await employee(parsed.data.employee_identifier); if (found && "unavailable" in found) return NextResponse.json({ message: "База временно недоступна" }, { status: 503 }); if (!found) return NextResponse.json({ message: "Сотрудник не найден" }, { status: 403 }); const db = createAdminClient();
-  const lookup = await db.from("work_shifts").select("*").eq("employee_id", found.id).is("ended_at", null).maybeSingle();
-  if (lookup.error) { logSupabaseError("shift lookup failed", lookup.error); return NextResponse.json({ message: "Не удалось прочитать смены. Проверьте, что миграция work_shifts применена." }, { status: 503 }); }
-  let shift = lookup.data;
-  if (parsed.data.action === "start") {
-    // Start is idempotent: a repeated click or a lost first response returns the open shift.
-    if (!shift) {
-      const created = await db.from("work_shifts").insert({ employee_id: found.id, status: "active" }).select("*").single();
-      if (created.error || !created.data) { if (created.error) logSupabaseError("shift start failed", created.error); return NextResponse.json({ message: "Не удалось начать смену. Проверьте миграцию work_shifts и права service role." }, { status: 500 }); }
-      shift = created.data;
-    }
-  }
-  else if (!shift) return NextResponse.json({ message: "Активная смена не найдена" }, { status: 409 });
-  else if (parsed.data.action === "pause" && shift.status === "active") { await db.from("work_shift_pauses").insert({ shift_id: shift.id }); shift = (await db.from("work_shifts").update({ status: "paused", pause_count: Number(shift.pause_count) + 1 }).eq("id", shift.id).select("*").single()).data; }
-  else if (parsed.data.action === "resume" && shift.status === "paused") { const pause = (await db.from("work_shift_pauses").select("*").eq("shift_id", shift.id).is("ended_at", null).single()).data; const now = new Date(); const added = pause ? Math.floor((now.getTime() - new Date(pause.started_at).getTime()) / 1000) : 0; if (pause) await db.from("work_shift_pauses").update({ ended_at: now.toISOString() }).eq("id", pause.id); shift = (await db.from("work_shifts").update({ status: "active", pause_seconds: Number(shift.pause_seconds) + added }).eq("id", shift.id).select("*").single()).data; }
-  else if (parsed.data.action === "finish") {
-    const now = new Date(); if (shift.status === "paused") { const pause = (await db.from("work_shift_pauses").select("*").eq("shift_id", shift.id).is("ended_at", null).single()).data; if (pause) { shift.pause_seconds = Number(shift.pause_seconds) + Math.floor((now.getTime() - new Date(pause.started_at).getTime()) / 1000); await db.from("work_shift_pauses").update({ ended_at: now.toISOString() }).eq("id", pause.id); } }
-    const [{ count: orders }, { data: setting }, { data: metricRows }] = await Promise.all([db.from("scans").select("id", { count: "exact", head: true }).eq("shift_id", shift.id), db.from("settings").select("price_per_order").eq("id", 1).single(), db.rpc("shift_order_metrics", { p_shift_id: shift.id })]);
-    const metrics = metricRows?.[0];
-    const total = Math.floor((now.getTime() - new Date(shift.started_at).getTime()) / 1000), orderCount = orders ?? 0; shift = (await db.from("work_shifts").update({ status: "finished", ended_at: now.toISOString(), active_seconds: Math.max(0, total - Number(shift.pause_seconds)), orders_count: orderCount, earnings: orderCount * Number(setting?.price_per_order ?? 0), median_interval_seconds: metrics?.median_interval_seconds ?? null, average_interval_seconds: metrics?.average_interval_seconds ?? null, interval_count: Number(metrics?.interval_count ?? 0) }).eq("id", shift.id).select("*").single()).data;
-  }
-  const state = await view(found.id, found.name, shift); return NextResponse.json(state ?? { message: "База временно недоступна" }, { status: state ? 200 : 503 });
+  if (!authorized(request)) return NextResponse.json({ code: "invalid_token", message: "Неверный токен" }, { status: 401 });
+  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ message: "Некорректный запрос" }, { status: 400 });
+  const found = await employee(parsed.data.employee_identifier);
+  if (found && "unavailable" in found) return databaseFailure({ message: "Employee lookup unavailable" });
+  if (!found) return NextResponse.json({ message: "Сотрудник не найден" }, { status: 403 });
+  const { data, error } = await createAdminClient().rpc("scanner_shift_action", { p_employee: found.id, p_action: parsed.data.action, p_operation: parsed.data.operation_id ?? null, p_shift: parsed.data.shift_id ?? null });
+  if (error) return databaseFailure(error);
+  if (data?.error) return NextResponse.json({ message: data.error }, { status: 409 });
+  const state = await view(found.id, found.name, data);
+  return state ? NextResponse.json(state, { headers: { "Cache-Control": "no-store" } }) : databaseFailure({ message: "Shift view unavailable" });
 }

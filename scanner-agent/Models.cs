@@ -33,7 +33,8 @@ internal sealed record ScanEvent(
     [property: JsonPropertyName("shift_id")] Guid? ShiftId,
     [property: JsonPropertyName("timestamp"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTimeOffset? LegacyTimestamp = null,
     [property: JsonPropertyName("average_interval_ms"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? LegacyAverageIntervalMs = null,
-    [property: JsonPropertyName("source"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LegacySource = null);
+    [property: JsonPropertyName("source"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LegacySource = null,
+    [property: JsonPropertyName("durable_at")] DateTimeOffset? DurableAt = null);
 
 internal sealed record ScanInputMetadata(
     [property: JsonPropertyName("average_interval_ms")] double AverageIntervalMs,
@@ -43,6 +44,9 @@ internal enum ConnectionState { Connected, NoInternet, ServerUnavailable, Author
 
 internal sealed class ScanResponse
 {
+    public Guid EventId { get; set; }
+    public bool Acknowledged { get; set; }
+    public string Reason { get; set; } = "";
     public bool Success { get; set; }
     [JsonRequired] public string Result { get; set; } = "";
     public int OrdersToday { get; set; }
@@ -52,6 +56,8 @@ internal sealed class ScanResponse
     public double? MedianIntervalSeconds { get; set; }
     public int IntervalCount { get; set; }
 }
+
+internal sealed class ReadinessResponse { public bool Ready { get; set; } public bool ScanReady { get; set; } public int Version { get; set; } }
 
 internal sealed class ShiftState
 {

@@ -1,19 +1,28 @@
 using System.Reflection;
-
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Channels;
 namespace ScannerAgent;
-
 internal static class AgentLog
 {
-    private static readonly object Sync = new();
     private static readonly string Folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WarehouseScanner", "logs");
-    private static readonly string PathName = Path.Combine(Folder, "scanner-agent.log");
-    public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.2.0";
-    public static void Info(string message) => Write("INFO", message);
-    public static void Error(string message, Exception? error = null) => Write("ERROR", error is null ? message : $"{message}: {error.GetType().Name}: {error.Message}");
-    public static void Scan(RawScan scan, string validationResult) => Write("SCAN", $"device_path={scan.DevicePath} raw_char_count={scan.RawCharCount} normalized_barcode={scan.Barcode} barcode_length={scan.Barcode.Length} elapsed_input_ms={scan.ElapsedMs} validation_result={validationResult}");
-    public static void RawInput(IntPtr deviceHandle, string devicePath, Keys key, bool keyDown, int bufferLength) => Write("RAW", $"device_handle=0x{deviceHandle.ToInt64():X} device_path={devicePath} raw_key={(int)key}({key}) key_state={(keyDown ? "down" : "up")} accumulated_buffer_length={bufferLength}");
-    private static void Write(string level, string message)
-    {
-        try { lock (Sync) { Directory.CreateDirectory(Folder); File.AppendAllText(PathName, $"{DateTimeOffset.Now:O} [{level}] {message}{Environment.NewLine}"); } } catch { }
+    private static readonly Channel<string> Lines = Channel.CreateBounded<string>(new BoundedChannelOptions(4096) { FullMode = BoundedChannelFullMode.DropOldest, SingleReader = true });
+    private static readonly Task Writer = Task.Run(async () => {
+        await foreach (var line in Lines.Reader.ReadAllAsync()) {
+            try {
+                Directory.CreateDirectory(Folder); var path = Path.Combine(Folder,"scanner-agent.log");
+                if (File.Exists(path) && new FileInfo(path).Length > 5_000_000) File.Move(path,path+".1",true);
+                await File.AppendAllTextAsync(path,line+Environment.NewLine);
+            } catch { /* Logging never interrupts capture/delivery. */ }
+        }
+    });
+    public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.3.0";
+    public static void Info(string message) => Write("info", message);
+    public static void Error(string message, Exception? error = null) => Write("error", message + " exception_type=" + error?.GetType().Name);
+    private static void Write(string level,string message) {
+        var fields = new Dictionary<string,object?> { ["at"] = DateTimeOffset.UtcNow, ["level"] = level, ["message"] = message };
+        foreach (Match m in Regex.Matches(message,@"(?<key>[a-z_]+)=(?<value>[^\s]+)")) fields[m.Groups["key"].Value] = m.Groups["value"].Value;
+        Lines.Writer.TryWrite(JsonSerializer.Serialize(fields));
     }
+    public static async Task Complete() { Lines.Writer.TryComplete(); await Writer; }
 }
