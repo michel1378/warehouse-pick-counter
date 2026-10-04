@@ -18,42 +18,40 @@ export function normalizeSize(value: string): string {
     .replace(/^XXXL$/, "3XL").replace(/^XXXXL$/, "4XL").replace(/^XXXXXL$/, "5XL");
 }
 
-/** Heuristic distances, not probabilities. Calibrate against owners' held-out examples. */
-export function recommendSize(product: Pick<SizeProduct, "sizes" | "examples">,
-  height: number, weight: number, fit: Fit): SizeResult {
-  const unsure = (message: string, evidence: SizeExample[] = []): SizeResult =>
-    ({ size: null, kind: "uncertain", message, evidence });
-  if (!Number.isFinite(height) || !Number.isFinite(weight) || height < 100 || height > 230 || weight < 25 || weight > 250)
-    return unsure("Проверьте рост (100–230 см) и вес (25–250 кг).");
-  const examples = product.examples.filter(e => e.fit === fit && product.sizes.includes(e.size));
-  if (!examples.length) return unsure("Для этой посадки пока нет рекомендаций. Уточните у Кирилла.");
-  const exact = examples.filter(e => e.height === height && e.weight === weight);
-  if (exact.length) {
-    if (new Set(exact.map(e => e.size)).size > 1) return unsure("В базе разные размеры для этих параметров. Уточните у Кирилла.", exact);
-    return { size: exact[0].size, kind: "exact", message: "Такие параметры и посадка есть в вашей таблице.", evidence: exact };
-  }
-  // De-duplicate cases: repeating the same row must not give it extra weight.
-  const unique = [...new Map(examples.map(e => [`${e.height}/${e.weight}/${e.size}`, e])).values()];
-  const ranked = unique.map(e => ({ e, d: Math.hypot((height - e.height) / 7, (weight - e.weight) / 10) }))
-    .sort((a, b) => a.d - b.d || a.e.height - b.e.height || a.e.weight - b.e.weight || a.e.size.localeCompare(b.e.size));
-  const nearby = ranked.filter(x => Math.abs(x.e.height - height) <= 10 && Math.abs(x.e.weight - weight) <= 15 && x.d <= 1.8);
-  if (nearby.length < 2) return unsure("Мало близких примеров для этой посадки. Уточните размер у Кирилла.", ranked.slice(0, 3).map(x => x.e));
-  const heights = examples.map(e => e.height), weights = examples.map(e => e.weight);
-  if (height < Math.min(...heights) - 3 || height > Math.max(...heights) + 3 || weight < Math.min(...weights) - 4 || weight > Math.max(...weights) + 4)
-    return unsure("Параметры выходят за проверенный диапазон. Уточните размер у Кирилла.", nearby.slice(0, 3).map(x => x.e));
-  // Include all equally close neighbours, to avoid order-dependent choices at boundaries.
-  const cutoff = nearby[Math.min(2, nearby.length - 1)].d;
-  const selected = nearby.filter(x => x.d <= cutoff + 1e-9);
-  const votes = new Map<string, number>();
-  for (const { e, d } of selected) votes.set(e.size, (votes.get(e.size) ?? 0) + 1 / (d * d + 0.08));
-  const ordered = [...votes].sort((a, b) => b[1] - a[1]);
-  const total = ordered.reduce((sum, x) => sum + x[1], 0);
-  const winner = ordered[0][0];
-  const evidence = selected.slice(0, 6).map(x => x.e);
-  const nearestDisagrees = selected.some(x => x.d <= selected[0].d * 1.2 + 0.05 && x.e.size !== winner);
-  if (ordered[0][1] / total < 0.75 || nearestDisagrees)
-    return unsure("Пограничный случай: близкие примеры дают разные размеры. Уточните у Кирилла.", evidence);
-  return { size: winner, kind: "estimated", message: "Рекомендация по близким примерам с такой же посадкой.", evidence };
+/** Regularized ordinal regression trained anew on this product's complete table. */
+export function recommendSize(product: Pick<SizeProduct, "sizes" | "examples">, height: number, weight: number, fit: Fit): SizeResult {
+  const unsure = (message: string): SizeResult => ({size:null,kind:"uncertain",message,evidence:[]});
+  if (!Number.isFinite(height) || !Number.isFinite(weight) || height<100 || height>230 || weight<25 || weight>250) return unsure("Проверьте рост (100–230 см) и вес (25–250 кг).");
+  const rows = [...new Map(product.examples.filter(e=>product.sizes.includes(e.size) && FITS.includes(e.fit) && Number.isFinite(e.height) && Number.isFinite(e.weight)).map(e=>[JSON.stringify([e.height,e.weight,e.fit,e.size]),e])).values()].sort((a,b)=>a.height-b.height || a.weight-b.weight || a.fit.localeCompare(b.fit) || product.sizes.indexOf(a.size)-product.sizes.indexOf(b.size));
+  const same=rows.filter(e=>e.fit===fit);
+  if(!same.length) return unsure("Для выбранной посадки нет примеров. Уточните у владельца.");
+  const exact=same.filter(e=>e.height===height && e.weight===weight);
+  if(exact.length && new Set(exact.map(e=>e.size)).size===1) return {size:exact[0].size,kind:"exact",message:"Такие параметры и посадка есть в таблице владельца.",evidence:exact};
+  const hs=same.map(e=>e.height), ws=same.map(e=>e.weight);
+  if(height<Math.min(...hs)-10 || height>Math.max(...hs)+10 || weight<Math.min(...ws)-15 || weight>Math.max(...ws)+15) return unsure("Параметры далеко за пределами примеров этой посадки. Уточните у владельца.");
+  const mh=rows.reduce((s,e)=>s+e.height,0)/rows.length, mw=rows.reduce((s,e)=>s+e.weight,0)/rows.length;
+  const sh=Math.max(5,Math.sqrt(rows.reduce((s,e)=>s+(e.height-mh)**2,0)/rows.length)), sw=Math.max(5,Math.sqrt(rows.reduce((s,e)=>s+(e.weight-mw)**2,0)/rows.length));
+  const x=(h:number,w:number,f:Fit)=>[1,(h-mh)/sh,(w-mw)/sw,...FITS.map(v=>Number(v===f))];
+  const n=6, m=Array.from({length:n},()=>Array(n+1).fill(0) as number[]);
+  for(const e of rows) { const v=x(e.height,e.weight,e.fit), y=product.sizes.indexOf(e.size); for(let i=0;i<n;i++) { for(let j=0;j<n;j++) m[i][j]+=v[i]*v[j]; m[i][n]+=v[i]*y; } }
+  // Penalize slopes and learned fit offsets; leave intercept unpenalized.
+  for(let i=1;i<n;i++) m[i][i]+=0.25;
+  for(let i=0;i<n;i++) { let pivot=i; for(let j=i+1;j<n;j++) if(Math.abs(m[j][i])>Math.abs(m[pivot][i])) pivot=j; [m[i],m[pivot]]=[m[pivot],m[i]]; const d=m[i][i]; for(let k=i;k<=n;k++) m[i][k]/=d; for(let j=0;j<n;j++) if(j!==i) { const f=m[j][i]; for(let k=i;k<=n;k++) m[j][k]-=f*m[i][k]; } }
+  const predict=(h:number,w:number,f:Fit)=>x(h,w,f).reduce((s,v,i)=>s+v*m[i][n],0);
+  const value=predict(height,weight,fit), index=Math.max(0,Math.min(product.sizes.length-1,Math.round(value)));
+  const residual=Math.sqrt(rows.reduce((s,e)=>s+(predict(e.height,e.weight,e.fit)-product.sizes.indexOf(e.size))**2,0)/rows.length);
+  const conflicts=rows.some((e,i)=>rows.slice(i+1).some(o=>e.height===o.height && e.weight===o.weight && e.fit===o.fit && e.size!==o.size));
+  const reasons:string[]=[];
+  if(same.length<6) reasons.push("мало примеров выбранной посадки");
+  if(conflicts || residual>0.4) reasons.push("противоречия или заметные отклонения в таблице");
+  if(Math.abs(value-Math.floor(value)-0.5)<0.2) reasons.push("граница размеров");
+  if(height<Math.min(...hs) || height>Math.max(...hs) || weight<Math.min(...ws) || weight>Math.max(...ws)) reasons.push("выход за диапазон примеров");
+  const evidence=[...same].sort((a,b)=>Math.hypot((a.height-height)/sh,(a.weight-weight)/sw)-Math.hypot((b.height-height)/sh,(b.weight-weight)/sw)).slice(0,6);
+  return {size:product.sizes[index],kind:reasons.length?"uncertain":"estimated",message:(reasons.length?"Уточните у владельца: "+reasons.join("; ")+". ":"Прогноз по всей таблице вещи. ")+"Точность на реальных рекомендациях требует проверки.",evidence};
+}
+/** Exclude all duplicates of the tested measurements and fit to avoid leakage. */
+export function evaluateSizeExamples(product: Pick<SizeProduct,"sizes"|"examples">) {
+  return product.examples.map(example=>({example,result:recommendSize({...product,examples:product.examples.filter(e=>!(e.height===example.height && e.weight===example.weight && e.fit===example.fit))},example.height,example.weight,example.fit)}));
 }
 
 export function parseExampleRows(text: string): SizeExample[] {

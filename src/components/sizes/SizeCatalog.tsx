@@ -27,7 +27,11 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
   }, []);
   useEffect(() => {
     void load();
-    const refresh = () => { if (document.visibilityState === "visible") void load(); };
+    let lastRefresh = 0;
+    const refresh = () => {
+      if (document.visibilityState !== "visible" || Date.now() - lastRefresh < 1000) return;
+      lastRefresh = Date.now(); void load();
+    };
     window.addEventListener("focus", refresh); document.addEventListener("visibilitychange", refresh);
     return () => { generation.current++; window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, [load]);
@@ -39,18 +43,18 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
     </div>
     {notice && <p className="success" role="status">{notice}</p>}
     {admin && editor !== null && <SizeEditor key={editor === "new" ? "new" : editor.id} product={editor === "new" ? null : editor} onClose={() => { setEditor(null); void load(); }} onSaved={p => {
-      generation.current++; setProducts(old => [...old.filter(x => x.id !== p.id), p].sort((a, b) => a.name.localeCompare(b.name, "ru")));
+      generation.current++; setPhotoIndexes(old => ({ ...old, [p.id]: 0 })); setProducts(old => [...old.filter(x => x.id !== p.id), p].sort((a, b) => a.name.localeCompare(b.name, "ru")));
       setEditor(null); setError(""); setNotice(p.active ? "Сохранено. Вещь доступна сотрудникам." : "Сохранено. Вещь скрыта от сотрудников.");
     }} />}
     {error && <p className="error" role="alert">{error} Подбор недоступен до обновления каталога.</p>}
     {loading ? <p role="status">Загружаем вещи…</p> : !error && !products.length ? <div className="card size-empty"><h2>Здесь появятся ваши вещи</h2><p>{admin ? "Добавьте фотографию, размерный ряд и ваши рекомендации." : "Администратор пока не добавил вещи в каталог."}</p></div> : !error && !visible.length ? <p>По этому названию ничего не найдено.</p> : null}
-    {!error && <div className="size-grid">{visible.map(p => {
+    {!error && <div className="size-grid">{visible.map((p, position) => {
       const count = Math.max(1, p.photo_count || 1);
       const index = Math.min(photoIndexes[p.id] ?? 0, count - 1);
       const changePhoto = (delta: number) => setPhotoIndexes(old => ({ ...old, [p.id]: (index + delta + count) % count }));
       return <article key={p.id} className={`card size-card ${open === p.id ? "expanded" : ""}`}>
       <div className="size-card-media">
-        <img src={`/api/sizes/${p.id}/photo?index=${index}&v=${p.revision}`} alt={`${p.name}, фото ${index + 1} из ${count}`} loading="lazy" width={600} height={600} />
+        <img src={`/api/sizes/${p.id}/photo?index=${index}&v=${p.revision}`} alt={`${p.name}, фото ${index + 1} из ${count}`} loading={position < 2 ? "eager" : "lazy"} decoding="async" width={600} height={600} />
         {count > 1 && <><button type="button" className="size-photo-arrow prev" aria-label="Предыдущее фото" onClick={() => changePhoto(-1)}>‹</button><button type="button" className="size-photo-arrow next" aria-label="Следующее фото" onClick={() => changePhoto(1)}>›</button><span className="size-photo-count">{index + 1} / {count}</span></>}
       </div>
       <button type="button" className="size-card-button" aria-expanded={open === p.id} aria-controls={`picker-${p.id}`} onClick={() => setOpen(open === p.id ? null : p.id)}>
