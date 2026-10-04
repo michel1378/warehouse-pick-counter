@@ -5,7 +5,7 @@ import { sizeProductSchema } from "@/lib/sizes-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,active,revision,updated_at";
+const fields = "id,name,note,sizes,examples,active,revision,updated_at,photo_count";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function GET() {
   const session = await getSession();
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   } catch { /* Missing/malformed Origin is rejected. */ }
   if (!sameOrigin) return json({ error: "Недопустимый источник запроса." }, 403);
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 550000) return json({ error: "Слишком большой запрос. Уменьшите фотографию." }, 413);
+  if (length > 2500000) return json({ error: "Слишком большой запрос. Уменьшите фотографии." }, 413);
   // Bounded reader also covers chunked requests without Content-Length.
   const reader = request.body?.getReader();
   if (!reader) return json({ error: "Нет данных карточки." }, 400);
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     for (;;) {
       const { value, done } = await reader.read(); if (done) break;
       bytes += value.byteLength;
-      if (bytes > 550000) { await reader.cancel(); return json({ error: "Слишком большой запрос." }, 413); }
+      if (bytes > 2500000) { await reader.cancel(); return json({ error: "Слишком большой запрос." }, 413); }
       chunks.push(value);
     }
   } catch { return json({ error: "Не удалось прочитать запрос." }, 400); }
@@ -55,15 +55,16 @@ export async function POST(request: Request) {
   try { input = JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { return json({ error: "Некорректные данные карточки." }, 400); }
   const parsed = sizeProductSchema.safeParse(input);
   if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Проверьте поля." }, 400);
-  const { id, revision, photo, ...values } = parsed.data;
-  if (!id && !photo) return json({ error: "Добавьте фотографию вещи." }, 400);
-  if (photo) {
-    const image = Buffer.from(photo.split(",")[1], "base64");
+  const { id, revision, photo, photos, ...values } = parsed.data;
+  const incomingPhotos = photos ?? (photo ? [photo] : undefined);
+  if (!id && !incomingPhotos?.length) return json({ error: "Добавьте фотографию вещи." }, 400);
+  if (incomingPhotos) for (const candidate of incomingPhotos) {
+    const image = Buffer.from(candidate.split(",")[1], "base64");
     if (image.length < 4 || image[0] !== 0xff || image[1] !== 0xd8 || image[2] !== 0xff || image[image.length - 2] !== 0xff || image[image.length - 1] !== 0xd9)
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
-  const row = { ...values, ...(photo ? { photo } : {}), updated_at: new Date().toISOString() };
+  const row = { ...values, ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
     ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
     : await db.from("size_products").insert({ ...row, revision: 1 }).select(fields).single();

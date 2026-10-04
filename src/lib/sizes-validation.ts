@@ -11,6 +11,7 @@ export const sizeProductSchema = z.object({
     height: z.number().min(100).max(230), weight: z.number().min(25).max(250),
     fit: z.enum(FITS), size: label,
   }).strict()).max(200),
+  photos: z.array(z.string().max(400000)).min(1).max(6).optional(),
   photo: z.string().max(400000).optional(),
   active: z.boolean(),
 }).strict().superRefine((p, ctx) => {
@@ -25,5 +26,7 @@ export const sizeProductSchema = z.object({
     if (seen.has(key)) issue(`Строка ${index + 1}: рост, вес и посадка уже встречаются. Оставьте одну рекомендацию.`);
     seen.add(key);
   }
-  if (p.photo !== undefined && !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(p.photo)) issue("Загрузите фотографию заново.");
+  const photos = p.photos ?? (p.photo ? [p.photo] : []);
+  if (photos.reduce((sum, photo) => sum + photo.length, 0) > 2400000) issue("Фотографии слишком большие. Уменьшите их количество или размер.");
+  for (const photo of photos) if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)) issue("Загрузите фотографию заново.");
 });

@@ -7,7 +7,7 @@ export const FIT_LABELS: Record<Fit, string> = {
 export type SizeExample = { height: number; weight: number; fit: Fit; size: string };
 export type SizeProduct = {
   id: string; name: string; note: string; sizes: string[]; examples: SizeExample[];
-  active: boolean; revision: number; updated_at: string;
+  active: boolean; revision: number; updated_at: string; photo_count: number;
 };
 export type SizeResult = {
   size: string | null; kind: "exact" | "estimated" | "uncertain";

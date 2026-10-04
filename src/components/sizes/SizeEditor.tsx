@@ -32,7 +32,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
   const [sizeText, setSizeText] = useState(product?.sizes.join(", ") ?? "");
   const [active, setActive] = useState(product?.active ?? true);
   const [rows, setRows] = useState<DraftRow[]>(product?.examples.length ? product.examples.map(e => ({ ...e, height: String(e.height), weight: String(e.weight) })) : [emptyRow()]);
-  const [photo, setPhoto] = useState<string>();
+  const [photos, setPhotos] = useState<string[]>([]);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [bulk, setBulk] = useState("");
   const [error, setError] = useState("");
@@ -73,8 +73,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
   async function save(e: FormEvent) {
     e.preventDefault(); setError("");
     try {
-      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, ...(photo ? { photo } : {}) };
-      if (!product && !photo) throw new Error("Добавьте фотографию вещи.");
+      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, ...(photos.length ? { photos } : {}) };
+      if (!product && !photos.length) throw new Error("Добавьте хотя бы одну фотографию вещи.");
       setSaving(true);
       const response = await fetch("/api/sizes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
       const data = await response.json();
@@ -84,19 +84,21 @@ export function SizeEditor({ product, onSaved, onClose }: {
     finally { setSaving(false); }
   }
   let preview: SizeProduct | null = null;
-  try { preview = { id: "preview", name, note, sizes, examples: examples(), active, revision: 1, updated_at: "" }; } catch { /* Incomplete rows are shown in the editor, not interpreted as examples. */ }
+  try { preview = { id: "preview", name, note, sizes, examples: examples(), active, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1 }; } catch { /* Incomplete rows are shown in the editor, not interpreted as examples. */ }
   return <form className="card size-editor" ref={formRef} onSubmit={save} onChange={() => setDirty(true)}>
     <div className="size-toolbar"><h2>{product ? "Редактировать вещь" : "Новая вещь"}</h2><button type="button" className="secondary" onClick={close} disabled={saving}>Закрыть</button></div>
     <fieldset disabled={saving} className="size-editor-fields">
       <div className="size-editor-top"><div>
-        {(photo || product) ? <img className="size-editor-photo" src={photo ?? `/api/sizes/${product!.id}/photo?v=${product!.revision}`} alt={name || "Фотография вещи"} /> : <div className="size-photo-placeholder">Фотография вещи</div>}
-        <label>Загрузить фото<input type="file" accept="image/jpeg,image/png,image/webp" onChange={async e => {
-          const file = e.target.files?.[0]; if (!file) return;
+        {(photos[0] || product) ? <img className="size-editor-photo" src={photos[0] ?? `/api/sizes/${product!.id}/photo?v=${product!.revision}`} alt={name || "Фотография вещи"} /> : <div className="size-photo-placeholder">Фотография вещи</div>}
+        <label>Загрузить фото<input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={async e => {
+          const files = [...(e.target.files ?? [])]; if (!files.length) return;
+          if (files.length > 6) { setError("Можно загрузить максимум 6 фотографий."); e.currentTarget.value = ""; return; }
           const request = ++latestPhoto.current; setPhotoBusy(true); setError("");
-          try { const result = await preparePhoto(file); if (request === latestPhoto.current) { setPhoto(result); setDirty(true); } }
+          try { const results: string[] = []; for (const file of files) results.push(await preparePhoto(file)); if (request === latestPhoto.current) { setPhotos(results); setDirty(true); } }
           catch (err) { if (request === latestPhoto.current) setError(err instanceof Error ? err.message : "Не удалось открыть фото."); }
           finally { if (request === latestPhoto.current) setPhotoBusy(false); }
-        }} /></label><p className="size-hint">{photoBusy ? "Обрабатываем фото…" : "JPEG, PNG или WebP. Фото уменьшается автоматически."}</p>
+          e.currentTarget.value = "";
+        }} /></label><p className="size-hint">{photoBusy ? "Обрабатываем фото…" : photos.length ? `${photos.length} фото выбрано. Новые фото заменят галерею.` : product ? `Сейчас сохранено фото: ${product.photo_count}. Новые фото заменят галерею.` : "Можно выбрать несколько фото — например, по одному на каждый цвет."}</p>
       </div><div className="size-fields">
         <label>Название вещи<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Лонгслив Alpaca" /></label>
         <label>Подпись под названием<input maxLength={200} list="size-notes" value={note} onChange={e => setNote(e.target.value)} /></label>
