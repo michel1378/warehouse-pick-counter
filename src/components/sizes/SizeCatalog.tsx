@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SizeProduct } from "@/lib/sizes";
 import { SizePicker } from "./SizePicker";
 import { SizeEditor } from "./SizeEditor";
+import { SizeConflicts } from "./SizeConflicts";
 
 export function SizeCatalog({ admin = false }: { admin?: boolean }) {
   const [products, setProducts] = useState<SizeProduct[]>([]);
@@ -61,6 +62,7 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
         <span className="size-card-caption"><strong>{p.name}</strong><small>{p.note || "Особенности посадки не указаны"}</small>{!p.active && <span className="badge">Скрыта от сотрудников</span>}<span className="size-card-action">{open === p.id ? "Свернуть ↑" : "Подобрать размер ↓"}</span></span>
       </button>
       {open === p.id && <SizePicker key={`${p.id}-${p.revision}`} product={p} />}
+      {admin && <SizeConflicts product={p} />}
       {admin && <div className="size-card-admin"><span>{p.examples.length} примеров · {p.sizes.join(" / ")}</span><button className="secondary" type="button" disabled={editor !== null} onClick={() => { setEditor(p); setNotice(""); }}>Редактировать</button></div>}
     </article>})}</div>}
   </>;

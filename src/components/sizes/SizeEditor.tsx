@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { FITS, FIT_LABELS, normalizeSize, parseExampleRows, type Fit, type SizeExample, type SizeProduct } from "@/lib/sizes";
 import { SizePicker } from "./SizePicker";
+import { SizeConflicts } from "./SizeConflicts";
 
 type DraftRow = { height: string; weight: string; fit: Fit; size: string };
 const emptyRow = (): DraftRow => ({ height: "", weight: "", fit: "regular", size: "" });
@@ -108,6 +109,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Показывать сотрудникам</label>
       </div></div>
       <h3>Ваши рекомендации</h3><p className="size-hint">Начните с 10–20 разных примеров. Указывайте желаемую посадку и размер, который вы действительно положили бы. Для каждой посадки нужны свои примеры.</p>
+      {preview && <SizeConflicts product={preview} />}
       <div className="table-wrap size-example-table"><table><thead><tr><th>Рост, см</th><th>Вес, кг</th><th>Посадка</th><th>По бирке</th><th><span className="visually-hidden">Удаление</span></th></tr></thead><tbody>
         {rows.map((row, i) => <tr key={i}>
           <td><input aria-label={`Рост, строка ${i + 1}`} type="number" min="100" max="230" step="0.5" value={row.height} onChange={e => updateRow(i, { height: e.target.value })} /></td>

@@ -1,0 +1,17 @@
+{
+  "protocol": "Fixed anchored plane, 7 cm / 10 kg, ridge 0.25, residual IDW2. Cases chosen from low, middle and high measurement regions without consulting predictions. Owner labels must be received before comparison; no tuning.",
+  "cases": [
+    { "id": 1, "product": "Лонгслив Мужик", "height": 168, "weight": 57, "fit": "regular" },
+    { "id": 2, "product": "Лонгслив Мужик", "height": 181, "weight": 77, "fit": "regular" },
+    { "id": 3, "product": "Лонгслив Мужик", "height": 192, "weight": 92, "fit": "regular" },
+    { "id": 4, "product": "Асим Рубашка", "height": 162, "weight": 53, "fit": "regular" },
+    { "id": 5, "product": "Асим Рубашка", "height": 176, "weight": 69, "fit": "regular" },
+    { "id": 6, "product": "Асим Рубашка", "height": 191, "weight": 81, "fit": "regular" },
+    { "id": 7, "product": "Лонгслив Альпака (в полоску)", "height": 163, "weight": 53, "fit": "regular" },
+    { "id": 8, "product": "Лонгслив Альпака (в полоску)", "height": 173, "weight": 72, "fit": "regular" },
+    { "id": 9, "product": "Лонгслив Альпака (в полоску)", "height": 188, "weight": 87, "fit": "regular" },
+    { "id": 10, "product": "Рубашка Лучшая (дистресс)", "height": 156, "weight": 51, "fit": "regular" },
+    { "id": 11, "product": "Рубашка Лучшая (дистресс)", "height": 171, "weight": 69, "fit": "regular" },
+    { "id": 12, "product": "Рубашка Лучшая (дистресс)", "height": 184, "weight": 87, "fit": "regular" }
+  ]
+}
