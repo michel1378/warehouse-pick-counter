@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient, logSupabaseError } from "@/lib/supabase";
-import { availabilityFields, availabilitySaveSchema } from "@/lib/availability";
+import { availabilityCreateSchema, availabilityFields, availabilitySaveSchema } from "@/lib/availability";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,24 +40,62 @@ export async function POST(request: Request) {
     for (;;) {
       const { done, value } = await reader.read(); if (done) break;
       length += value.byteLength;
-      if (length > 2900000) { await reader.cancel(); return json({ error: "Фотографии слишком большие." }, 413); }
+      if (length > 4300000) { await reader.cancel(); return json({ error: "Суммарный размер фотографий слишком большой. Загрузите часть фото сейчас, остальные — после сохранения." }, 413); }
       chunks.push(value);
     }
     input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch { return json({ error: "Некорректные данные." }, 400); }
+  const creating = typeof input === "object" && input !== null && !("id" in input);
+  if (creating) {
+    const parsed = availabilityCreateSchema.safeParse(input);
+    if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Проверьте поля." }, 400);
+    const { photos, ...values } = parsed.data;
+    if (values.stock_details.colors.some(color => color.sizes?.some(size => !values.sizes.includes(size))))
+      return json({ error: "Добавьте выбранные размеры в размерный ряд товара." }, 400);
+    const db = createAdminClient();
+    const { data, error } = await db.from("size_products").insert({
+      ...values, photo: photos[0] ?? "", photos, photo_count: photos.length,
+      active: true, examples: [], revision: 1,
+      stock_has_chart: Boolean(values.stock_chart), stock_model_count: values.stock_models?.length ?? 0,
+    }).select(availabilityFields).single();
+    if (error) { logSupabaseError("availability create", error); return json({ error: "Не удалось создать позицию. Проверьте миграцию создания позиций и подключение." }, 503); }
+    return json({ product: data }, 201);
+  }
   const parsed = availabilitySaveSchema.safeParse(input);
   if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Проверьте поля." }, 400);
-  const { id, revision, ...values } = parsed.data;
+  const { id, revision, photos, stock_models, ...values } = parsed.data;
   const db = createAdminClient();
-  const { data: current, error: readError } = await db.from("size_products").select("sizes,revision").eq("id", id).maybeSingle();
+  const needsPhotos = photos?.some(photo => typeof photo !== "string");
+  const needsModels = stock_models?.some(photo => typeof photo !== "string");
+  const currentFields = "sizes,examples,revision" + (needsPhotos ? ",photo,photos" : "") + (needsModels ? ",stock_models" : "");
+  const { data: currentData, error: readError } = await db.from("size_products").select(currentFields).eq("id", id).maybeSingle();
+  const current = currentData as unknown as { sizes: string[]; examples: { size: string }[]; revision: number; photo?: string; photos?: string[]; stock_models?: string[] } | null;
   if (readError) { logSupabaseError("availability validation", readError); return json({ error: "Не удалось прочитать товар." }, 503); }
   if (!current) return json({ error: "Товар не найден." }, 404);
   if (current.revision !== revision) return json({ error: "Товар уже изменили. Скопируйте правки и обновите каталог." }, 409);
-  if (values.stock_details.colors.some(color => color.sizes?.some(size => !current.sizes.includes(size))))
+  // References are resolved only from this product at the checked revision, never from client URLs.
+  const resolveImages = (incoming: typeof photos, stored: string[]): string[] | undefined => incoming?.map(photo => {
+    if (typeof photo === "string") return photo;
+    const saved = stored[photo.index];
+    if (!saved) throw new Error("Сохранённая фотография не найдена. Обновите карточку.");
+    return saved;
+  });
+  let resolvedPhotos: string[] | undefined, resolvedModels: string[] | undefined;
+  try {
+    const storedPhotos = needsPhotos ? [...(current.photos ?? [])] : [];
+    if (needsPhotos && current.photo) storedPhotos[0] = current.photo;
+    resolvedPhotos = resolveImages(photos, storedPhotos);
+    resolvedModels = resolveImages(stock_models, needsModels ? current.stock_models ?? [] : []);
+  } catch { return json({ error: "Сохранённая фотография не найдена. Обновите карточку." }, 400); }
+  const sizes: string[] = values.sizes ?? current.sizes;
+  if (values.sizes && (current.examples ?? []).some((example: { size: string }) => !sizes.includes(example.size)))
+    return json({ error: "Нельзя удалить размер, используемый в примерах подбора. Проверьте примеры в разделе «Размеры»." }, 400);
+  if (values.stock_details.colors.some(color => color.sizes?.some(size => !sizes.includes(size))))
     return json({ error: "Выберите размеры из существующего размерного ряда товара." }, 400);
   const row = { ...values, revision: revision + 1, updated_at: new Date().toISOString(),
+    ...(resolvedPhotos !== undefined ? { photo: resolvedPhotos[0] ?? "", photos: resolvedPhotos, photo_count: resolvedPhotos.length } : {}),
     ...(values.stock_chart !== undefined ? { stock_has_chart: values.stock_chart !== null } : {}),
-    ...(values.stock_models !== undefined ? { stock_model_count: values.stock_models.length } : {}),
+    ...(resolvedModels !== undefined ? { stock_models: resolvedModels, stock_model_count: resolvedModels.length } : {}),
   };
   const { data, error } = await db.from("size_products").update(row).eq("id", id).eq("revision", revision).select(availabilityFields).maybeSingle();
   if (error) { logSupabaseError("availability save", error); return json({ error: "Не удалось сохранить наличие. Проверьте миграцию и подключение." }, 503); }

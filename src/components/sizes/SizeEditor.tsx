@@ -72,7 +72,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
     <div className="size-toolbar"><h2>{product ? "Редактировать вещь" : "Новая вещь"}</h2><button type="button" className="secondary" onClick={close} disabled={saving}>Закрыть</button></div>
     <fieldset disabled={saving} className="size-editor-fields">
       <div className="size-editor-top"><div>
-        {(photos[0] || product) ? <img className="size-editor-photo" src={photos[0] ?? `/api/sizes/${product!.id}/photo?v=${product!.revision}`} alt={name || "Фотография вещи"} /> : <div className="size-photo-placeholder">Фотография вещи</div>}
+        {(photos[0] || product?.photo_count) ? <img className="size-editor-photo" src={photos[0] ?? `/api/sizes/${product!.id}/photo?v=${product!.revision}`} alt={name || "Фотография вещи"} /> : <div className="size-photo-placeholder">Фотография вещи</div>}
         <label>Загрузить фото<input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={async e => {
           const files = [...(e.target.files ?? [])]; if (!files.length) return;
           if (files.length > 6) { setError("Можно загрузить максимум 6 фотографий."); e.currentTarget.value = ""; return; }

@@ -55,13 +55,13 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
       const changePhoto = (delta: number) => setPhotoIndexes(old => ({ ...old, [p.id]: (index + delta + count) % count }));
       return <article key={p.id} className={`card size-card ${open === p.id ? "expanded" : ""}`}>
       <div className="size-card-media">
-        <img src={`/api/sizes/${p.id}/photo?index=${index}&v=${p.revision}`} alt={`${p.name}, фото ${index + 1} из ${count}`} loading={position < 2 ? "eager" : "lazy"} decoding="async" width={600} height={600} />
+        {p.photo_count > 0 ? <img src={`/api/sizes/${p.id}/photo?index=${index}&v=${p.revision}`} alt={`${p.name}, фото ${index + 1} из ${count}`} loading={position < 2 ? "eager" : "lazy"} decoding="async" width={600} height={600} /> : <div className="size-photo-placeholder">Фото не добавлено</div>}
         {count > 1 && <><button type="button" className="size-photo-arrow prev" aria-label="Предыдущее фото" onClick={() => changePhoto(-1)}>‹</button><button type="button" className="size-photo-arrow next" aria-label="Следующее фото" onClick={() => changePhoto(1)}>›</button><span className="size-photo-count">{index + 1} / {count}</span></>}
       </div>
       <button type="button" className="size-card-button" aria-expanded={open === p.id} aria-controls={`picker-${p.id}`} onClick={() => setOpen(open === p.id ? null : p.id)}>
         <span className="size-card-caption"><strong>{p.name}</strong><small>{p.note || "Особенности посадки не указаны"}</small>{!p.active && <span className="badge">Скрыта от сотрудников</span>}<span className="size-card-action">{open === p.id ? "Свернуть ↑" : "Подобрать размер ↓"}</span></span>
       </button>
-      {open === p.id && <SizePicker key={`${p.id}-${p.revision}`} product={p} />}
+      {open === p.id && (p.examples.length && p.sizes.length && p.photo_count > 0 ? <SizePicker key={`${p.id}-${p.revision}`} product={p} /> : <p className="size-hint">Подбор пока недоступен. Заполните размеры, фотографии и примеры подбора.</p>)}
       {admin && <SizeConflicts product={p} />}
       {admin && <div className="size-card-admin"><span>{p.examples.length} примеров · {p.sizes.join(" / ")}</span><button className="secondary" type="button" disabled={editor !== null} onClick={() => { setEditor(p); setNotice(""); }}>Редактировать</button></div>}
     </article>})}</div>}

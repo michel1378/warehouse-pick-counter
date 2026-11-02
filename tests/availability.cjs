@@ -26,7 +26,7 @@ function load(filename) {
         then(resolve, reject) { return Promise.resolve({ data: restricted && !active ? [] : [{ id }], error: null }).then(resolve, reject); },
       }; return q;
     } }) }
-    : name.startsWith('@/') ? load('src/' + name.slice(2) + '.ts') : original(name);
+    : name.startsWith('@/') ? load('src/' + name.slice(2) + '.ts') : name.startsWith('.') ? load(path.resolve(path.dirname(filename), name + '.ts')) : original(name);
   mod._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText, filename);
   return mod.exports;
 }
@@ -48,7 +48,7 @@ const photo = (query = 'kind=chart', etag) => photos.GET(new Request(`https://wa
   session = null; assert.equal((await photo('kind=chart', etag)).status, 401);
   session = { role: 'admin' }; assert.equal((await photo()).status, 200); assert.equal((await photo('kind=model&index=5')).status, 200); assert.equal((await photo('kind=model&index=6')).status, 400);
   assert.equal((await post(payload(), 'https://evil.test')).status, 403);
-  assert.equal((await post({ ...payload(), name: 'overwrite' })).status, 400);
+  assert.equal((await post({ ...payload(), active: false })).status, 400);
   assert.equal((await post({ ...payload(), stock_details: { ...fields, colors: [{ name: 'Красный', sizes: ['XL'] }] } })).status, 400);
   assert.equal((await post({ ...payload(), revision: 99 })).status, 409);
   conflict = true; assert.equal((await post()).status, 409); conflict = false;
@@ -64,7 +64,7 @@ const photo = (query = 'kind=chart', etag) => photos.GET(new Request(`https://wa
   assert.equal(saved.stock_has_chart, false); assert.equal(saved.stock_model_count, 0);
   assert.equal(schema.safeParse({ ...payload(), stock_chart: 'data:image/jpeg;base64,AAAA' }).success, false);
   assert.equal(schema.safeParse({ ...payload(), stock_details: { ...fields, colors: [{ name: 'Синий', sizes: null }, { name: 'синий', sizes: [] }] } }).success, false);
-  assert.equal((await post({ ...payload(), stock_details: { ...fields, material: 'x'.repeat(2900000) } })).status, 413);
+  assert.equal((await post({ ...payload(), stock_details: { ...fields, material: 'x'.repeat(4300000) } })).status, 413);
   console.log('PASS API: sessions, employee read-only, active visibility, Origin, bounded body, validation, conflicts, independent images and untouched catalog fields');
 
   const db = new PGlite();

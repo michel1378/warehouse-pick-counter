@@ -15,7 +15,7 @@ export async function GET() {
   const products = [];
   for (let offset = 0; ; offset += 200) {
     let query = db.from("size_products").select(fields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true);
+    if (session.role !== "admin") query = query.eq("active", true).neq("examples", "[]").neq("sizes", "[]").gt("photo_count", 0);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("size catalog read", error);
@@ -64,6 +64,11 @@ export async function POST(request: Request) {
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
+  if (id && values.active && !incomingPhotos?.length) {
+    const { data: current, error } = await db.from("size_products").select("photo_count").eq("id", id).maybeSingle();
+    if (error) { logSupabaseError("size catalog photo validation", error); return json({ error: "Не удалось проверить фотографии товара." }, 503); }
+    if (current && current.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
+  }
   const row = { ...values, ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
     ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
