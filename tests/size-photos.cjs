@@ -14,6 +14,7 @@ mod.require = name => name === '@/lib/session' ? { getSession: async () => sessi
   : name === '@/lib/supabase' ? { createAdminClient: () => ({ from: () => {
     let restricted = false;
     const query = {
+      or() { return query; },
       select(fields) { calls.push(fields); return query; },
       eq(field, value) { if (field === 'active') { assert.equal(value, true); restricted = true; } return query; },
       async maybeSingle() { return { data: restricted && !active ? null : { revision, photo, selected: photo }, error: null }; }

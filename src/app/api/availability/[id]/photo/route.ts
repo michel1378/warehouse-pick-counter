@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const kind = search.get("kind"); const index = Number(search.get("index") ?? "0");
   if (!z.string().uuid().safeParse(id).success || !["chart", "model"].includes(kind ?? "") || !Number.isInteger(index) || index < 0 || index > 5) return failure(400);
   let query = createAdminClient().from("size_products").select(kind === "chart" ? "revision,selected:stock_chart" : `revision,selected:stock_models->>${index}`).eq("id", id);
-  if (session.role !== "admin") query = query.eq("active", true);
+  if (session.role !== "admin") query = query.eq("active", true).eq("show_in_availability", true);
   const { data, error } = await query.maybeSingle();
   if (error) return failure(503);
   const row = data as unknown as { revision: number; selected: string } | null;

@@ -5,7 +5,7 @@ import { sizeProductSchema } from "@/lib/sizes-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,active,revision,updated_at,photo_count";
+const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function GET() {
   const session = await getSession();
@@ -15,7 +15,7 @@ export async function GET() {
   const products = [];
   for (let offset = 0; ; offset += 200) {
     let query = db.from("size_products").select(fields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true).neq("examples", "[]").neq("sizes", "[]").gt("photo_count", 0);
+    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("examples", "[]").neq("sizes", "[]").gt("photo_count", 0);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("size catalog read", error);
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
-  if (id && values.active && !incomingPhotos?.length) {
+  if (id && values.active && values.show_in_sizes !== false && !incomingPhotos?.length) {
     const { data: current, error } = await db.from("size_products").select("photo_count").eq("id", id).maybeSingle();
     if (error) { logSupabaseError("size catalog photo validation", error); return json({ error: "Не удалось проверить фотографии товара." }, 503); }
     if (current && current.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   const row = { ...values, ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
     ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
-    : await db.from("size_products").insert({ ...row, revision: 1 }).select(fields).single();
+    : await db.from("size_products").insert({ ...row, show_in_availability: values.show_in_availability ?? false, show_in_sizes: values.show_in_sizes ?? true, revision: 1 }).select(fields).single();
   if (error) { logSupabaseError("size catalog save", error); return json({ error: "Не удалось сохранить. Проверьте подключение и миграцию каталога." }, 503); }
   if (!data) return json({ error: "Карточку уже изменили в другом окне. Скопируйте свои правки, закройте редактор и откройте карточку заново." }, 409);
   return json({ product: data });

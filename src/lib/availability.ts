@@ -22,6 +22,8 @@ const image = z.string().max(400000).regex(/^data:image\/jpeg;base64,[A-Za-z0-9+
 const sizeList = z.array(z.string().trim().min(1).max(16).transform(normalizeSize)).max(30)
   .refine(sizes => new Set(sizes).size === sizes.length, "Размеры не должны повторяться.");
 const editableFields = {
+  show_in_availability: z.boolean().optional(),
+  show_in_sizes: z.boolean().optional(),
   name: z.string().trim().min(1, "Укажите название.").max(120).optional(),
   sizes: sizeList.optional(),
   photos: z.array(image).max(6).optional(),
@@ -38,6 +40,8 @@ export const availabilitySaveSchema = z.object({
 }).strict();
 export const availabilityCreateSchema = z.object({
   ...editableFields,
+  show_in_availability: z.boolean().default(true),
+  show_in_sizes: z.boolean().default(false),
   name: z.string().trim().min(1, "Укажите название.").max(120),
   sizes: sizeList.default([]),
   photos: z.array(image).max(6).default([]),
@@ -46,8 +50,8 @@ export const availabilityCreateSchema = z.object({
 export type AvailabilityDetails = z.infer<typeof availabilityDetailsSchema>;
 export type AvailabilityImage = string | { index: number };
 export type AvailabilityProduct = {
-  id: string; name: string; sizes: string[]; active: boolean; revision: number;
+  id: string; name: string; sizes: string[]; active: boolean; show_in_availability: boolean; show_in_sizes: boolean; revision: number;
   photo_count: number; stock_details: AvailabilityDetails;
   stock_has_chart: boolean; stock_model_count: number;
 };
-export const availabilityFields = "id,name,sizes,active,revision,photo_count,stock_details,stock_has_chart,stock_model_count";
+export const availabilityFields = "id,name,sizes,active,show_in_availability,show_in_sizes,revision,photo_count,stock_details,stock_has_chart,stock_model_count";

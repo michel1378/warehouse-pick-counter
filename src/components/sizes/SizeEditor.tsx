@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { FITS, FIT_LABELS, normalizeSize, parseExampleRows, type Fit, type SizeExample, type SizeProduct } from "@/lib/sizes";
+import { FITS, FIT_LABELS, normalizeSize, parseExampleRows, type Fit, type SizeExample } from "@/lib/sizes";
+import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility";
 import { preparePhoto } from "@/lib/prepare-photo";
 import { SizePicker } from "./SizePicker";
 import { SizeConflicts } from "./SizeConflicts";
@@ -13,6 +14,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
   const [name, setName] = useState(product?.name ?? "");
   const [note, setNote] = useState(product?.note ?? "Не маломерит");
   const [sizeText, setSizeText] = useState(product?.sizes.join(", ") ?? "");
+  const [showInAvailability, setShowInAvailability] = useState(product?.show_in_availability ?? false);
+  const [showInSizes, setShowInSizes] = useState(product?.show_in_sizes ?? true);
   const [active, setActive] = useState(product?.active ?? true);
   const [rows, setRows] = useState<DraftRow[]>(product?.examples.length ? product.examples.map(e => ({ ...e, height: String(e.height), weight: String(e.weight) })) : [emptyRow()]);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -56,7 +59,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
   async function save(e: FormEvent) {
     e.preventDefault(); setError("");
     try {
-      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, ...(photos.length ? { photos } : {}) };
+      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photos.length ? { photos } : {}) };
       if (!product && !photos.length) throw new Error("Добавьте хотя бы одну фотографию вещи.");
       setSaving(true);
       const response = await fetch("/api/sizes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
@@ -67,7 +70,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
     finally { setSaving(false); }
   }
   let preview: SizeProduct | null = null;
-  try { preview = { id: "preview", name, note, sizes, examples: examples(), active, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1 }; } catch { /* Incomplete rows are shown in the editor, not interpreted as examples. */ }
+  try { preview = { id: "preview", name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1 }; } catch { /* Incomplete rows are shown in the editor, not interpreted as examples. */ }
   return <form className="card size-editor" ref={formRef} onSubmit={save} onChange={() => setDirty(true)}>
     <div className="size-toolbar"><h2>{product ? "Редактировать вещь" : "Новая вещь"}</h2><button type="button" className="secondary" onClick={close} disabled={saving}>Закрыть</button></div>
     <fieldset disabled={saving} className="size-editor-fields">
@@ -86,9 +89,11 @@ export function SizeEditor({ product, onSaved, onClose }: {
         <label>Название вещи<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Лонгслив Alpaca" /></label>
         <label>Подпись под названием<input maxLength={200} list="size-notes" value={note} onChange={e => setNote(e.target.value)} /></label>
         <datalist id="size-notes"><option value="Не маломерит" /><option value="Маломерит на размер" /><option value="Маломерит на два размера" /></datalist>
-        <label>Какие размеры привозим — от меньшего к большему<input required value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL, 2XL, 3XL" /></label>
+        <label>Какие размеры привозим — от меньшего к большему<input required={showInSizes && active} value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL, 2XL, 3XL" /></label>
         <p className="size-hint">Именно маркировка на бирке. Подпись о маломерности не прибавляет размер повторно.</p>
-        <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Показывать сотрудникам</label>
+        <label className="size-checkbox"><input type="checkbox" checked={showInAvailability} onChange={e => setShowInAvailability(e.target.checked)} />{product ? "Показывать в наличии" : "Также показывать в наличии"}</label>
+        {product && <label className="size-checkbox"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />Показывать в размерах</label>}
+        <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Товар активен</label>
       </div></div>
       <h3>Ваши рекомендации</h3><p className="size-hint">Начните с 10–20 разных примеров. Указывайте желаемую посадку и размер, который вы действительно положили бы. Для каждой посадки нужны свои примеры.</p>
       {preview && <SizeConflicts product={preview} />}

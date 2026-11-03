@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SizeProduct } from "@/lib/sizes";
+import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility";
 import { SizePicker } from "./SizePicker";
 import { SizeEditor } from "./SizeEditor";
 import { SizeConflicts } from "./SizeConflicts";
@@ -36,8 +36,10 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
     window.addEventListener("focus", refresh); document.addEventListener("visibilitychange", refresh);
     return () => { generation.current++; window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, [load]);
-  const visible = products.filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
+  const [hidden, setHidden] = useState(false);
+  const visible = products.filter(p => hidden ? !p.show_in_sizes : p.show_in_sizes).filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
   return <>
+    {admin && <label className="size-checkbox"><input type="checkbox" checked={hidden} onChange={e => setHidden(e.target.checked)} />Скрытые в размерах (включая скрытые в обоих разделах)</label>}
     <div className="size-toolbar"><label className="size-search"><span className="visually-hidden">Найти вещь</span><input type="search" placeholder="Найти вещь по названию…" value={query} onChange={e => setQuery(e.target.value)} /></label>
       <button type="button" className="secondary" onClick={() => void load()}>Обновить</button>
       {admin && <button type="button" className="primary" disabled={editor !== null} onClick={() => { setEditor("new"); setNotice(""); }}>+ Добавить вещь</button>}
@@ -45,7 +47,7 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
     {notice && <p className="success" role="status">{notice}</p>}
     {admin && editor !== null && <SizeEditor key={editor === "new" ? "new" : editor.id} product={editor === "new" ? null : editor} onClose={() => { setEditor(null); void load(); }} onSaved={p => {
       generation.current++; setPhotoIndexes(old => ({ ...old, [p.id]: 0 })); setProducts(old => [...old.filter(x => x.id !== p.id), p].sort((a, b) => a.name.localeCompare(b.name, "ru")));
-      setEditor(null); setError(""); setNotice(p.active ? "Сохранено. Вещь доступна сотрудникам." : "Сохранено. Вещь скрыта от сотрудников.");
+      setEditor(null); setError(""); setNotice("Сохранено. Настройки видимости обновлены.");
     }} />}
     {error && <p className="error" role="alert">{error} Подбор недоступен до обновления каталога.</p>}
     {loading ? <p role="status">Загружаем вещи…</p> : !error && !products.length ? <div className="card size-empty"><h2>Здесь появятся ваши вещи</h2><p>{admin ? "Добавьте фотографию, размерный ряд и ваши рекомендации." : "Администратор пока не добавил вещи в каталог."}</p></div> : !error && !visible.length ? <p>По этому названию ничего не найдено.</p> : null}

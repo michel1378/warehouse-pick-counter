@@ -13,7 +13,7 @@ export async function GET() {
   const products = [];
   for (let offset = 0; ; offset += 200) {
     let query = db.from("size_products").select(availabilityFields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true);
+    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_availability", true);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("availability read", error);

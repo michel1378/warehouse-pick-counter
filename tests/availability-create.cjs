@@ -20,6 +20,7 @@ function client() {
       eq(key, value) { filters.push(`${key} = ${arg(value)}`); return q; },
       neq(key, value) { filters.push(`${key} <> ${arg(value)}`); return q; },
       gt(key, value) { filters.push(`${key} > ${arg(value)}`); return q; },
+      or(expression) { assert.equal(expression, 'show_in_availability.eq.true,show_in_sizes.eq.true'); filters.push('(show_in_availability or show_in_sizes)'); return q; },
       order(key) { ordering += (ordering ? ',' : ' order by ') + key; return q; },
       range(start, end) { paging = ` limit ${end - start + 1} offset ${start}`; return q; },
       insert(row) { operation = 'insert'; values = row; return q; },
@@ -62,6 +63,7 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     await db.exec('create role anon; create role authenticated; create role service_role;');
     for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
     await db.query("insert into size_products(name,sizes,examples,photo,photos,photo_count,active) values ('Original','[\"M\"]','[{\"height\":175,\"weight\":70,\"size\":\"M\",\"fit\":\"regular\"}]',$1,$2,1,true)", [image, JSON.stringify([image])]);
+    await db.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
     const original = (await db.query('select * from size_products')).rows[0];
     const migration = fs.readFileSync('supabase/migrations/20261102_availability_create.sql', 'utf8');
     await db.exec(migration); await db.exec(migration);
@@ -100,7 +102,7 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     session = { role: 'employee' }; assert(!(await (await sizes.GET()).json()).products.some(p => p.id === created.id));
     session = { role: 'admin' };
     const sizeRequest = body => sizes.POST(new Request('https://warehouse.test/api/sizes', { method: 'POST', headers: { origin: 'https://warehouse.test', host: 'warehouse.test' }, body: JSON.stringify(body) }));
-    response = await sizeRequest({ id: updated.id, revision: updated.revision, name: updated.name, sizes: ['M'], examples: original.examples, note: '', active: true });
+    response = await sizeRequest({ id: updated.id, revision: updated.revision, name: updated.name, sizes: ['M'], examples: original.examples, note: '', active: true, show_in_sizes: true });
     assert.equal(response.status, 200);
     session = { role: 'employee' }; assert((await (await sizes.GET()).json()).products.some(p => p.id === created.id));
     session = { role: 'admin' };
@@ -170,5 +172,58 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     changed = await edit({ photos: [{ index: 0 }, imageB] });
     assert.deepEqual(changed.photos, [image,imageB]); assert.equal(changed.photo, image);
     console.log('PASS editing: fresh admin-only editor, append/reorder/replace/delete product and model photos, chart replacement/deletion, legacy photo fallback, persisted reload, shared picker photo bytes, revision conflicts, unchanged examples and no copies');
+
+    // Independent flags, creation in sizes, persisted reload, and recovery from both off.
+    response = await sizeRequest({ name: 'Sizes only', note: '', sizes: ['M'], examples: original.examples, photos: [image], active: true });
+    assert.equal(response.status, 200);
+    const sizeOnly = (await response.json()).product;
+    assert.equal(sizeOnly.show_in_sizes, true); assert.equal(sizeOnly.show_in_availability, false);
+    assert.equal(created.show_in_availability, true); assert.equal(created.show_in_sizes, false);
+    response = await sizeRequest({ id: sizeOnly.id, revision: sizeOnly.revision, name: sizeOnly.name, note: '', sizes: sizeOnly.sizes, examples: sizeOnly.examples, active: true, show_in_availability: true, show_in_sizes: false });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).product.show_in_sizes, false);
+    const baseline = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
+    for (const availability of [false, true]) for (const sizing of [false, true]) {
+      session = { role: 'admin' };
+      const current = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
+      response = await post({ id: current.id, revision: current.revision, stock_details: current.stock_details, show_in_availability: availability, show_in_sizes: sizing });
+      assert.equal(response.status, 200);
+      session = { role: 'employee' };
+      assert.equal((await (await api.GET()).json()).products.some(p => p.id === sizeOnly.id), availability);
+      assert.equal((await (await sizes.GET()).json()).products.some(p => p.id === sizeOnly.id), sizing);
+      const beforeDenied = calls;
+      assert.equal((await sizeRequest({ ...sizeOnly, show_in_sizes: !sizing })).status, 403);
+      assert.equal(calls, beforeDenied);
+      session = { role: 'admin' };
+      const reload = (await (await api.GET()).json()).products.find(p => p.id === sizeOnly.id);
+      assert.equal(reload.show_in_availability, availability); assert.equal(reload.show_in_sizes, sizing);
+      assert((await (await sizes.GET()).json()).products.some(p => p.id === sizeOnly.id));
+      const persisted = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
+      for (const key of Object.keys(baseline).filter(k => !['show_in_availability', 'show_in_sizes', 'revision', 'updated_at'].includes(k))) assert.deepEqual(persisted[key], baseline[key], key);
+    }
+    // Saved examples must never re-enable a flag after the one-time migration.
+    await db.query('update size_products set show_in_sizes=false, show_in_availability=false where id=$1', [sizeOnly.id]);
+    const snapshot = (await db.query('select * from size_products order by id')).rows;
+    await db.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
+    assert.deepEqual((await db.query('select * from size_products order by id')).rows, snapshot);
+    console.log('PASS independent visibility: both creation defaults, four persisted combinations, hidden admin recovery, server rejects employee writes, data unchanged, migration never resets choices');
+    const legacyDb = new PGlite();
+    try {
+      await legacyDb.exec('create role anon; create role authenticated; create role service_role;');
+      for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql', '20261102_availability_create.sql']) await legacyDb.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
+      for (const active of [true, false]) for (const examples of [[], original.examples]) {
+        await legacyDb.query('insert into size_products(name,sizes,examples,photo,photos,photo_count,active) values ($1,$2,$3,$4,$5,1,$6)', ['Legacy', JSON.stringify(['M']), JSON.stringify(examples), image, JSON.stringify([image]), active]);
+      }
+      const before = (await legacyDb.query('select * from size_products order by id')).rows;
+      await legacyDb.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
+      const after = (await legacyDb.query('select * from size_products order by id')).rows;
+      assert.equal(after.length, before.length);
+      after.forEach((row, i) => {
+        const { show_in_availability, show_in_sizes, ...unchanged } = row;
+        assert.deepEqual(unchanged, before[i]);
+        assert.equal(show_in_availability, true); assert.equal(show_in_sizes, row.examples.length > 0);
+      });
+      console.log('PASS legacy distribution: active/inactive with/without examples, unchanged IDs and every original column');
+    } finally { await legacyDb.close(); }
   } finally { await db.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
