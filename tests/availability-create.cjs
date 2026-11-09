@@ -61,7 +61,7 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
 (async () => {
   try {
     await db.exec('create role anon; create role authenticated; create role service_role;');
-    for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
+    for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql', '20261108220243_size_measurements_ai.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
     await db.query("insert into size_products(name,sizes,examples,photo,photos,photo_count,active) values ('Original','[\"M\"]','[{\"height\":175,\"weight\":70,\"size\":\"M\",\"fit\":\"regular\"}]',$1,$2,1,true)", [image, JSON.stringify([image])]);
     await db.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
     const original = (await db.query('select * from size_products')).rows[0];

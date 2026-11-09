@@ -19,3 +19,7 @@ public/ScannerAgent.exe
 tests/fixtures/size-catalog-20261028.json
 tests/fixtures/size-blind-lock-20261028.json
 docs/size-evaluation-results.json
+# Authenticated catalog metadata and locally resolved transfer IDs are private working files.
+source-catalog.json
+source-size-preflight.json
+data/size-transfers/*.local.json

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { FITS, normalizeSize } from "@/lib/sizes";
+import { sizeProfileSchema } from "@/lib/size-profile";
 const label = z.string().trim().min(1).max(16).transform(normalizeSize);
 export const sizeProductSchema = z.object({
   id: z.string().uuid().optional(),
@@ -16,11 +17,12 @@ export const sizeProductSchema = z.object({
   active: z.boolean(),
   show_in_availability: z.boolean().optional(),
   show_in_sizes: z.boolean().optional(),
+  size_profile: sizeProfileSchema.nullable().optional(),
 }).strict().superRefine((p, ctx) => {
   const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
   if (p.id && !p.revision) issue("Не указана версия карточки. Обновите страницу.");
   if (new Set(p.sizes).size !== p.sizes.length) issue("Размеры не должны повторяться.");
-  if (p.active && p.show_in_sizes !== false && !p.examples.length) issue("Добавьте хотя бы один пример перед публикацией.");
+  if (p.active && p.show_in_sizes !== false && !p.examples.length && !p.size_profile) issue("Добавьте хотя бы один пример или числовую размерную таблицу перед публикацией.");
   if (p.active && p.show_in_sizes !== false && !p.sizes.length) issue("Укажите размеры на бирке.");
   const seen = new Set<string>();
   for (const [index, e] of p.examples.entries()) {

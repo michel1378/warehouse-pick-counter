@@ -5,7 +5,7 @@ import { sizeProductSchema } from "@/lib/sizes-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count";
+const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count,size_profile";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function GET() {
   const session = await getSession();
@@ -15,13 +15,13 @@ export async function GET() {
   const products = [];
   for (let offset = 0; ; offset += 200) {
     let query = db.from("size_products").select(fields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("examples", "[]").neq("sizes", "[]").gt("photo_count", 0);
+    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("sizes", "[]").gt("photo_count", 0);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("size catalog read", error);
-      return json({ error: session.role === "admin" ? "Не удалось открыть каталог. Проверьте миграцию 20261004_size_catalog.sql в Supabase." : "Каталог временно недоступен. Сообщите администратору." }, 503);
+      return json({ error: session.role === "admin" ? "Не удалось открыть каталог. Проверьте миграции каталога, включая size_measurements_ai, в Supabase." : "Каталог временно недоступен. Сообщите администратору." }, 503);
     }
-    products.push(...(data ?? []));
+    products.push(...(data ?? []).filter(product => session.role === "admin" || product.examples.length > 0 || product.size_profile));
     if (!data || data.length < 200) break;
   }
   return json({ products });

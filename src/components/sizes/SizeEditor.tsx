@@ -5,6 +5,8 @@ import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility
 import { preparePhoto } from "@/lib/prepare-photo";
 import { SizePicker } from "./SizePicker";
 import { SizeConflicts } from "./SizeConflicts";
+import { SizeProfileEditor } from "./SizeProfileEditor";
+import { sizeProfileSchema, type SizeProfile } from "@/lib/size-profile";
 
 type DraftRow = { height: string; weight: string; fit: Fit; size: string };
 const emptyRow = (): DraftRow => ({ height: "", weight: "", fit: "regular", size: "" });
@@ -14,6 +16,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
   const [name, setName] = useState(product?.name ?? "");
   const [note, setNote] = useState(product?.note ?? "Не маломерит");
   const [sizeText, setSizeText] = useState(product?.sizes.join(", ") ?? "");
+  const [profile, setProfile] = useState<SizeProfile | null>(product?.size_profile ?? null);
   const [showInAvailability, setShowInAvailability] = useState(product?.show_in_availability ?? false);
   const [showInSizes, setShowInSizes] = useState(product?.show_in_sizes ?? true);
   const [active, setActive] = useState(product?.active ?? true);
@@ -59,7 +62,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
   async function save(e: FormEvent) {
     e.preventDefault(); setError("");
     try {
-      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photos.length ? { photos } : {}) };
+      if (profile) { const parsed = sizeProfileSchema.safeParse(profile); if (!parsed.success) throw new Error(parsed.error.issues[0].message); }
+      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, size_profile: profile, ...(photos.length ? { photos } : {}) };
       if (!product && !photos.length) throw new Error("Добавьте хотя бы одну фотографию вещи.");
       setSaving(true);
       const response = await fetch("/api/sizes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
@@ -87,7 +91,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         }} /></label><p className="size-hint">{photoBusy ? "Обрабатываем фото…" : photos.length ? `${photos.length} фото выбрано. Новые фото заменят галерею.` : product ? `Сейчас сохранено фото: ${product.photo_count}. Новые фото заменят галерею.` : "Можно выбрать несколько фото — например, по одному на каждый цвет."}</p>
       </div><div className="size-fields">
         <label>Название вещи<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Лонгслив Alpaca" /></label>
-        <label>Подпись под названием<input maxLength={200} list="size-notes" value={note} onChange={e => setNote(e.target.value)} /></label>
+        <label>Маломерность и особенности посадки<input maxLength={200} list="size-notes" value={note} onChange={e => setNote(e.target.value)} /></label>
         <datalist id="size-notes"><option value="Не маломерит" /><option value="Маломерит на размер" /><option value="Маломерит на два размера" /></datalist>
         <label>Какие размеры привозим — от меньшего к большему<input required={showInSizes && active} value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL, 2XL, 3XL" /></label>
         <p className="size-hint">Именно маркировка на бирке. Подпись о маломерности не прибавляет размер повторно.</p>
@@ -95,6 +99,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         {product && <label className="size-checkbox"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />Показывать в размерах</label>}
         <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Товар активен</label>
       </div></div>
+      <SizeProfileEditor name={name} value={profile} onChange={value => { setProfile(value); setDirty(true); }} />
       <h3>Ваши рекомендации</h3><p className="size-hint">Начните с 10–20 разных примеров. Указывайте желаемую посадку и размер, который вы действительно положили бы. Для каждой посадки нужны свои примеры.</p>
       {preview && <SizeConflicts product={preview} />}
       <div className="table-wrap size-example-table"><table><thead><tr><th>Рост, см</th><th>Вес, кг</th><th>Посадка</th><th>По бирке</th><th><span className="visually-hidden">Удаление</span></th></tr></thead><tbody>
@@ -113,7 +118,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         <button type="button" className="secondary" onClick={pasteRows}>Добавить строки в таблицу</button>
       </details>
       <details className="size-test"><summary>Проверить подбор перед сохранением</summary>
-        {preview ? <SizePicker product={preview} /> : <p>Сначала заполните строки таблицы корректно.</p>}
+        {profile ? <p>Подбор через OpenAI использует сохранённую таблицу. Сохраните вещь и нажмите «Подобрать» в её карточке.</p> : preview ? <SizePicker product={preview} /> : <p>Сначала заполните строки таблицы корректно.</p>}
       </details>
     </fieldset>
     {error && <p className="error" role="alert">{error}</p>}

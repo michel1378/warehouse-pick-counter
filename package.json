@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test:sizes-ai": "node tests/sizes-ai.cjs",
+    "test:sizes-ai:live": "node tests/sizes-ai-live.cjs",
     "test:scanner": "node tests/scanner-agent.cjs && node tests/scanner-employee.cjs && node tests/global-barcode.cjs && node tests/scanner-reliability.cjs",
     "test:scanner:postgres": "node tests/scanner-reliability.cjs --postgres"
   },

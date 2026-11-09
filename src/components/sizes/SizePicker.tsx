@@ -1,8 +1,14 @@
 "use client";
 import { useMemo, useState } from "react";
-import { FITS, FIT_LABELS, recommendSize, evaluateSizeExamples, type Fit, type SizeProduct } from "@/lib/sizes";
+import { FITS, FIT_LABELS, recommendSize, evaluateSizeExamples, type Fit } from "@/lib/sizes";
+import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility";
+import { SizeAiPicker } from "./SizeAiPicker";
 
 export function SizePicker({ product }: { product: SizeProduct }) {
+  return product.size_profile ? <SizeAiPicker product={product} /> : <LegacySizePicker product={product} />;
+}
+
+function LegacySizePicker({ product }: { product: SizeProduct }) {
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [fit, setFit] = useState<Fit>("regular");

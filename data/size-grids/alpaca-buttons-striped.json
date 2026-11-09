@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "productName": "Лонгслив Альпака пуговицы (в полоску)",
+  "units": "cm",
+  "columns": ["Размер", "Плечи", "Грудь", "Длина", "Рукав"],
+  "chestDefinition": "Ширина разложенной вещи от подмышки до подмышки, не обхват тела",
+  "stretch": "Хорошо тянется",
+  "cut": null,
+  "fitNote": "По оценке владельца, маломерит минимум на размер, иногда на два. Это описание посадки, без автоматической прибавки размера поверх фактических замеров.",
+  "colors": [
+    {
+      "key": "main",
+      "name": "Основной цвет",
+      "rows": [
+        {"size":"M", "shoulders":{"samples":[42,43,44]}, "chest":{"min":48,"max":50}, "length":{"min":64,"max":66}, "sleeve":{"min":62,"max":63}, "source":"measured"},
+        {"size":"L", "shoulders":{"min":47,"max":48}, "chest":{"min":50,"max":52}, "length":67, "sleeve":63, "source":"measured"},
+        {"size":"XL", "shoulders":48, "chest":{"min":52,"max":54}, "length":{"min":67,"max":69}, "sleeve":{"min":60,"max":62}, "source":"measured"},
+        {"size":"2XL", "shoulders":47, "chest":{"min":50,"max":52}, "length":{"min":68,"max":69}, "sleeve":{"min":62,"max":64}, "source":"measured"},
+        {"size":"3XL", "shoulders":{"min":48,"max":49}, "chest":{"min":50,"max":54}, "length":{"samples":[68,70,71]}, "sleeve":{"min":64,"max":65}, "source":"measured"}
+      ]
+    },
+    {
+      "key": "dark",
+      "name": "Тёмный цвет",
+      "rows": [
+        {"size":"M", "shoulders":{"min":42,"max":43}, "chest":50, "length":{"min":64,"max":66}, "sleeve":64, "source":"measured"},
+        {"size":"L", "shoulders":46, "chest":52, "length":{"min":66,"max":67}, "sleeve":65, "source":"measured"},
+        {"size":"XL", "shoulders":48, "chest":54, "length":68, "sleeve":66, "source":"measured"},
+        {"size":"2XL", "shoulders":50, "chest":56, "length":69, "sleeve":67, "source":"calculated", "note":"Расчётные значения, не измерены"},
+        {"size":"3XL", "shoulders":52, "chest":58, "length":70, "sleeve":68, "source":"calculated", "note":"Расчётные значения, не измерены"}
+      ]
+    }
+  ],
+  "rules": {
+    "oneExistingProduct": true,
+    "createProducts": false,
+    "compareColorsIndependently": true,
+    "compareShouldersAndChest": true,
+    "labelOrderDoesNotImplyWidth": true,
+    "automaticSmallSizingOffset": false,
+    "resultFormat": "Альпака — {main}. Если тёмная — {dark}",
+    "darkCalculatedOnlyText": "Если тёмная — уточнить замеры на складе",
+    "calculatedRowsConfirmShipment": false
+  }
+}

@@ -79,7 +79,7 @@ test('Picker renders preliminary label and readable held-out explanation',()=> {
   const picker=new Module(filename,module); picker.filename=filename; picker.paths=module.paths;
   const original=picker.require.bind(picker); let state=0;
   picker.require=name=>name==='react' ? {...require('react'),useState:()=>[['176','71','regular'][state++],()=>{}],useMemo:fn=>fn()}
-    : name==='@/lib/sizes' ? load('src/lib/sizes.ts') : original(name);
+    : name==='@/lib/sizes' ? load('src/lib/sizes.ts') : name==='./SizeAiPicker' ? {SizeAiPicker:()=>null} : original(name);
   picker._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);
   const html=require('react-dom/server').renderToStaticMarkup(picker.exports.SizePicker({product:{id:'test',sizes:['L'],examples:[row(175,70,'L')]}}));
   assert.match(html,/>Предварительно<\/span><strong>L<\/strong>/);
