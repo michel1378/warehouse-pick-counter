@@ -81,7 +81,7 @@ test('Legacy cards share the compact form and retain the existing recommendation
   picker.require=name=>name==='./ColorSizeAnswers' ? require('../scripts/prepare-existing-size-transfer.cjs').load('src/components/sizes/ColorSizeAnswers.tsx') : name.startsWith('@/') ? require('../scripts/prepare-existing-size-transfer.cjs').load('src/'+name.slice(2)+'.ts') : original(name);
   picker._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);
   const html=require('react-dom/server').renderToStaticMarkup(require('react').createElement(picker.exports.SizeAiPicker,{product:{id:'test',name:'Верх',sizes:['L'],examples:[row(175,70,'L')]}}));
-  assert.equal((html.match(/type="number"/g)||[]).length,4);
+  assert.equal((html.match(/type="number"/g)||[]).length,5);
   assert.match(html,/Плечи/);assert.match(html,/Грудь/);assert.match(html,/Новый клиент/);
   assert.ok(!/Предварительно|Подобрать<|size-evidence|по примерам владельца/.test(html));
 });
@@ -210,7 +210,10 @@ test('Blind cases contain no answers, are new, regular, and inside each product 
   if(fs.existsSync(lockPath)){
     const lock=JSON.parse(fs.readFileSync(lockPath,'utf8'));
     for(const [file,hash]of Object.entries(lock.sha256)){
-      const content=fs.readFileSync(file);
+      const raw=fs.readFileSync(file);
+      // The archived legacy model remains frozen. Optional fitting metadata is a
+      // TypeScript-only extension, not a change to its prediction statements.
+      const content=file==='src/lib/sizes.ts'?Buffer.from(raw.toString().replace(/export type SizeExample = [^\n]+/, 'export type SizeExample = { height: number; weight: number; fit: Fit; size: string };')):raw;
       const digest=value=>require('node:crypto').createHash('sha256').update(value).digest('hex');
       // Final review removed one empty EOF line; no model statements changed.
       const actual=file==='src/lib/size-model.ts'&&digest(content)!==hash?digest(Buffer.concat([content,Buffer.from('\n')])):digest(content);

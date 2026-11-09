@@ -48,15 +48,19 @@ const fixture = http.createServer(async (req, res) => {
       assert(!liveForm, 'Mock OpenAI is disabled for live form checks');
       const sent = await readBody(req); providerCalls++;
       const input = JSON.parse(sent.input);
-      assert.equal(input.product.name, 'Брюки Огромнейшие');
-      assert.equal(input.product.rows.length, 6);
+      assert(['Брюки Огромнейшие','Тестовый верх'].includes(input.product.name));
       await new Promise(resolve => setTimeout(resolve, providerDelay));
-      const result = providerMode === 'clarification'
-        ? { size: null, explanation: 'Тестовый ответ: нужно различить варианты.', clarification: 'Какой полупояс у подходящих брюк, в сантиметрах?' }
-        : { size: 'M', explanation: 'Тестовый предварительный ответ для проверки интерфейса, не оценка качества модели.', clarification: null };
+      const measured=input.customer.shouldersCm!==null||input.customer.chestWidthCm!==null||input.customer.halfWaistCm!==null;
+      const result={results:input.requestedKeys.map(key=>{
+        const color=input.product.colors.find(row=>row.key===key);
+        const clarify=providerMode==='clarification'||measured&&color.allowedSizes.length>1;
+        const size=measured?color.allowedSizes[0]:input.product.examples.length>=2?'XL':'M';
+        return {key,size:clarify?null:size,reason:'Synthetic response for UI testing, not model quality',clarification:clarify?'Уточните замеры вещи':null,
+          basis:measured?'measurements':'owner_examples',exampleIndexes:measured?[]:input.product.examples.map(row=>row.index)};
+      })};
       data = { id: 'resp_browser_fixture', object: 'response', created_at: 1, status: 'completed', output: [{ id: 'msg_fixture', type: 'message', status: 'completed', role: 'assistant', content: [{ type: 'output_text', text: JSON.stringify(result), annotations: [] }] }] };
     } else if (url.pathname === '/rest/v1/rpc/take_size_ai_slot') {
-      const input = await readBody(req); data = (await db.query('select take_size_ai_slot($1) as allowed', [input.p_subject])).rows[0].allowed;
+      const input = await readBody(req); data = colorForm?true:(await db.query('select take_size_ai_slot($1) as allowed', [input.p_subject])).rows[0].allowed;
     } else {
       const table = url.pathname.split('/').at(-1);
       assert(['size_products', 'employees'].includes(table));
@@ -134,7 +138,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
       const child=spawn(process.execPath,['tests/color-size-form.cjs'],{windowsHide:true,stdio:'inherit',env:{...process.env,SIZE_TEST_ENTRY:fixtureOrigin,SIZE_TEST_BASE:baseURL,SIZE_TEST_PRODUCT_ID:topId}});
       const code=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('exit',resolve);});
       assert.equal(code,0,'All-color browser checks must pass');
-      assert.equal(providerCalls,0,'Color comparisons do not use OpenAI transport');
+      assert(providerCalls>0,'Ambiguous colors must use the explicitly mocked model transport');
       return;
     }
     browser = await chromium.launch({ channel: 'msedge', headless: !liveForm });
@@ -185,7 +189,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await login('employee'); await page.goto(baseURL + '/sizes');
     await page.getByRole('button', { name: /Брюки Огромнейшие/ }).click();
     const picker=page.locator('.size-picker');
-    assert.equal(await picker.locator('input[type=number]').count(),3);
+    assert.equal(await picker.locator('input[type=number]').count(),4);
     assert.equal(await picker.getByLabel('Полупояс',{exact:true}).getAttribute('required'),null);
     assert.equal(await picker.getByRole('button',{name:'Подобрать',exact:true}).count(),0);
     assert.equal(await picker.locator('details').count(),0);
@@ -210,8 +214,8 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
       assert.equal(providerCalls,1);
     }
     await db.exec('delete from size_ai_limits');providerMode='clarification';
-    waiting=waitingResponse();await picker.getByLabel('Полупояс',{exact:true}).fill('');
-    await answer(await waiting,'Размер: —');assert.equal(providerCalls,2);
+    waiting=waitingResponse();await picker.getByLabel('Вес',{exact:true}).fill('72');await picker.getByLabel('Полупояс',{exact:true}).fill('');
+    await answer(await waiting,'Уточните замеры вещи');assert.equal(providerCalls,2);
     console.log('PASS compact single-grid browser: automatic size, optional waist, clarification as dash, original editor/photo/example data retained');
     await db.exec('delete from size_ai_limits');providerDelay=1000;providerMode='size';
     const oldRequest=page.waitForRequest(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.method()==='POST');

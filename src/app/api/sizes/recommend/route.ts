@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient, logSupabaseError } from "@/lib/supabase";
 import { sizeProfileSchema } from "@/lib/size-profile";
-import { recommendSizeWithAi, sizeAiInputSchema, sizeMeasurementDecision } from "@/lib/sizes-ai";
-import { compareSizeMeasurements } from "@/lib/size-evidence";
-import { recommendColorGrids } from "@/lib/color-size-grids";
+import { sizeAiInputSchema } from "@/lib/sizes-ai";
+import { cachedSizeResult, composeSizeResult, hasPendingSizeDecisions, planSizeRecommendation, resolveSizePlan } from "@/lib/size-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,28 +34,27 @@ export async function POST(request: Request) {
   const parsed = sizeAiInputSchema.safeParse(input);
   if (!parsed.success) return json({ error: "Проверьте рост (100–230 см), вес (25–250 кг) и посадку. Полупояс необязателен; если указан — 20–100 см." }, 400);
   const db = createAdminClient();
-  let query = db.from("size_products").select("id,name,note,sizes,examples,active,show_in_sizes,revision,size_profile").eq("id", parsed.data.productId);
+  let query = db.from("size_products").select("id,name,note,sizes,examples,active,show_in_sizes,revision,size_profile,stock_details").eq("id", parsed.data.productId);
   if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true);
   const { data: product, error } = await query.maybeSingle();
   if (error) { logSupabaseError("size AI product read", error); return json({ error: "Не удалось загрузить размерную таблицу. Сообщите администратору." }, 503); }
   if (!product) return json({ error: "Вещь недоступна. Обновите каталог." }, 404);
   if (product.revision !== parsed.data.revision) return json({ error: "Карточка изменилась. Обновите каталог и повторите подбор." }, 409);
   const profile = sizeProfileSchema.safeParse(product.size_profile);
-  if (!profile.success) return json({ error: "Администратору нужно сохранить числовую таблицу и свойства этой вещи." }, 409);
-  if (parsed.data.colorKey && !profile.data.colorGrids?.colors.some(color => color.key === parsed.data.colorKey))
+  if (!profile.success && product.size_profile !== null) return json({ error: "Администратору нужно проверить размерную таблицу этой вещи." }, 409);
+  if (parsed.data.colorKey && (!profile.success || !profile.data.colorGrids?.colors.some(color => color.key === parsed.data.colorKey)))
     return json({error:"Этот цвет недоступен. Обновите карточку и выберите цвет заново."},400);
-  if (profile.data.colorGrids) return json({result:recommendColorGrids(profile.data.colorGrids,parsed.data,product.examples,product.id),revision:product.revision});
-  const clarification = sizeMeasurementDecision(profile.data, parsed.data);
-  const comparison = compareSizeMeasurements(profile.data, parsed.data);
-  if (clarification) return json({ result: clarification, comparison, revision: product.revision });
-  if (!process.env.OPENAI_API_KEY?.trim()) return json({ error: "Подбор через OpenAI пока не настроен. Администратору нужно добавить серверный OPENAI_API_KEY." }, 503);
+  const plan = planSizeRecommendation(product, profile.success ? profile.data : null, parsed.data);
+  if (!hasPendingSizeDecisions(plan)) return json({result:composeSizeResult(plan),revision:product.revision});
+  const saved=cachedSizeResult(plan);if(saved)return json({result:saved,revision:product.revision});
+  if (!process.env.OPENAI_API_KEY?.trim()) return json({result:composeSizeResult(plan,"not_configured"),revision:product.revision});
   // Atomic shared limit: concurrent requests and separate server instances use the same budget.
   const { data: allowed, error: limitError } = await db.rpc("take_size_ai_slot", { p_subject: session.sub });
   if (limitError) { logSupabaseError("size AI limit", limitError); return json({ error: "Подбор временно недоступен. Проверьте миграцию размерных таблиц." }, 503); }
-  if (allowed !== true) return json({ error: "Подождите 5 секунд перед новым подбором. Лимит — 50 запросов на пользователя в сутки (UTC)." }, 429);
+  if (allowed !== true) return json({ result:composeSizeResult(plan,"limited"), retryAfterSeconds:5, revision:product.revision });
   try {
-    const result = await recommendSizeWithAi(product, profile.data, parsed.data);
-    return json({ result, comparison, revision: product.revision });
+    const result = await resolveSizePlan(plan);
+    return json({ result, revision: product.revision });
   } catch {
     // Provider messages may contain request content: never log or return them.
     return json({ error: "Не удалось получить надёжный ответ OpenAI. Повторите подбор позже или уточните мерки у владельца." }, 502);

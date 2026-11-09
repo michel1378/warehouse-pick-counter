@@ -1,7 +1,7 @@
 import { recommendSize, type SizeExample } from "@/lib/sizes";
 import { columnKey, isTrousers, type SizeComparison, type SizeCustomer, type SizeProfile } from "@/lib/size-profile";
 
-export type SizeProductFacts = { id?: string; name: string; note: string; examples?: SizeExample[]; sizes?: string[] };
+export type SizeProductFacts = { id?: string; name: string; note: string; examples?: SizeExample[]; sizes?: string[]; stock_details?:{material?:string;composition?:string;stretch?:string} };
 const round = (value: number) => Math.round(value * 1000) / 1000;
 export const cm = (value: number) => String(round(value)).replace(".", ",");
 

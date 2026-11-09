@@ -9,8 +9,9 @@ export const sizeProductSchema = z.object({
   note: z.string().trim().max(200),
   sizes: z.array(label).max(30),
   examples: z.array(z.object({
-    height: z.number().min(100).max(230), weight: z.number().min(25).max(250),
+    height: z.number().min(40).max(230), weight: z.number().min(2).max(250),
     fit: z.enum(FITS), size: label,
+    confirmed: z.boolean().optional(), colorKey: z.string().regex(/^[a-z0-9_-]{1,30}$/).optional(), ageYears: z.number().finite().min(0).max(110).optional(),
   }).strict()).max(200),
   photos: z.array(z.string().max(400000)).min(1).max(6).optional(),
   photo: z.string().max(400000).optional(),
@@ -27,7 +28,7 @@ export const sizeProductSchema = z.object({
   const seen = new Set<string>();
   for (const [index, e] of p.examples.entries()) {
     if (!p.sizes.includes(e.size)) issue(`Строка ${index + 1}: размера ${e.size} нет в размерном ряду.`);
-    const key = `${e.height}/${e.weight}/${e.fit}`;
+    const key = `${e.height}/${e.weight}/${e.fit}/${e.colorKey??"unknown"}/${e.ageYears??"unknown"}`;
     if (seen.has(key)) issue(`Строка ${index + 1}: рост, вес и посадка уже встречаются. Оставьте одну рекомендацию.`);
     seen.add(key);
   }

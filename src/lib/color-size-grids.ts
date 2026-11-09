@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { normalizeSize, type SizeExample } from "@/lib/sizes";
-import { sizeDistance } from "@/lib/size-model";
 import type { SizeAiResult, SizeCustomer } from "@/lib/size-profile";
-
-const ALPACA_PRODUCT_ID = "a92d78d6-90c1-4938-8d14-f01859925511";
 
 const value = z.number().finite().positive().max(400);
 export const spreadSchema = z.union([
@@ -51,24 +48,9 @@ export function spreadDistance(spread: Spread, client: number): number {
   return client < spread.min ? spread.min-client : client > spread.max ? client-spread.max : 0;
 }
 
-/** A nearby owner label is a preliminary anchor, never a fabricated body measurement.
- * Keep one shared anchor across colors, reject tied labels and distant extrapolation.
- * The 15 cm / 15 kg window bounds this fallback; it does not establish fit accuracy.
- */
-function nearbyOwnerSize(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[]): string | null {
-  const measuredLabels = new Set(grids.colors[0].rows.filter(row => row.source === "measured").map(row => row.size));
-  const nearby = examples.filter(row => row.fit === input.fit && measuredLabels.has(row.size)
-    && Number.isFinite(row.height) && Number.isFinite(row.weight)
-    && Math.abs(row.height - input.height) <= 15 && Math.abs(row.weight - input.weight) <= 15);
-  const min = Math.min(...nearby.map(row => sizeDistance(row.height - input.height, row.weight - input.weight)));
-  const labels = new Set(nearby.filter(row => Math.abs(sizeDistance(row.height - input.height, row.weight - input.weight) - min) < 0.000001).map(row => row.size));
-  return labels.size === 1 ? [...labels][0] : null;
-}
-
-export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[] = [], productId?: string): SizeAiResult & { summary: string; colorResults: ColorSizeResult[] } {
+export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[] = []): SizeAiResult & { summary: string; colorResults: ColorSizeResult[] } {
   const colors = input.colorKey ? grids.colors.filter(color => color.key === input.colorKey) : grids.colors;
   if (!colors.length) throw new Error("SIZE_COLOR_NOT_FOUND");
-  const ownerSize = nearbyOwnerSize(grids, input, examples);
   const noMeasurements = input.shouldersCm === undefined && input.chestWidthCm === undefined;
   const incompleteMeasurements = input.shouldersCm === undefined || input.chestWidthCm === undefined;
   const colorResults = colors.map(color => {
@@ -76,18 +58,9 @@ export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, exam
     const comparisons = color.rows.map(row => ({size:row.size,source:row.source,shoulders:row.shoulders,chest:row.chest,
       distanceCm:Math.round(((input.shouldersCm === undefined ? 0 : spreadDistance(row.shoulders,input.shouldersCm))
         +(input.chestWidthCm === undefined ? 0 : spreadDistance(row.chest,input.chestWidthCm)))*1000)/1000}));
-    if (noMeasurements) {
-      // Explicit owner rule for this existing card only. Start from the raw owner
-      // anchor on every call, step once in this color's grid, never shift measurements.
-      const step = productId === ALPACA_PRODUCT_ID ? 1 : 0;
-      const anchorIndex = color.rows.findIndex(row => row.size === ownerSize);
-      const anchor = anchorIndex >= 0 ? color.rows[anchorIndex + step] : undefined;
-      if (anchor?.source === "measured") return {...base,size:anchor.size,source:"measured" as const,approximate:true,
-        explanation:`Общий предварительный ориентир по ближайшему примеру владельца этой посадки. ${step ? "Поправка владельца на маломерность: одна ступень по сетке этого цвета, применена один раз. " : ""}Пример не привязан к цвету и не подтверждён примеркой; строка сетки измерена. Мерки клиента из роста и веса не выводились.`,clarification:null};
-      return {...base,size:null,source:anchor?.source ?? null,requiresWarehouseCheck:anchor?.source === "calculated",
-        explanation:anchor?.source === "calculated" ? "Строка общего ориентира этого цвета расчётная, не измерена." : "Нет близкого однозначного примера выбранной посадки и измеренной строки этого размера.",
-        clarification:"Какая ширина по груди любимой вещи от подмышки до подмышки?"};
-    }
+    if (noMeasurements) return {...base,size:null,
+      explanation:"Без мерок нужна совместная оценка примеров, сетки и свойств вещи.",
+      clarification:"Уточните ширину груди любимой вещи"};
     const min = Math.min(...comparisons.map(row=>row.distanceCm));
     const closest = comparisons.filter(row=>Math.abs(row.distanceCm-min)<0.000001);
     const measured = closest.filter(row=>row.source === "measured");
@@ -99,7 +72,6 @@ export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, exam
     if (min === 0 && measured.length > 1) {
       const hints = [...new Set(examples.filter(e=>e.height===input.height&&e.weight===input.weight&&e.fit===input.fit&&measured.some(row=>row.size===e.size)).map(e=>e.size))];
       if (hints.length === 1) { selected=color.rows.find(row=>row.size===hints[0]);ownerHint=true; }
-      else if (incompleteMeasurements && measured.some(row=>row.size===ownerSize)) { selected=color.rows.find(row=>row.size===ownerSize);ownerHint=true; }
     }
     if (!selected) return {...base,comparisons,size:null,requiresWarehouseCheck:true,
       explanation:min === 0 ? `Разброс плеч и груди перекрывается у ${measured.map(row=>row.size).join(" / ")}. Большая бирка не означает большую ширину.`

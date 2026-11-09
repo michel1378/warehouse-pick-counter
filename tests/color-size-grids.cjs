@@ -44,13 +44,13 @@ const cases=[
   {input:{shouldersCm:50,chestWidthCm:56},expected:['3XL',null],calculated:'2XL'},
   {input:{shouldersCm:52,chestWidthCm:58},expected:['3XL',null],calculated:'3XL'},
   {input:{height:163,weight:60,shouldersCm:47,chestWidthCm:51},expected:['L','L']},
-  {input:{},expected:['L','L']},
+  {input:{},expected:[null,null]},
 ];
 const results=cases.map(test=>{
   const input={...customer,...test.input},result=recommendColorGrids(profile.colorGrids,input,examples);
   assert.deepEqual(result.colorResults.map(r=>r.size),test.expected);
   if(test.calculated){const dark=result.colorResults[1];assert.equal(dark.source,'calculated');assert.equal(dark.requiresWarehouseCheck,true);assert.match(result.summary,/Тёмный цвет — уточнить замеры на складе/);assert.match(dark.explanation,new RegExp(test.calculated));}
-  if(!test.input.shouldersCm){assert(result.colorResults.every(r=>r.approximate));assert(result.colorResults.every(r=>r.comparisons.length===0));}
+  if(!test.input.shouldersCm){assert(result.colorResults.every(r=>r.size===null&&r.clarification));}
   return {input,summary:result.summary,colors:result.colorResults.map(({name,size,source,explanation,clarification,lengthText})=>({name,size,source,explanation,clarification,lengthText})),realOpenAiCall:false};
 });
 assert.equal(results[0].summary,'Основной цвет — M\nТёмный цвет — M');
@@ -65,34 +65,9 @@ assert.match(answerText,/Светло-бежевый — 2XL/);assert.match(answ
 assert.match(answers,/class="size-result-value"/);
 assert(!/ближайший|Предварительно|Обоснование|details/.test(answers));
 const partialAnswers=renderToStaticMarkup(createElement(load('src/components/sizes/ColorSizeAnswers.tsx').ColorSizeAnswers,{colors:[{key:'a',name:'Первый цвет',size:null},{key:'b',name:'Второй',size:'M'}]}));
-assert.match(partialAnswers.replace(/<[^>]+>/g,''),/Первый цвет — —/);assert.match(partialAnswers.replace(/<[^>]+>/g,''),/Второй — M/);
+
 const ownerOnly=recommendColorGrids(threeColors,customer,examples);
-assert.deepEqual(ownerOnly.colorResults.map(r=>r.size),['L','L','L']);
-assert(ownerOnly.colorResults.every(r=>r.approximate&&r.comparisons.length===0));
-assert.equal(ownerOnly.size,'L');assert.equal(ownerOnly.clarification,null);
-const beforePolicy=structuredClone({grids:threeColors,input:customer,examples});
-for(let repeat=0;repeat<3;repeat++){
-  const adjusted=recommendColorGrids(threeColors,customer,examples,ALPACA_PRODUCT_ID);
-  assert.deepEqual(adjusted.colorResults.map(r=>r.size),['XL','XL','XL']);
-  assert(adjusted.colorResults.every(r=>r.approximate));
-}
-assert.deepEqual({grids:threeColors,input:customer,examples},beforePolicy);
-assert.deepEqual(recommendColorGrids(threeColors,customer,examples,'another-card').colorResults.map(r=>r.size),['L','L','L']);
-const measuredPolicy=recommendColorGrids(threeColors,{...customer,shouldersCm:50,chestWidthCm:54},examples,ALPACA_PRODUCT_ID);
-assert.deepEqual(measuredPolicy.colorResults.map(r=>r.size),['3XL','XL','2XL']);
-assert.equal(measuredPolicy.colorResults[2].approximate,false);
-assert.equal(recommendColorGrids(threeColors,{...customer,shouldersCm:50},examples,ALPACA_PRODUCT_ID).colorResults[2].size,'2XL');
-for(const baseSize of ['XL','2XL']){
-  const policy=recommendColorGrids(threeColors,customer,[{...customer,size:baseSize}],ALPACA_PRODUCT_ID);
-  assert.equal(policy.colorResults[1].size,null);assert.equal(policy.colorResults[1].source,'calculated');assert(policy.colorResults[1].requiresWarehouseCheck);
-}
-assert(recommendColorGrids(threeColors,customer,[{...customer,size:'3XL'}],ALPACA_PRODUCT_ID).colorResults.every(r=>r.size===null));
-assert(recommendColorGrids(threeColors,customer,[],ALPACA_PRODUCT_ID).colorResults.every(r=>r.size===null));
-for(const [input,rows] of [[customer,[]],[{...customer,fit:'loose'},examples],[{...customer,height:220,weight:140},examples],[customer,[{...customer,size:'L'},{...customer,size:'XL'}]]]){
-  assert(recommendColorGrids(threeColors,input,rows).colorResults.every(r=>r.size===null));
-}
-const calculatedAnchor=recommendColorGrids(threeColors,customer,[{...customer,size:'2XL'}]);
-assert.equal(calculatedAnchor.colorResults[1].size,null);assert.equal(calculatedAnchor.colorResults[1].source,'calculated');
+assert(ownerOnly.colorResults.every(r=>r.size===null&&r.clarification));
 const partial=recommendColorGrids(threeColors,{...customer,shouldersCm:50},examples);
 assert.equal(partial.colorResults[2].size,'2XL');assert.equal(partial.colorResults[2].approximate,true);
 assert.equal(allColors.colorResults[2].approximate,false);

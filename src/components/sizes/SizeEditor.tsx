@@ -8,7 +8,7 @@ import { SizeConflicts } from "./SizeConflicts";
 import { SizeProfileEditor } from "./SizeProfileEditor";
 import { sizeProfileSchema, type SizeProfile } from "@/lib/size-profile";
 
-type DraftRow = { height: string; weight: string; fit: Fit; size: string };
+type DraftRow = { height: string; weight: string; fit: Fit; size: string } & Pick<SizeExample,"confirmed"|"colorKey"|"ageYears">;
 const emptyRow = (): DraftRow => ({ height: "", weight: "", fit: "regular", size: "" });
 export function SizeEditor({ product, onSaved, onClose }: {
   product: SizeProduct | null; onSaved: (product: SizeProduct) => void; onClose: () => void;
@@ -42,9 +42,9 @@ export function SizeEditor({ product, onSaved, onClose }: {
     const filled = rows.filter(r => r.height || r.weight || r.size);
     return filled.map((r, i) => {
       const height = Number(r.height.replace(",", ".")), weight = Number(r.weight.replace(",", "."));
-      if (!r.height || !r.weight || !r.size || !Number.isFinite(height) || !Number.isFinite(weight) || height < 100 || height > 230 || weight < 25 || weight > 250) throw new Error(`Заполните корректно строку ${i + 1}: рост 100–230, вес 25–250 и размер.`);
+      if (!r.height || !r.weight || !r.size || !Number.isFinite(height) || !Number.isFinite(weight) || height < 40 || height > 230 || weight < 2 || weight > 250) throw new Error(`Заполните корректно строку ${i + 1}: рост 40–230, вес 2–250 и размер.`);
       if (!sizes.includes(r.size)) throw new Error(`Строка ${i + 1}: размера ${r.size} нет в размерном ряду.`);
-      return { height, weight, fit: r.fit, size: r.size };
+      return { ...r, height, weight };
     });
   }
   function pasteRows() {
@@ -104,8 +104,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
       {preview && <SizeConflicts product={preview} />}
       <div className="table-wrap size-example-table"><table><thead><tr><th>Рост, см</th><th>Вес, кг</th><th>Посадка</th><th>По бирке</th><th><span className="visually-hidden">Удаление</span></th></tr></thead><tbody>
         {rows.map((row, i) => <tr key={i}>
-          <td><input aria-label={`Рост, строка ${i + 1}`} type="number" min="100" max="230" step="0.5" value={row.height} onChange={e => updateRow(i, { height: e.target.value })} /></td>
-          <td><input aria-label={`Вес, строка ${i + 1}`} type="number" min="25" max="250" step="0.5" value={row.weight} onChange={e => updateRow(i, { weight: e.target.value })} /></td>
+          <td><input aria-label={`Рост, строка ${i + 1}`} type="number" min="40" max="230" step="0.5" value={row.height} onChange={e => updateRow(i, { height: e.target.value })} /></td>
+          <td><input aria-label={`Вес, строка ${i + 1}`} type="number" min="2" max="250" step="0.5" value={row.weight} onChange={e => updateRow(i, { weight: e.target.value })} /></td>
           <td><select aria-label={`Посадка, строка ${i + 1}`} value={row.fit} onChange={e => updateRow(i, { fit: e.target.value as Fit })}>{FITS.map(f => <option key={f} value={f}>{FIT_LABELS[f]}</option>)}</select></td>
           <td><select aria-label={`Размер на бирке, строка ${i + 1}`} value={row.size} onChange={e => updateRow(i, { size: e.target.value })}><option value="">Выбрать</option>{row.size && !sizes.includes(row.size) && <option value={row.size}>{row.size} — отсутствует</option>}{[...new Set(sizes)].map(s => <option key={s}>{s}</option>)}</select></td>
           <td><button type="button" className="danger" aria-label={`Удалить строку ${i + 1}`} onClick={() => { setRows(old => old.filter((_, j) => j !== i)); setDirty(true); }}>×</button></td>

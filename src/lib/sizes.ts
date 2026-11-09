@@ -5,7 +5,7 @@ export type Fit = typeof FITS[number];
 export const FIT_LABELS: Record<Fit, string> = {
   tight: "В обтяг", regular: "Размер в размер", loose: "Немного оверсайз",
 };
-export type SizeExample = { height: number; weight: number; fit: Fit; size: string };
+export type SizeExample = { height: number; weight: number; fit: Fit; size: string; confirmed?: boolean; colorKey?: string; ageYears?: number };
 export type SizeProduct = {
   id: string; name: string; note: string; sizes: string[]; examples: SizeExample[];
   active: boolean; revision: number; updated_at: string; photo_count: number;

@@ -10,7 +10,7 @@ const entry=process.env.SIZE_TEST_ENTRY||'http://127.0.0.1:64919';
 const base=process.env.SIZE_TEST_BASE||'http://127.0.0.1:64920';
 if(![entry,base].every(url=>new URL(url).hostname==='127.0.0.1'))throw new Error('Isolated loopback stand only');
 const id=process.env.SIZE_TEST_PRODUCT_ID||'e5f81908-0a6a-4514-af98-54770af6d603';
-const preliminarySize=id==='a92d78d6-90c1-4938-8d14-f01859925511'?'XL':'L';
+const preliminarySize='XL'; // Explicit mock response; real quality is tested separately.
 const profile=require('../scripts/lib/alpaca-size-profile.cjs')({...load('src/lib/size-profile.ts'),...load('src/lib/color-size-grids.ts')});
 profile.colorGrids.colors=profile.colorGrids.colors.slice(0,2);
 let browser,admin,original,touched=false;const checks=[];
@@ -66,7 +66,7 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const picker=staffCard.locator('.size-picker');
   assert.equal(await picker.getByRole('button',{name:'Подобрать',exact:true}).count(),0);
   assert.equal(await picker.locator('details,select').count(),0);
-  assert.equal(await picker.locator('input[type=number]').count(),4);
+  assert.equal(await picker.locator('input[type=number]').count(),5);
   assert.equal(await picker.getByLabel('Плечи',{exact:true}).getAttribute('required'),null);
   let requests=0;const sent=[];staff.on('request',r=>{if(r.url()===base+'/api/sizes/recommend'){requests++;sent.push({at:Date.now(),input:r.postDataJSON()});}});
   const waitResponse=()=>staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend'&&r.request().method()==='POST');
@@ -77,8 +77,8 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
     assert.equal(response.request().postDataJSON().colorKey,undefined);
     await lines.first().waitFor();
     const actual=await lines.allTextContents();
-    assert.deepEqual(actual,result.colorResults.map(r=>r.name+' — '+(r.size&&r.approximate?'≈ ':'')+(r.size??'—')));
-    assert(!/предвар|ближайш|налич|измер|рукав|ткань|владел|длина/i.test(await picker.locator('.size-answer').innerText()));
+    assert.deepEqual(actual,result.colorResults.map(r=>r.name+' — '+(r.size&&r.approximate?'≈ ':'')+(r.size??r.clarification)));
+    assert(!/предвар|ближайш|налич|рукав|ткань|владел|длина/i.test(await picker.locator('.size-answer').innerText()));
     return actual;
   }
   let before=requests,waiting=waitResponse();
@@ -90,6 +90,11 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const preliminaryScreenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-adjusted-preliminary.png');
   await picker.screenshot({path:preliminaryScreenshot});
   checks.push({test:'height weight and fit alone produce shared approximate owner anchor, no fabricated item measurements',input:{height:175,weight:70,fit:'regular'},actual,screenshot:preliminaryScreenshot,passed:true,realOpenAiCall:false});
+  before=requests;waiting=waitResponse();await picker.getByLabel('Возраст',{exact:true}).fill('35');
+  await verifyResponse(await waiting,['XL','XL','XL'],before);assert.equal(sent.at(-1).input.ageYears,35);
+  before=requests;waiting=waitResponse();await picker.getByLabel('Возраст',{exact:true}).fill('');
+  await verifyResponse(await waiting,['XL','XL','XL'],before);
+  checks.push({test:'optional age transmitted and cleared; adult age does not force a UI size offset',passed:true,realOpenAiCall:false});
   before=requests;waiting=waitResponse();
   await picker.getByLabel('Плечи',{exact:true}).pressSequentially('50',{delay:40});
   await picker.getByLabel('Грудь',{exact:true}).pressSequentially('54',{delay:40});
@@ -159,6 +164,6 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
     if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
   }finally{if(browser)await browser.close();}
 }
-fs.writeFileSync('docs/alpaca-adjustment-form-check-2026-11-09.json',JSON.stringify({environment:'synthetic in-memory top with Alpaca policy ID, grids and two unconfirmed owner anchors; no source card or photos copied; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
+fs.writeFileSync('docs/sizes-context-form-check-2026-11-09.json',JSON.stringify({environment:'synthetic in-memory top with grids and two unconfirmed owner anchors; OpenAI transport explicitly mocked; no source card or photos copied; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
 console.log('PASS compact browser: automatic three-color results in narrow card; debounce, optional measurements, fit updates, partial dashes, stale response guard and reset; original fixture restored');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});
