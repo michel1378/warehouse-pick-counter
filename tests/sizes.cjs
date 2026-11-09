@@ -74,21 +74,16 @@ test('Russian warnings remain readable',()=> {
   assert.match(result.message,/Мало примеров/);
   assert.ok(!/\?{3}/.test(result.message));
 });
-test('Picker renders preliminary label and readable held-out explanation',()=> {
-  const filename=path.resolve('src/components/sizes/SizePicker.tsx');
-  const picker=new Module(filename,module); picker.filename=filename; picker.paths=module.paths;
-  const original=picker.require.bind(picker); let state=0;
-  picker.require=name=>name==='react' ? {...require('react'),useState:()=>[['176','71','regular'][state++],()=>{}],useMemo:fn=>fn()}
-    : name==='@/lib/sizes' ? load('src/lib/sizes.ts') : name==='./SizeAiPicker' ? {SizeAiPicker:()=>null} : original(name);
-  picker._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);
-  const html=require('react-dom/server').renderToStaticMarkup(picker.exports.SizePicker({product:{id:'test',sizes:['L'],examples:[row(175,70,'L')]}}));
-  assert.match(html,/>Предварительно<\/span><strong>L<\/strong>/);
-  assert.match(html,/size-answer preliminary uncertain/);
-  assert.match(html,/Рекомендация по примерам владельца\. Размер не подтверждён\./);
-  assert.match(html,/Мало близких примеров/);
-  assert.match(html,/Проверка на отложенных примерах/);
-  assert.ok(!html.includes('Положить размер'));
-  assert.ok(!/\?{3}/.test(html));
+test('Legacy cards share the compact form and retain the existing recommendation engine',()=> {
+  const filename=path.resolve('src/components/sizes/SizeAiPicker.tsx');
+  const picker=new Module(filename,module);picker.filename=filename;picker.paths=module.paths;
+  const original=picker.require.bind(picker);
+  picker.require=name=>name==='./ColorSizeAnswers' ? require('../scripts/prepare-existing-size-transfer.cjs').load('src/components/sizes/ColorSizeAnswers.tsx') : name.startsWith('@/') ? require('../scripts/prepare-existing-size-transfer.cjs').load('src/'+name.slice(2)+'.ts') : original(name);
+  picker._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);
+  const html=require('react-dom/server').renderToStaticMarkup(require('react').createElement(picker.exports.SizeAiPicker,{product:{id:'test',name:'Верх',sizes:['L'],examples:[row(175,70,'L')]}}));
+  assert.equal((html.match(/type="number"/g)||[]).length,4);
+  assert.match(html,/Плечи/);assert.match(html,/Грудь/);assert.match(html,/Новый клиент/);
+  assert.ok(!/Предварительно|Подобрать<|size-evidence|по примерам владельца/.test(html));
 });
 test('Warning categories distinguish sparse data, boundaries and contradictions',()=> {
   const sparse=recommendSize({sizes:['M'],examples:[row(170,60,'M'),row(180,80,'M')]},175,70,'regular');

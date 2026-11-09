@@ -60,7 +60,10 @@ assert(allColors.colorResults.slice(0,2).every(r=>r.shortNote.includes('ближ
 assert.equal(allColors.colorResults[2].shortNote,undefined);
 const answers=renderToStaticMarkup(createElement(load('src/components/sizes/ColorSizeAnswers.tsx').ColorSizeAnswers,{colors:allColors.colorResults}));
 assert.equal((answers.match(/class="size-color-result"/g)||[]).length,3);
-assert.match(answers,/Светло-бежевый — 2XL/);assert.match(answers,/Основной цвет — 3XL \(ближайший/);
+assert.match(answers,/Светло-бежевый — 2XL/);assert.match(answers,/Основной цвет — 3XL<\/p>/);
+assert(!/ближайший|Предварительно|Обоснование|details/.test(answers));
+const partialAnswers=renderToStaticMarkup(createElement(load('src/components/sizes/ColorSizeAnswers.tsx').ColorSizeAnswers,{colors:[{key:'a',name:'Первый цвет',size:null},{key:'b',name:'Второй',size:'M'}]}));
+assert.match(partialAnswers,/Первый цвет — —/);assert.match(partialAnswers,/Второй — M/);
 const renamed=structuredClone(threeColors);renamed.colors[0].name='Белый';
 assert.match(recommendColorGrids(renamed,{...customer,shouldersCm:50,chestWidthCm:54}).summary,/^Белый —/);
 assert.match(results[4].colors[0].explanation,/не подтверждённая примерка/);

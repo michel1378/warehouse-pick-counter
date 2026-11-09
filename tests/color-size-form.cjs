@@ -59,40 +59,93 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const employee=await browser.newContext();await employee.route('**/*',route=>{
     const url=new URL(route.request().url());return [base,entry].includes(url.origin)&&!url.pathname.endsWith('/photo')?route.continue():route.abort();
   });
-  const staff=await employee.newPage();await staff.goto(entry+'/enter/employee');
+  const staff=await employee.newPage();await staff.setViewportSize({width:360,height:900});await staff.goto(entry+'/enter/employee');
   const staffCard=staff.locator('article').filter({has:staff.getByText('Тестовый верх',{exact:true})});
   await staffCard.getByRole('button',{name:/Тестовый верх/}).click();
-  await staffCard.getByLabel('Рост, см',{exact:true}).fill('175');await staffCard.getByLabel('Вес, кг',{exact:true}).fill('70');
-  assert.equal(await staffCard.getByLabel('Цвет для подбора',{exact:true}).count(),0);
-  let requests=0;staff.on('request',r=>{if(r.url()===base+'/api/sizes/recommend')requests++;});
-  for(const [shoulders,chest,expected] of [['42','50',['M','M','M']],['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[null,null,null]],['50','54',['3XL','XL','2XL']]]){
-    await staffCard.getByLabel('Плечи любимой вещи, см (необязательно)',{exact:true}).fill(shoulders);
-    await staffCard.getByLabel('Ширина по груди любимой вещи, см (необязательно)',{exact:true}).fill(chest);
-    const beforeRequests=requests,waiting=staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend');
-    await staffCard.getByRole('button',{name:'Подобрать',exact:true}).click();const response=await waiting;assert.equal(response.status(),200);
-    assert.equal(requests-beforeRequests,1);assert.equal(response.request().postDataJSON().colorKey,undefined);
+  const picker=staffCard.locator('.size-picker');
+  assert.equal(await picker.getByRole('button',{name:'Подобрать',exact:true}).count(),0);
+  assert.equal(await picker.locator('details,select').count(),0);
+  assert.equal(await picker.locator('input[type=number]').count(),4);
+  assert.equal(await picker.getByLabel('Плечи',{exact:true}).getAttribute('required'),null);
+  let requests=0;const sent=[];staff.on('request',r=>{if(r.url()===base+'/api/sizes/recommend'){requests++;sent.push({at:Date.now(),input:r.postDataJSON()});}});
+  const waitResponse=()=>staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend'&&r.request().method()==='POST');
+  const lines=picker.locator('.size-color-result');
+  async function verifyResponse(response,expected,before){
+    assert.equal(response.status(),200);assert.equal(requests-before,1);
     const {result}=await response.json();assert.deepEqual(result.colorResults.map(r=>r.size),expected);
-    const lines=staffCard.locator('.size-color-result');await lines.first().waitFor();
-    const actual=await lines.allTextContents();assert.equal(actual.length,3);assert.deepEqual(actual,result.summary.split('\n'));
-    for(let i=0;i<3;i++)assert(actual[i].startsWith(withThird.size_profile.colorGrids.colors[i].name+' — '));
-    if(shoulders==='50'&&chest==='54'){assert.equal(actual[2],'Светло-бежевый — 2XL');assert(actual.slice(0,2).every(line=>line.includes('ближайший')));}
-    checks.push({input:{height:175,weight:70,fit:'regular',shouldersCm:shoulders||null,chestWidthCm:chest||null},expected,actual,requests:requests-beforeRequests,passed:true,realOpenAiCall:false});
+    assert.equal(response.request().postDataJSON().colorKey,undefined);
+    await lines.first().waitFor();
+    const actual=await lines.allTextContents();
+    assert.deepEqual(actual,result.colorResults.map(r=>r.name+' — '+(r.size??'—')));
+    assert(!/предвар|ближайш|налич|измер|рукав|ткань|владел|длина/i.test(await picker.locator('.size-answer').innerText()));
+    return actual;
+  }
+  let before=requests,waiting=waitResponse();
+  await picker.getByLabel('Рост',{exact:true}).pressSequentially('175',{delay:40});
+  await picker.getByLabel('Вес',{exact:true}).pressSequentially('70',{delay:40});
+  await picker.getByLabel('Плечи',{exact:true}).pressSequentially('50',{delay:40});
+  await picker.getByLabel('Грудь',{exact:true}).pressSequentially('54',{delay:40});
+  const stoppedAt=Date.now();
+  await staff.waitForTimeout(200);assert.equal(requests,before);
+  let actual=await verifyResponse(await waiting,['3XL','XL','2XL'],before);
+  assert(sent.at(-1).at-stoppedAt>=400,'Debounce must wait after the last digit');
+  assert.deepEqual(actual,['Основной цвет — 3XL','Тёмный цвет — XL','Светло-бежевый — 2XL']);
+  assert.equal(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  const bounds=await picker.boundingBox();assert(bounds.width<=330);
+  for(const line of await lines.all())assert((await line.boundingBox()).x+(await line.boundingBox()).width<=360);
+  const screenshot=path.join(require('node:os').tmpdir(),'warehouse-compact-alpaca-auto.png');
+  await picker.screenshot({path:screenshot});
+  checks.push({test:'narrow card, automatic three-color result after debounce, one request per typing burst',width:bounds.width,input:{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54},actual,requests:requests-before,screenshot,passed:true,realOpenAiCall:false});
+  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[null,null,null]]]){
+    before=requests;waiting=waitResponse();
+    await picker.getByLabel('Плечи',{exact:true}).fill(shoulders);
+    assert.equal(await lines.count(),0,'Old result disappears immediately');
+    await picker.getByLabel('Грудь',{exact:true}).fill(chest);
+    actual=await verifyResponse(await waiting,expected,before);
+    checks.push({input:{shouldersCm:shoulders||null,chestWidthCm:chest||null},actual,passed:true,realOpenAiCall:false});
   }
   for(const row of beige.rows){
-    await staffCard.getByLabel('Плечи любимой вещи, см (необязательно)',{exact:true}).fill(String(row.shoulders));
-    await staffCard.getByLabel('Ширина по груди любимой вещи, см (необязательно)',{exact:true}).fill(String(row.chest));
-    const waiting=staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend');await staffCard.getByRole('button',{name:'Подобрать',exact:true}).click();
-    const response=await waiting;assert.equal(response.status(),200);assert.equal(response.request().postDataJSON().colorKey,undefined);
+    before=requests;waiting=waitResponse();
+    await picker.getByLabel('Плечи',{exact:true}).fill(String(row.shoulders));
+    await picker.getByLabel('Грудь',{exact:true}).fill(String(row.chest));
+    const response=await waiting;assert.equal(response.status(),200);assert.equal(requests-before,1);
     const {result}=await response.json();assert.equal(result.colorResults.length,3);assert.equal(result.colorResults.find(c=>c.key===savedBeige.key).size,row.size);
-    await staffCard.locator('.size-color-result').filter({hasText:`Светло-бежевый — ${row.size}`}).waitFor();
-    checks.push({test:'one click, all colors, beige grid exact row',input:{shouldersCm:row.shoulders,chestWidthCm:row.chest},actual:result.summary,passed:true,realOpenAiCall:false});
+    await lines.filter({hasText:'Светло-бежевый — '+row.size}).waitFor();
+    checks.push({test:'automatic beige exact row',input:{shouldersCm:row.shoulders,chestWidthCm:row.chest},actual:await lines.allTextContents(),passed:true,realOpenAiCall:false});
   }
+  before=requests;waiting=waitResponse();await picker.getByRole('radio',{name:'Немного оверсайз',exact:true}).check();
+  const fitResponse=await waiting;assert.equal(fitResponse.request().postDataJSON().fit,'loose');await verifyResponse(fitResponse,['3XL',null,'3XL'],before);
+  checks.push({test:'fit change triggers automatic recalculation',passed:true});
+  before=requests;await picker.getByLabel('Плечи',{exact:true}).fill('5');assert.equal(await lines.count(),0);
+  await staff.waitForTimeout(650);assert.equal(requests,before);
+  checks.push({test:'invalid partial measurement sends no request and clears result',passed:true});
+  // Delay an obsolete response; the newer parameters must win even if the old request finishes last.
+  let releaseOld,oldSeen;const hold=new Promise(resolve=>{releaseOld=resolve;}),seen=new Promise(resolve=>{oldSeen=resolve;});
+  await employee.route('**/api/sizes/recommend',async route=>{
+    const input=route.request().postDataJSON();
+    if(input.shouldersCm===51){const response=await route.fetch();oldSeen();await hold;await route.fulfill({response}).catch(()=>{});}
+    else await route.continue();
+  });
+  await picker.getByLabel('Плечи',{exact:true}).fill('51');await seen;
+  waiting=waitResponse();await picker.getByLabel('Плечи',{exact:true}).fill('50');await picker.getByLabel('Грудь',{exact:true}).fill('54');
+  await waiting;await lines.filter({hasText:'Светло-бежевый — 2XL'}).waitFor();
+  releaseOld();await staff.waitForTimeout(150);
+  assert.deepEqual(await lines.allTextContents(),['Основной цвет — 3XL','Тёмный цвет — XL','Светло-бежевый — 2XL']);
+  checks.push({test:'delayed obsolete response cannot replace current result',passed:true});
+  // Reset before debounce and while a request is in flight.
+  before=requests;await picker.getByLabel('Вес',{exact:true}).fill('71');await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
+  await staff.waitForTimeout(650);assert.equal(requests,before);assert.equal(await lines.count(),0);
+  for(const input of await picker.locator('input[type=number]').all())assert.equal(await input.inputValue(),'');
+  assert.equal(await picker.getByRole('radio',{name:'В размер',exact:true}).isChecked(),true);
+  checks.push({test:'new customer clears all fields, result and pending debounce',passed:true});
+  const beforeLayout=await getCard();
+  for(const key of Object.keys(withThird).filter(k=>!['revision','updated_at'].includes(k)))assert.deepEqual(beforeLayout[key],withThird[key],key);
   await employee.close();
 }finally{
   try{
     if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
   }finally{if(browser)await browser.close();}
 }
-fs.writeFileSync('docs/alpaca-all-colors-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
-console.log('PASS browser: save/reopen three grids; no color selector; one click and one request produce three separate lines; five exact beige rows; partial clarification and calculated-row guards; fixture restored');
+fs.writeFileSync('docs/alpaca-compact-auto-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
+console.log('PASS compact browser: automatic three-color results in narrow card; debounce, optional measurements, fit updates, partial dashes, stale response guard and reset; original fixture restored');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

@@ -1,100 +1,87 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { FITS, FIT_LABELS, type Fit } from "@/lib/sizes";
+import { FITS, FIT_LABELS, recommendSize, type Fit } from "@/lib/sizes";
 import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility";
-import { STRETCH_LABELS, sizeLengthAssessment, isTrousers, type SizeComparison, type SizeAiResult } from "@/lib/size-profile";
-import {ColorGridsTable} from "./ColorGridsTable";
-import {ColorSizeAnswers} from "./ColorSizeAnswers";
+import { isTrousers, type SizeAiResult } from "@/lib/size-profile";
+import { ColorSizeAnswers } from "./ColorSizeAnswers";
+
+const emptyInput = { height: "", weight: "", halfWaist: "", shoulders: "", chestWidth: "", fit: "regular" as Fit };
+const inRange = (value: string, min: number, max: number) => value !== "" && Number.isFinite(Number(value)) && Number(value) >= min && Number(value) <= max;
 
 export function SizeAiPicker({ product }: { product: SizeProduct }) {
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
-  const [halfWaist, setHalfWaist] = useState("");
-  const [shoulders, setShoulders] = useState("");
-  const [chestWidth, setChestWidth] = useState("");
-  const [beltFit, setBeltFit] = useState<"unknown" | "snug" | "roomy">("unknown");
-  const [comparison, setComparison] = useState<SizeComparison | null>(null);
-  const [fit, setFit] = useState<Fit>("regular");
-  const [result, setResult] = useState<SizeAiResult | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [input, setInput] = useState(emptyInput);
+  const [answer, setAnswer] = useState<{ body: string; result: SizeAiResult | null } | null>(null);
   const pending = useRef<AbortController | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const generation = useRef(0);
-  const profile = product.size_profile!;
-  useEffect(() => () => { generation.current++; pending.current?.abort(); }, []);
-  function invalidate() {
-    generation.current++; pending.current?.abort(); setBusy(false); setResult(null); setComparison(null); setError("");
+  const profile = product.size_profile;
+  const trousers = profile ? isTrousers(profile) : /брюк|джинс|штан/i.test(product.name);
+  const valid = inRange(input.height, 100, 230) && inRange(input.weight, 25, 250)
+    && (trousers ? !input.halfWaist || inRange(input.halfWaist, 20, 100)
+      : (!input.shoulders || inRange(input.shoulders, 15, 100)) && (!input.chestWidth || inRange(input.chestWidth, 20, 150)));
+  const body = valid ? JSON.stringify({ productId: product.id, revision: product.revision,
+    height: Number(input.height), weight: Number(input.weight), fit: input.fit,
+    ...(trousers && input.halfWaist ? { halfWaistCm: Number(input.halfWaist) } : {}),
+    ...(!trousers && input.shoulders ? { shouldersCm: Number(input.shoulders) } : {}),
+    ...(!trousers && input.chestWidth ? { chestWidthCm: Number(input.chestWidth) } : {}) }) : null;
+
+  function change(values: Partial<typeof input>) {
+    generation.current++;
+    pending.current?.abort();
+    if (timer.current) clearTimeout(timer.current);
+    setAnswer(null);
+    setInput(previous => ({ ...previous, ...values }));
   }
-  async function recommend() {
-    invalidate();
-    const h = Number(height), w = Number(weight), waist = Number(halfWaist);
-    if (!height || !weight || h < 100 || h > 230 || w < 25 || w > 250 || (halfWaist && (waist < 20 || waist > 100))
-      || (shoulders && (Number(shoulders) < 15 || Number(shoulders) > 100)) || (chestWidth && (Number(chestWidth) < 20 || Number(chestWidth) > 150))) {
-      setError("Проверьте рост, вес и необязательные мерки любимой вещи."); return;
-    }
+
+  useEffect(() => {
+    if (!body) return;
     const request = ++generation.current;
-    const controller = new AbortController(); pending.current = controller;
-    setBusy(true);
-    try {
-      const response = await fetch("/api/sizes/recommend", {
-        method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
-        body: JSON.stringify({ productId: product.id, revision: product.revision, height: h, weight: w, fit,
-          ...(isTrousers(profile) && halfWaist ? { halfWaistCm: waist, beltFit } : {}),
-          ...(!isTrousers(profile) && shoulders ? { shouldersCm: Number(shoulders) } : {}),
-          ...(!isTrousers(profile) && chestWidth ? { chestWidthCm: Number(chestWidth) } : {}) }),
-      });
-      const data = await response.json();
-      if (request !== generation.current) return;
-      if (!response.ok) throw new Error(data.error ?? "Не удалось подобрать размер.");
-      setResult(data.result);
-      setComparison(data.comparison ?? null);
-    } catch (e) {
-      if (request === generation.current) setError(e instanceof Error ? e.message : "Проверьте подключение.");
-    } finally { if (request === generation.current) setBusy(false); }
-  }
-  return <div className="size-picker" id={`picker-${product.id}`}>
-    <p className="size-hint">{profile.cut || "Крой не указан"} · {STRETCH_LABELS[profile.stretch]}. {profile.fabric}</p>
-    {profile.fitNote && <p className="size-hint">{profile.fitNote}</p>}
+    const controller = new AbortController();
+    pending.current = controller;
+    const scheduled = setTimeout(async () => {
+      if (controller.signal.aborted || request !== generation.current) return;
+      try {
+        let result: SizeAiResult;
+        if (product.size_profile) {
+          const response = await fetch("/api/sizes/recommend", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body, signal: controller.signal,
+          });
+          if (!response.ok) throw new Error("SIZE_RECOMMENDATION_UNAVAILABLE");
+          result = (await response.json()).result;
+        } else {
+          const customer = JSON.parse(body);
+          const legacy = recommendSize(product, customer.height, customer.weight, customer.fit);
+          result = { size: legacy.size, explanation: legacy.message, clarification: null };
+        }
+        if (!controller.signal.aborted && request === generation.current) setAnswer({ body, result });
+      } catch {
+        if (!controller.signal.aborted && request === generation.current) setAnswer({ body, result: null });
+      }
+    }, 500);
+    timer.current = scheduled;
+    return () => {
+      clearTimeout(scheduled);
+      controller.abort();
+    };
+  }, [body, product, input]);
+
+  const current = answer?.body === body ? answer : null;
+  const colors = current?.result?.colorResults ?? (current && profile?.colorGrids?.colors.map(color => ({ key: color.key, name: color.name, size: null })));
+  return <div className="size-picker size-picker-compact" id={`picker-${product.id}`}>
     <div className="size-measurements">
-      <label>Рост, см<input type="number" inputMode="decimal" min="100" max="230" step="0.5" value={height} onChange={e => { invalidate(); setHeight(e.target.value); }} /></label>
-      <label>Вес, кг<input type="number" inputMode="decimal" min="25" max="250" step="0.5" value={weight} onChange={e => { invalidate(); setWeight(e.target.value); }} /></label>
+      <label>Рост<input type="number" inputMode="decimal" min="100" max="230" step="any" required value={input.height} onChange={e => change({ height: e.target.value })} /></label>
+      <label>Вес<input type="number" inputMode="decimal" min="25" max="250" step="any" required value={input.weight} onChange={e => change({ weight: e.target.value })} /></label>
+      {trousers ? <label>Полупояс<input type="number" inputMode="decimal" min="20" max="100" step="any" value={input.halfWaist} onChange={e => change({ halfWaist: e.target.value })} /></label> : <>
+        <label>Плечи<input type="number" inputMode="decimal" min="15" max="100" step="any" value={input.shoulders} onChange={e => change({ shoulders: e.target.value })} /></label>
+        <label>Грудь<input type="number" inputMode="decimal" min="20" max="150" step="any" value={input.chestWidth} onChange={e => change({ chestWidth: e.target.value })} /></label>
+      </>}
     </div>
-    {isTrousers(profile) ? <><label className="size-waist">Полупояс подходящих брюк, см (необязательно)
-      <input type="number" inputMode="decimal" min="20" max="100" step="0.5" value={halfWaist} onChange={e => { invalidate(); setHalfWaist(e.target.value); }} />
-      <span className="size-hint">Измерьте пояс от края до края, разложив подходящие брюки ровно, без растяжения. Это не обхват талии.</span>
-    </label>
-    {halfWaist && <fieldset className="size-fit"><legend>Как сидит пояс любимых брюк?</legend>{([['unknown', 'Не знаю'], ['snug', 'Впритык'], ['roomy', 'С запасом']] as const).map(([value, label]) => <label key={value} className={beltFit === value ? "selected" : ""}>
-      <input type="radio" name={`belt-${product.id}`} checked={beltFit === value} onChange={() => { invalidate(); setBeltFit(value); }} />{label}
-    </label>)}</fieldset>}</> : <>
-      <div className="size-measurements">
-        <label>Плечи любимой вещи, см (необязательно)<input type="number" inputMode="decimal" min="15" max="100" step="0.5" value={shoulders} onChange={e => { invalidate(); setShoulders(e.target.value); }} /></label>
-        <label>Ширина по груди любимой вещи, см (необязательно)<input type="number" inputMode="decimal" min="20" max="150" step="0.5" value={chestWidth} onChange={e => { invalidate(); setChestWidth(e.target.value); }} /></label>
-      </div><p className="size-hint">Разложите вещь ровно. Плечи — между плечевыми швами, грудь — от подмышки до подмышки. Это ширина вещи, не обхват тела.</p>
-    </>}
-    <fieldset className="size-fit"><legend>Пожелание клиента</legend>{FITS.map(f => <label key={f} className={fit === f ? "selected" : ""}>
-      <input type="radio" name={`fit-${product.id}`} checked={fit === f} onChange={() => { invalidate(); setFit(f); }} />{FIT_LABELS[f]}
+    <fieldset className="size-fit"><legend>Посадка</legend>{FITS.map(fit => <label key={fit} className={input.fit === fit ? "selected" : ""}>
+      <input type="radio" name={`fit-${product.id}`} checked={input.fit === fit} onChange={() => change({ fit })} />{fit === "regular" ? "В размер" : FIT_LABELS[fit]}
     </label>)}</fieldset>
-    <button type="button" className="primary" disabled={busy || !height || !weight} onClick={() => void recommend()}>{busy ? "Подбираем…" : "Подобрать"}</button>
-    <div aria-live="polite" aria-atomic="true" aria-busy={busy} className={`size-answer ${result?.size ? "preliminary" : ""}`}>
-      {busy ? <p>Сравниваем параметры с таблицей выбранной вещи…</p> : result ? <>
-        {result.colorResults ? <ColorSizeAnswers colors={result.colorResults}/> : <>
-          {result.size ? <><span className="size-answer-label">Предварительная рекомендация по бирке</span><strong className="size-final-choice">Размер: {result.size}</strong></> : <b>Нужно уточнение</b>}
-          <p>{result.explanation}</p>{result.clarification && <p>{result.clarification}</p>}
-        </>}
-      </> : <p>Подбор запускается по кнопке. По росту и весу нельзя гарантировать точную посадку.</p>}
+    <div aria-live="polite" aria-atomic="true" aria-busy={!!body && !current} className="size-answer size-answer-compact">
+      {colors ? <ColorSizeAnswers colors={colors}/> : current ? <p className="size-final-choice">Размер: {current.result?.size ?? "—"}</p> : null}
     </div>
-    {result && !result.colorResults && <div className="size-length-assessment"><b>Длина отдельно</b><p>{sizeLengthAssessment(profile, result.size)}</p></div>}
-    {!!comparison?.rows.length && <details className="size-evidence"><summary>Сравнение мерок с сеткой</summary><ul>{comparison.rows.map(row => <li key={row.size}><b>{row.size}</b>: {row.measurements.map(m => `${m.label}: ${m.itemCm} см (${m.deltaCm > 0 ? "+" : ""}${m.deltaCm} см к любимой вещи)`).join("; ")}</li>)}</ul><p className="size-hint">Минус — уже, плюс — шире. При одинаковой разнице нет единственного ближайшего размера.</p></details>}
-    {error && <p className="error" role="alert">{error}</p>}
-    <p className="size-hint">Рекомендация предварительная. Наличие размера проверяйте в разделе «Наличие»: строка в таблице его не подтверждает.</p>
-    <details className="size-evidence"><summary>{profile.colorGrids?'Размерные таблицы по цветам, см':'Размерная таблица, см'}</summary>{profile.colorGrids ? <ColorGridsTable grids={profile.colorGrids}/> : <div className="table-wrap"><table>
-      <thead><tr><th>По бирке</th>{profile.columns.map(column => <th key={column}>{column}</th>)}</tr></thead>
-      <tbody>{profile.rows.map(row => <tr key={row.size}><th>{row.size}</th>{row.values.map((value, i) => <td key={i}>{value}</td>)}</tr>)}</tbody>
-    </table></div>}</details>
-    <details className="size-evidence"><summary>Сохранённые примеры владельца ({product.examples.length})</summary>
-      <ul>{product.examples.map((row, i) => <li key={i}>{row.height} см · {row.weight} кг · {FIT_LABELS[row.fit]} → <b>{row.size}</b></li>)}</ul>
-      <p className="size-hint">Старые рекомендации учитываются как ориентир, а не как подтверждённые примерки. Прямые мерки имеют приоритет.</p>
-    </details>
-    <button type="button" className="secondary" onClick={() => { invalidate(); setHeight(""); setWeight(""); setHalfWaist(""); setShoulders(""); setChestWidth(""); setBeltFit("unknown"); setFit("regular"); }}>Новый клиент</button>
+    <button type="button" className="secondary" onClick={() => change(emptyInput)}>Новый клиент</button>
   </div>;
 }

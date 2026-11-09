@@ -62,7 +62,7 @@ export function SizeCatalog({ admin = false }: { admin?: boolean }) {
         {count > 1 && <><button type="button" className="size-photo-arrow prev" aria-label="Предыдущее фото" onClick={() => changePhoto(-1)}>‹</button><button type="button" className="size-photo-arrow next" aria-label="Следующее фото" onClick={() => changePhoto(1)}>›</button><span className="size-photo-count">{index + 1} / {count}</span></>}
       </div>
       <button type="button" className="size-card-button" aria-expanded={open === p.id} aria-controls={`picker-${p.id}`} onClick={() => setOpen(open === p.id ? null : p.id)}>
-        <span className="size-card-caption"><strong>{p.name}</strong><small>{p.note || "Особенности посадки не указаны"}</small>{!p.active && <span className="badge">Скрыта от сотрудников</span>}<span className="size-card-action">{open === p.id ? "Свернуть ↑" : "Подобрать размер ↓"}</span></span>
+        <span className="size-card-caption"><strong>{p.name}</strong>{!p.active && <span className="badge">Скрыта от сотрудников</span>}<span className="size-card-action">{open === p.id ? "Свернуть ↑" : "Подобрать размер ↓"}</span></span>
       </button>
       {open === p.id && ((p.examples.length || p.size_profile) && p.sizes.length && p.photo_count > 0 ? <SizePicker key={`${p.id}-${p.revision}`} product={p} /> : <p className="size-hint">Подбор пока недоступен. Заполните размеры, фотографии и примеры или числовую таблицу.</p>)}
       {admin && <SizeConflicts product={p} />}

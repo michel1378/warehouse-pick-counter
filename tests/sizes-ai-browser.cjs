@@ -182,49 +182,46 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
 
     await login('employee'); await page.goto(baseURL + '/sizes');
     await page.getByRole('button', { name: /Брюки Огромнейшие/ }).click();
-    await page.getByLabel('Рост, см', { exact: true }).fill('175');
-    await page.getByLabel('Вес, кг', { exact: true }).fill('70');
-    assert.equal(providerCalls, 0);
-    await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
-    await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: M');
-    await page.getByRole('button', { name: 'Новый клиент', exact: true }).click();
-    assert.equal(await page.getByLabel('Рост, см', { exact: true }).inputValue(), '');
-    assert.equal(await page.locator('.size-answer strong').count(), 0);
-    await db.exec('delete from size_ai_limits');
-    await page.getByLabel('Рост, см', { exact: true }).fill('175'); await page.getByLabel('Вес, кг', { exact: true }).fill('70');
-    await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill('39.5');
-    await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
-    await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: M');
-    assert.match(await page.locator('.size-length-assessment').innerText(), /106 см/);
-    for (const [waist, size, length] of [['42','L','107'], ['44','XL','108']]) {
-      await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill(waist);
-      await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
-      await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-      assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: ' + size);
-      assert((await page.locator('.size-length-assessment').innerText()).includes(length + ' см'));
-      assert.match(await page.locator('.size-length-assessment').innerText(), /По одному росту нельзя/);
-      assert.equal(providerCalls, 1);
+    const picker=page.locator('.size-picker');
+    assert.equal(await picker.locator('input[type=number]').count(),3);
+    assert.equal(await picker.getByLabel('Полупояс',{exact:true}).getAttribute('required'),null);
+    assert.equal(await picker.getByRole('button',{name:'Подобрать',exact:true}).count(),0);
+    assert.equal(await picker.locator('details').count(),0);
+    const waitingResponse=()=>page.waitForResponse(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.request().method()==='POST');
+    async function answer(response,text){
+      assert.equal(response.status(),200);await picker.locator('.size-final-choice').getByText(text,{exact:true}).waitFor();
+      assert.equal(await picker.locator('.size-answer').innerText(),text);
     }
-    await db.exec('delete from size_ai_limits'); providerMode = 'clarification';
-    await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill('');
-    await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
-    await page.getByText('Нужно уточнение', { exact: true }).waitFor();
-    assert.equal(await page.locator('.size-answer strong').count(), 0);
-    assert.equal(providerCalls, 2);
-    console.log('PASS browser integration (mock, not quality): height/weight/fit reaches provider; exact waist uses chart, length shown separately; model clarification, no automatic calls, customer reset');
-
-    await db.exec('delete from size_ai_limits'); providerDelay = 1500; providerMode = 'size';
-    await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill('39.75');
-    await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
-    await page.getByText('Сравниваем параметры с таблицей выбранной вещи…', { exact: true }).waitFor();
-    await page.getByLabel('Вес, кг', { exact: true }).fill('71');
-    await page.waitForTimeout(1800); assert.equal(await page.locator('.size-answer strong').count(), 0);
-    await page.setViewportSize({ width: 390, height: 844 });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-    await page.screenshot({ path: path.join(require('node:os').tmpdir(), 'warehouse-size-ai-mobile.png'), fullPage: true });
-    console.log('PASS browser stale-response cancellation and mobile viewport; all external traffic blocked, OpenAI mocked');
+    let waiting=waitingResponse();
+    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('70');
+    assert.equal(providerCalls,0);await answer(await waiting,'Размер: M');assert.equal(providerCalls,1);
+    await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
+    assert.equal(await picker.getByLabel('Рост',{exact:true}).inputValue(),'');
+    assert.equal(await picker.locator('.size-final-choice').count(),0);
+    waiting=waitingResponse();
+    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('70');
+    await picker.getByLabel('Полупояс',{exact:true}).fill('39.5');
+    await answer(await waiting,'Размер: M');assert.equal(providerCalls,1);
+    for(const [waist,size] of [['42','L'],['44','XL']]){
+      waiting=waitingResponse();await picker.getByLabel('Полупояс',{exact:true}).fill(waist);
+      assert.equal(await picker.locator('.size-final-choice').count(),0);await answer(await waiting,'Размер: '+size);
+      assert.equal(providerCalls,1);
+    }
+    await db.exec('delete from size_ai_limits');providerMode='clarification';
+    waiting=waitingResponse();await picker.getByLabel('Полупояс',{exact:true}).fill('');
+    await answer(await waiting,'Размер: —');assert.equal(providerCalls,2);
+    console.log('PASS compact single-grid browser: automatic size, optional waist, clarification as dash, original editor/photo/example data retained');
+    await db.exec('delete from size_ai_limits');providerDelay=1000;providerMode='size';
+    const oldRequest=page.waitForRequest(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.method()==='POST');
+    await picker.getByLabel('Вес',{exact:true}).fill('71');await oldRequest;
+    waiting=waitingResponse();await picker.getByLabel('Полупояс',{exact:true}).fill('42');
+    await answer(await waiting,'Размер: L');await page.waitForTimeout(1100);
+    assert.equal(await picker.locator('.size-answer').innerText(),'Размер: L');
+    await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
+    await page.waitForTimeout(600);assert.equal(await picker.locator('.size-answer').innerText(),'');
+    await page.setViewportSize({width:360,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await picker.screenshot({path:path.join(require('node:os').tmpdir(),'warehouse-compact-pants-auto.png')});
+    console.log('PASS compact single-grid stale response cancellation, reset, mobile viewport; all OpenAI transport mocked');
   } finally {
     await browser?.close();
     if (next && next.exitCode === null) await new Promise(resolve => {
