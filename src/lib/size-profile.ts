@@ -41,7 +41,7 @@ export const sizeProfileSchema = z.object({
 });
 
 export type SizeProfile = z.infer<typeof sizeProfileSchema>;
-export type SizeAiResult = { size: string | null; explanation: string; clarification: string | null; summary?: string; colorResults?: ColorSizeResult[] };
+export type SizeAiResult = { size: string | null; explanation: string; clarification: string | null; approximate?: boolean; summary?: string; colorResults?: ColorSizeResult[] };
 export type SizeComparison = { nearest: string[]; rows: { size: string; distanceCm: number; measurements: { key: string; label: string; clientCm: number; itemCm: number; deltaCm: number }[] }[] };
 
 export const isTrousers = (profile: SizeProfile) => profile.garment === "trousers" || profile.garment === "jeans";

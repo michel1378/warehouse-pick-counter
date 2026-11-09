@@ -108,6 +108,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await db.query("insert into employees values ($1,'Тестовый сотрудник',true,'warehouse','[\"picking\"]')", [employee]);
     if (pilotForm || colorForm) await db.query("insert into size_products(id,name,note,sizes,examples,photo,photos,photo_count,active,show_in_sizes,show_in_availability) values ($1,'Тестовый верх','Не маломерит','[\"S\",\"M\",\"L\"]','[]',$2,$3,1,true,true,false)", [topId, image, JSON.stringify([image])]);
     if (colorForm) await db.query('update size_products set size_profile=$1 where id=$2',[JSON.stringify({garment:'top',fabric:'',stretch:'none',cut:'Прямой',fitNote:'',columns:['Плечи','Грудь','Длина'],columnKeys:['shouldersCm','chestWidthCm','lengthCm'],rows:[{size:'M',values:[44,48,64]}]}),topId]);
+    if (colorForm) await db.query('update size_products set examples=$1 where id=$2',[JSON.stringify([{height:150,weight:50,fit:'regular',size:'M'},{height:163,weight:60,fit:'regular',size:'L'}]),topId]);
     const original = (await db.query('select * from size_products where id=$1', [id])).rows[0];
     const fixtureOrigin = 'http://127.0.0.1:' + await listen(fixture);
     const portProbe = net.createServer(); const port = await listen(portProbe); await new Promise(resolve => portProbe.close(resolve));
@@ -194,7 +195,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     }
     let waiting=waitingResponse();
     await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('70');
-    assert.equal(providerCalls,0);await answer(await waiting,'Размер: M');assert.equal(providerCalls,1);
+    assert.equal(providerCalls,0);await answer(await waiting,'Размер: ≈ M');assert.equal(providerCalls,1);
     await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
     assert.equal(await picker.getByLabel('Рост',{exact:true}).inputValue(),'');
     assert.equal(await picker.locator('.size-final-choice').count(),0);

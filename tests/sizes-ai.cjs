@@ -256,6 +256,10 @@ const resetLimit = () => db.exec('delete from size_ai_limits');
     session={role:'employee',sub:subject};
     const employeeCatalog=await(await sizes.GET()).json();assert.equal(employeeCatalog.products.find(p=>p.id===other).size_profile.colorGrids.colors.length,3);
     const selectedInput={productId:other,revision:savedOther.revision,height:175,weight:70,fit:'regular'};
+    response=await api.POST(request('/recommend',selectedInput));assert.equal(response.status,200);
+    const ownerOnly=(await response.json()).result;
+    assert.deepEqual(ownerOnly.colorResults.map(r=>r.size),['M','M','M']);
+    assert(ownerOnly.colorResults.every(r=>r.approximate&&r.comparisons.length===0));
     response=await api.POST(request('/recommend',{...selectedInput,shouldersCm:50,chestWidthCm:54}));assert.equal(response.status,200);
     assert.deepEqual((await response.json()).result.colorResults.map(r=>r.size),['3XL','XL','2XL']);
     for(const [colorKey,shouldersCm,chestWidthCm,size] of [['light_beige',44,48,'M'],['light_beige',47,52,'L'],['light_beige',47,54,'XL'],['light_beige',50,54,'2XL'],['light_beige',52,56,'3XL'],['dark',50,56,null],['dark',52,58,null]]){

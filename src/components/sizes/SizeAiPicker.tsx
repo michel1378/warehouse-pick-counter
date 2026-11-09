@@ -51,7 +51,7 @@ export function SizeAiPicker({ product }: { product: SizeProduct }) {
         } else {
           const customer = JSON.parse(body);
           const legacy = recommendSize(product, customer.height, customer.weight, customer.fit);
-          result = { size: legacy.size, explanation: legacy.message, clarification: null };
+          result = { size: legacy.size, explanation: legacy.message, clarification: null, approximate: !!legacy.size };
         }
         if (!controller.signal.aborted && request === generation.current) setAnswer({ body, result });
       } catch {
@@ -80,7 +80,7 @@ export function SizeAiPicker({ product }: { product: SizeProduct }) {
       <input type="radio" name={`fit-${product.id}`} checked={input.fit === fit} onChange={() => change({ fit })} />{fit === "regular" ? "В размер" : FIT_LABELS[fit]}
     </label>)}</fieldset>
     <div aria-live="polite" aria-atomic="true" aria-busy={!!body && !current} className="size-answer size-answer-compact">
-      {colors ? <ColorSizeAnswers colors={colors}/> : current ? <p className="size-final-choice">Размер: {current.result?.size ?? "—"}</p> : null}
+      {colors ? <ColorSizeAnswers colors={colors}/> : current ? <p className="size-final-choice"><span className="size-color-name">Размер: </span><strong className="size-result-value">{current.result?.size && (current.result.approximate || (trousers ? !input.halfWaist : !input.shoulders || !input.chestWidth)) ? "≈ " : ""}{current.result?.size ?? "—"}</strong></p> : null}
     </div>
     <button type="button" className="secondary" onClick={() => change(emptyInput)}>Новый клиент</button>
   </div>;

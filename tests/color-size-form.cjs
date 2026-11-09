@@ -76,27 +76,39 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
     assert.equal(response.request().postDataJSON().colorKey,undefined);
     await lines.first().waitFor();
     const actual=await lines.allTextContents();
-    assert.deepEqual(actual,result.colorResults.map(r=>r.name+' — '+(r.size??'—')));
+    assert.deepEqual(actual,result.colorResults.map(r=>r.name+' — '+(r.size&&r.approximate?'≈ ':'')+(r.size??'—')));
     assert(!/предвар|ближайш|налич|измер|рукав|ткань|владел|длина/i.test(await picker.locator('.size-answer').innerText()));
     return actual;
   }
   let before=requests,waiting=waitResponse();
   await picker.getByLabel('Рост',{exact:true}).pressSequentially('175',{delay:40});
   await picker.getByLabel('Вес',{exact:true}).pressSequentially('70',{delay:40});
+  let actual=await verifyResponse(await waiting,['L','L','L'],before);
+  assert.deepEqual(actual,['Основной цвет — ≈ L','Тёмный цвет — ≈ L','Светло-бежевый — ≈ L']);
+  assert.equal(sent.at(-1).input.shouldersCm,undefined);assert.equal(sent.at(-1).input.chestWidthCm,undefined);
+  const preliminaryScreenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-preliminary-green.png');
+  await picker.screenshot({path:preliminaryScreenshot});
+  checks.push({test:'height weight and fit alone produce shared approximate owner anchor, no fabricated item measurements',input:{height:175,weight:70,fit:'regular'},actual,screenshot:preliminaryScreenshot,passed:true,realOpenAiCall:false});
+  before=requests;waiting=waitResponse();
   await picker.getByLabel('Плечи',{exact:true}).pressSequentially('50',{delay:40});
   await picker.getByLabel('Грудь',{exact:true}).pressSequentially('54',{delay:40});
   const stoppedAt=Date.now();
   await staff.waitForTimeout(200);assert.equal(requests,before);
-  let actual=await verifyResponse(await waiting,['3XL','XL','2XL'],before);
+  actual=await verifyResponse(await waiting,['3XL','XL','2XL'],before);
   assert(sent.at(-1).at-stoppedAt>=400,'Debounce must wait after the last digit');
-  assert.deepEqual(actual,['Основной цвет — 3XL','Тёмный цвет — XL','Светло-бежевый — 2XL']);
+  assert.deepEqual(actual,['Основной цвет — ≈ 3XL','Тёмный цвет — ≈ XL','Светло-бежевый — 2XL']);
   assert.equal(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const bounds=await picker.boundingBox();assert(bounds.width<=330);
   for(const line of await lines.all())assert((await line.boundingBox()).x+(await line.boundingBox()).width<=360);
-  const screenshot=path.join(require('node:os').tmpdir(),'warehouse-compact-alpaca-auto.png');
+  const styles=await lines.first().evaluate(el=>{
+    const name=el.querySelector('.size-color-name'),value=el.querySelector('.size-result-value'),a=getComputedStyle(name),b=getComputedStyle(value);
+    return {nameWeight:a.fontWeight,nameColor:a.color,sizeWeight:b.fontWeight,sizeColor:b.color,sizePx:b.fontSize,sameLine:Math.abs(name.getBoundingClientRect().bottom-value.getBoundingClientRect().bottom)<5};
+  });
+  assert.equal(styles.nameWeight,'400');assert.equal(styles.sizeWeight,'700');assert.equal(styles.sizePx,'24px');assert.notEqual(styles.sizeColor,styles.nameColor);assert(styles.sameLine);
+  const screenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-measured-green.png');
   await picker.screenshot({path:screenshot});
-  checks.push({test:'narrow card, automatic three-color result after debounce, one request per typing burst',width:bounds.width,input:{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54},actual,requests:requests-before,screenshot,passed:true,realOpenAiCall:false});
-  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[null,null,null]]]){
+  checks.push({test:'narrow card, measured grid overrides owner anchor; exact beige 2XL and green 24px size',width:bounds.width,input:{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54},actual,styles,requests:requests-before,screenshot,passed:true,realOpenAiCall:false});
+  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',['L','L','L']]]){
     before=requests;waiting=waitResponse();
     await picker.getByLabel('Плечи',{exact:true}).fill(shoulders);
     assert.equal(await lines.count(),0,'Old result disappears immediately');
@@ -130,7 +142,7 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   waiting=waitResponse();await picker.getByLabel('Плечи',{exact:true}).fill('50');await picker.getByLabel('Грудь',{exact:true}).fill('54');
   await waiting;await lines.filter({hasText:'Светло-бежевый — 2XL'}).waitFor();
   releaseOld();await staff.waitForTimeout(150);
-  assert.deepEqual(await lines.allTextContents(),['Основной цвет — 3XL','Тёмный цвет — XL','Светло-бежевый — 2XL']);
+  assert.deepEqual(await lines.allTextContents(),['Основной цвет — ≈ 3XL','Тёмный цвет — ≈ XL','Светло-бежевый — 2XL']);
   checks.push({test:'delayed obsolete response cannot replace current result',passed:true});
   // Reset before debounce and while a request is in flight.
   before=requests;await picker.getByLabel('Вес',{exact:true}).fill('71');await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
@@ -146,6 +158,6 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
     if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
   }finally{if(browser)await browser.close();}
 }
-fs.writeFileSync('docs/alpaca-compact-auto-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
+fs.writeFileSync('docs/alpaca-preliminary-green-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids and two unconfirmed owner anchors, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
 console.log('PASS compact browser: automatic three-color results in narrow card; debounce, optional measurements, fit updates, partial dashes, stale response guard and reset; original fixture restored');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});
