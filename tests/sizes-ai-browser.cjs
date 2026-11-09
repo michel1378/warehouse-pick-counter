@@ -7,8 +7,9 @@ const { spawn } = require('node:child_process');
 const { PGlite } = require('@electric-sql/pglite');
 const pilotForm = process.argv.includes('--pilot-form');
 const colorForm = process.argv.includes('--color-form');
+const employeeLiveForm = process.argv.includes('--employee-live-form');
 const keepOpen = process.argv.includes('--keep-open');
-const liveForm = process.argv.includes('--live-form') || pilotForm;
+const liveForm = process.argv.includes('--live-form') || pilotForm || employeeLiveForm;
 if (liveForm) {
   require('@next/env').loadEnvConfig(process.cwd());
   if (!process.env.OPENAI_API_KEY?.trim()) throw new Error('OPENAI_API_KEY is missing; live form test cannot start');
@@ -54,8 +55,8 @@ const fixture = http.createServer(async (req, res) => {
       const result={results:input.requestedKeys.map(key=>{
         const color=input.product.colors.find(row=>row.key===key);
         const clarify=providerMode==='clarification'||measured&&color.allowedSizes.length>1;
-        const size=measured?color.allowedSizes[0]:input.product.examples.length>=2?'XL':'M';
-        return {key,size:clarify?null:size,reason:'Synthetic response for UI testing, not model quality',clarification:clarify?'Уточните замеры вещи':null,
+        const size=measured?color.allowedSizes[0]:input.product.colors.some(row=>row.fitRule)?'L':input.product.examples.length>=2?'XL':'M';
+        return {key,size:clarify?null:size,baseSize:clarify?null:size,fitAdjustmentIncluded:false,reason:'Synthetic response for UI testing, not model quality',clarification:clarify?'Уточните замеры вещи':null,
           basis:measured?'measurements':'owner_examples',exampleIndexes:measured?[]:input.product.examples.map(row=>row.index)};
       })};
       data = { id: 'resp_browser_fixture', object: 'response', created_at: 1, status: 'completed', output: [{ id: 'msg_fixture', type: 'message', status: 'completed', role: 'assistant', content: [{ type: 'output_text', text: JSON.stringify(result), annotations: [] }] }] };
@@ -103,7 +104,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     }
     await db.exec('create role anon; create role authenticated; create role service_role;');
     for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql', '20261102_availability_create.sql', '20261103064143_independent_catalog_visibility.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
-    const ownerRows = pilotForm ? JSON.parse(fs.readFileSync('tests/fixtures/size-catalog-20261028.json','utf8')).find(p => p.name === 'Брюки Огромнейшие').examples
+    const ownerRows = pilotForm || employeeLiveForm ? JSON.parse(fs.readFileSync('tests/fixtures/size-catalog-20261028.json','utf8')).find(p => p.name === 'Брюки Огромнейшие').examples
       : liveForm ? [] : [{ height: 175, weight: 70, fit: 'regular', size: 'M' }];
     await db.query("insert into size_products(id,name,note,sizes,examples,photo,photos,photo_count,active,show_in_sizes,show_in_availability) values ($1,'Брюки Огромнейшие','Маломерит на размер',$2,$3,$4,$5,2,true,true,true)", [id, JSON.stringify(['M','L','XL','2XL','3XL']), JSON.stringify(ownerRows), image, JSON.stringify([image, image])]);
     await db.exec(fs.readFileSync('supabase/migrations/20261108220243_size_measurements_ai.sql', 'utf8'));
@@ -141,13 +142,34 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
       assert(providerCalls>0,'Ambiguous colors must use the explicitly mocked model transport');
       return;
     }
-    browser = await chromium.launch({ channel: 'msedge', headless: !liveForm });
+    browser = await chromium.launch({ channel: 'msedge', headless: !liveForm || employeeLiveForm });
     const context = await browser.newContext();
     await context.route('**/*', route => [baseURL, ...(pilotForm ? [fixtureOrigin] : [])].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort());
     const { SignJWT } = await import('jose');
     async function login(role) {
       const token = await new SignJWT(role === 'admin' ? { role, name: 'Тестовый администратор' } : { role }).setProtectedHeader({ alg: 'HS256' }).setSubject(employee).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(secret));
       await context.addCookies([{ name: 'warehouse_session', value: token, url: baseURL, httpOnly: true, sameSite: 'Lax' }]);
+    }
+    if(employeeLiveForm){
+      await login('employee');const page=await context.newPage();await page.setViewportSize({width:360,height:844});
+      await page.goto(baseURL+'/sizes');assert.equal(await page.getByRole('button',{name:'Редактировать',exact:true}).count(),0);
+      await page.getByRole('button',{name:/Брюки Огромнейшие/}).click();const picker=page.locator('.size-picker');
+      const nextResponse=()=>page.waitForResponse(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.request().method()==='POST');
+      let pending=nextResponse();await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('67');
+      let response=await pending;assert.equal(response.status(),200);const first=await response.json();
+      assert.equal(first.result.providerStatus,'completed');assert.equal(realApiObservations.length,1);
+      await picker.locator('.size-final-choice').waitFor();
+      const checks=[{input:response.request().postDataJSON(),httpStatus:200,result:first.result,realOpenAiCalls:1,observations:[...realApiObservations]}];
+      const before=realApiObservations.length;pending=nextResponse();await picker.getByLabel('Полупояс',{exact:true}).fill('39');
+      response=await pending;assert.equal(response.status(),200);const second=await response.json();
+      assert.equal(second.result.size,'M');assert.equal(second.result.providerStatus,'not_needed');assert.equal(realApiObservations.length,before);
+      await picker.getByText('Размер: M',{exact:true}).waitFor();
+      checks.push({input:response.request().postDataJSON(),httpStatus:200,result:second.result,realOpenAiCalls:0});
+      const screenshot=path.join(require('node:os').tmpdir(),'warehouse-pants-employee-real-M.png');await picker.screenshot({path:screenshot});
+      assert.deepEqual((await db.query('select * from size_products where id=$1',[id])).rows[0],original);
+      fs.writeFileSync('docs/pants-employee-real-form-2026-11-09.json',JSON.stringify({environment:'local isolated Next app, employee session validated by SQL fixture, real unchanged OpenAI HTTP transport',productionVerified:false,productionDatabaseChanged:false,checks,screenshot},null,2)+'\n');
+      console.log(JSON.stringify({passed:true,environment:'local_employee_form_real_OpenAI',checks:checks.map(c=>({input:c.input,status:c.httpStatus,size:c.result.size,clarification:c.result.clarification,realOpenAiCalls:c.realOpenAiCalls})),screenshot}));
+      return;
     }
     if (pilotForm) {
       const page = await context.newPage();
@@ -173,13 +195,13 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await page.goto(baseURL + '/admin/sizes');
     await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
     await page.getByLabel('Ткань и состав').fill('Ткань после проверки сохранения');
-    await page.getByLabel('Полупояс, строка сетки 2', { exact: true }).fill('39.5');
+    await page.getByLabel('Полупояс, строка сетки 1', { exact: true }).fill('38.5');
     await page.getByRole('button', { name: 'Сохранить вещь', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Сохранено' }).waitFor();
     await page.reload();
     await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
     assert.equal(await page.getByLabel('Ткань и состав').inputValue(), 'Ткань после проверки сохранения');
-    assert.equal(await page.getByLabel('Полупояс, строка сетки 2', { exact: true }).inputValue(), '39.5');
+    assert.equal(await page.getByLabel('Полупояс, строка сетки 1', { exact: true }).inputValue(), '38.5');
     const persisted = (await db.query('select * from size_products')).rows[0];
     for (const key of ['photos','photo','photo_count','examples','sizes','stock_details']) assert.deepEqual(persisted[key], original[key]);
     assert(!persisted.sizes.includes('S'));
@@ -187,6 +209,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     console.log('PASS browser admin: edit numeric chart/fabric, save, reload, exact values persisted; photos, examples, range and stock retained');
 
     await login('employee'); await page.goto(baseURL + '/sizes');
+    assert.equal(await page.getByRole('button',{name:'Редактировать',exact:true}).count(),0);
     await page.getByRole('button', { name: /Брюки Огромнейшие/ }).click();
     const picker=page.locator('.size-picker');
     assert.equal(await picker.locator('input[type=number]').count(),4);
@@ -194,20 +217,38 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     assert.equal(await picker.getByRole('button',{name:'Подобрать',exact:true}).count(),0);
     assert.equal(await picker.locator('details').count(),0);
     const waitingResponse=()=>page.waitForResponse(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.request().method()==='POST');
+    const traces=[];
     async function answer(response,text){
+      traces.push({input:response.request().postDataJSON(),status:response.status(),response:await response.json(),realOpenAiCall:false});
       assert.equal(response.status(),200);await picker.locator('.size-final-choice').getByText(text,{exact:true}).waitFor();
       assert.equal(await picker.locator('.size-answer').innerText(),text);
     }
     let waiting=waitingResponse();
-    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('70');
+    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('67');
     assert.equal(providerCalls,0);await answer(await waiting,'Размер: ≈ M');assert.equal(providerCalls,1);
     await picker.getByRole('button',{name:'Новый клиент',exact:true}).click();
     assert.equal(await picker.getByLabel('Рост',{exact:true}).inputValue(),'');
     assert.equal(await picker.locator('.size-final-choice').count(),0);
     waiting=waitingResponse();
-    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('70');
-    await picker.getByLabel('Полупояс',{exact:true}).fill('39.5');
+    await picker.getByLabel('Рост',{exact:true}).fill('175');await picker.getByLabel('Вес',{exact:true}).fill('67');
+    await picker.getByLabel('Полупояс',{exact:true}).fill('39');
     await answer(await waiting,'Размер: M');assert.equal(providerCalls,1);
+    assert.equal(traces.at(-1).response.result.providerStatus,'not_needed');
+    await page.setViewportSize({width:360,height:844});
+    await picker.screenshot({path:path.join(require('node:os').tmpdir(),'warehouse-pants-175-67-waist39.png')});
+    // A concurrent card edit used to be swallowed by the UI as a generic failure.
+    await db.query('update size_products set revision=revision+1 where id=$1',[id]);
+    const stale=page.waitForResponse(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.status()===409);
+    const recovered=page.waitForResponse(r=>r.url()===baseURL+'/api/sizes/recommend'&&r.status()===200);
+    await picker.getByLabel('Вес',{exact:true}).fill('68');
+    const staleResponse=await stale;traces.push({test:'stale card',status:409,input:staleResponse.request().postDataJSON(),response:await staleResponse.json()});
+    await answer(await recovered,'Размер: M');assert.equal(providerCalls,1);
+    assert(traces.at(-1).input.revision>traces.at(-2).input.revision);
+    // Expired employee login must be visible, rather than looking like missing measurements.
+    await page.route('**/api/sizes/recommend',route=>route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({error:'Войдите на сайт заново.'})}));
+    await picker.getByLabel('Вес',{exact:true}).fill('69');
+    await picker.getByText('Войдите на сайт заново',{exact:true}).waitFor();
+    await page.unroute('**/api/sizes/recommend');
     for(const [waist,size] of [['42','L'],['44','XL']]){
       waiting=waitingResponse();await picker.getByLabel('Полупояс',{exact:true}).fill(waist);
       assert.equal(await picker.locator('.size-final-choice').count(),0);await answer(await waiting,'Размер: '+size);
@@ -227,6 +268,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await page.waitForTimeout(600);assert.equal(await picker.locator('.size-answer').innerText(),'');
     await page.setViewportSize({width:360,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     await picker.screenshot({path:path.join(require('node:os').tmpdir(),'warehouse-compact-pants-auto.png')});
+    fs.writeFileSync('docs/pants-employee-form-check-2026-11-09.json',JSON.stringify({environment:'isolated local Next app and SQL fixture, employee session, OpenAI transport explicitly mocked',productionVerified:false,checks:['175/67 without waist','175/67 waist39 → M, zero provider calls','409 auto refresh and retry','401 shown clearly','stale-response cancellation','reset'],traces},null,2)+'\n');
     console.log('PASS compact single-grid stale response cancellation, reset, mobile viewport; all OpenAI transport mocked');
   } finally {
     await browser?.close();

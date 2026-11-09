@@ -10,7 +10,7 @@ const entry=process.env.SIZE_TEST_ENTRY||'http://127.0.0.1:64919';
 const base=process.env.SIZE_TEST_BASE||'http://127.0.0.1:64920';
 if(![entry,base].every(url=>new URL(url).hostname==='127.0.0.1'))throw new Error('Isolated loopback stand only');
 const id=process.env.SIZE_TEST_PRODUCT_ID||'e5f81908-0a6a-4514-af98-54770af6d603';
-const preliminarySize='XL'; // Explicit mock response; real quality is tested separately.
+const preliminarySizes=id==='a92d78d6-90c1-4938-8d14-f01859925511'?['XL','L','XL']:['XL','XL','XL']; // Explicit mock, not model quality.
 const profile=require('../scripts/lib/alpaca-size-profile.cjs')({...load('src/lib/size-profile.ts'),...load('src/lib/color-size-grids.ts')});
 profile.colorGrids.colors=profile.colorGrids.colors.slice(0,2);
 let browser,admin,original,touched=false;const checks=[];
@@ -84,16 +84,16 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   let before=requests,waiting=waitResponse();
   await picker.getByLabel('Рост',{exact:true}).pressSequentially('175',{delay:40});
   await picker.getByLabel('Вес',{exact:true}).pressSequentially('70',{delay:40});
-  let actual=await verifyResponse(await waiting,[preliminarySize,preliminarySize,preliminarySize],before);
-  assert.deepEqual(actual,['Основной цвет','Тёмный цвет','Светло-бежевый'].map(name=>name+' — ≈ '+preliminarySize));
+  let actual=await verifyResponse(await waiting,preliminarySizes,before);
+  assert.deepEqual(actual,['Основной цвет','Тёмный цвет','Светло-бежевый'].map((name,i)=>name+' — ≈ '+preliminarySizes[i]));
   assert.equal(sent.at(-1).input.shouldersCm,undefined);assert.equal(sent.at(-1).input.chestWidthCm,undefined);
   const preliminaryScreenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-adjusted-preliminary.png');
   await picker.screenshot({path:preliminaryScreenshot});
   checks.push({test:'height weight and fit alone produce shared approximate owner anchor, no fabricated item measurements',input:{height:175,weight:70,fit:'regular'},actual,screenshot:preliminaryScreenshot,passed:true,realOpenAiCall:false});
   before=requests;waiting=waitResponse();await picker.getByLabel('Возраст',{exact:true}).fill('35');
-  await verifyResponse(await waiting,['XL','XL','XL'],before);assert.equal(sent.at(-1).input.ageYears,35);
+  await verifyResponse(await waiting,preliminarySizes,before);assert.equal(sent.at(-1).input.ageYears,35);
   before=requests;waiting=waitResponse();await picker.getByLabel('Возраст',{exact:true}).fill('');
-  await verifyResponse(await waiting,['XL','XL','XL'],before);
+  await verifyResponse(await waiting,preliminarySizes,before);
   checks.push({test:'optional age transmitted and cleared; adult age does not force a UI size offset',passed:true,realOpenAiCall:false});
   before=requests;waiting=waitResponse();
   await picker.getByLabel('Плечи',{exact:true}).pressSequentially('50',{delay:40});
@@ -114,7 +114,7 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const screenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-measured-green.png');
   await picker.screenshot({path:screenshot});
   checks.push({test:'narrow card, measured grid overrides owner anchor; exact beige 2XL and green 24px size',width:bounds.width,input:{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54},actual,styles,requests:requests-before,screenshot,passed:true,realOpenAiCall:false});
-  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[preliminarySize,preliminarySize,preliminarySize]]]){
+  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',preliminarySizes]]){
     before=requests;waiting=waitResponse();
     await picker.getByLabel('Плечи',{exact:true}).fill(shoulders);
     assert.equal(await lines.count(),0,'Old result disappears immediately');

@@ -16,27 +16,39 @@ function load(relative){
 const core=load('src/lib/size-context.ts'),profile=require('../scripts/lib/alpaca-size-profile.cjs')({...load('src/lib/size-profile.ts'),...load('src/lib/color-size-grids.ts')});
 const examples=[{height:150,weight:50,fit:'regular',size:'M'},{height:163,weight:60,fit:'regular',size:'L'}];
 const input={height:175,weight:70,fit:'regular'},base={id:'a92d78d6-90c1-4938-8d14-f01859925511',name:'Alpaca',note:'Маломерит',examples,sizes:['M','L','XL','2XL','3XL']};
-function answers(payload,size='XL') {return payload.requestedKeys.map(key=>({key,size,reason:'Synthetic model response for transport testing only',clarification:null,basis:'owner_examples',exampleIndexes:[0,1]}));}
+function answers(payload,size) {size??=payload.product.colors.some(row=>row.fitRule)?'L':'XL';return payload.requestedKeys.map(key=>({key,size,baseSize:size,fitAdjustmentIncluded:false,reason:'Synthetic model response for transport testing only',clarification:null,basis:'owner_examples',exampleIndexes:[0,1]}));}
 const originalKey=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='synthetic-key-not-used-on-network';
 const api=load('src/app/api/sizes/recommend/route.ts'),id='e5f81908-0a6a-4514-af98-54770af6d603';
 function request(body,origin='http://warehouse.test'){return new Request('http://warehouse.test/api/sizes/recommend',{method:'POST',headers:{origin,host:'warehouse.test','content-type':'application/json'},body:JSON.stringify(body)});}
 (async()=>{try{
   factory=answers;let before=calls.length;
   const result=await core.recommendContextualSize(base,profile,input);
-  assert.deepEqual(result.colorResults.map(r=>r.size),['XL','XL','XL']);assert(result.colorResults.every(r=>r.approximate));assert.equal(calls.length-before,1);
+  assert.deepEqual(result.colorResults.map(r=>r.size),['XL','L','XL']);assert(result.colorResults.every(r=>r.approximate));assert.equal(calls.length-before,1);
   const sent=calls.at(-1);assert.equal(sent.payload.product.colors.length,3);assert.equal(sent.payload.customer.shouldersCm,null);assert.equal(sent.payload.customer.chestWidthCm,null);
-  assert(sent.payload.product.examples.every(e=>e.confirmed===false));assert.equal(sent.payload.product.fitNote,profile.fitNote);assert.equal(sent.payload.product.cut,profile.cut);
+  assert(sent.payload.product.examples.every(e=>e.confirmed===false));assert.notEqual(sent.payload.product.fitNote,profile.fitNote);assert.equal(sent.payload.product.cut,profile.cut);
+  assert.deepEqual(sent.payload.product.colors.map(row=>row.fitRule.smallBySteps),[1,0,1]);
   assert.deepEqual(sent.payload.product.colors[0].grid.rows[0].shoulders,{samples:[42,43,44]});assert(!JSON.stringify(sent.payload).includes('synthetic-key'));
   assert.equal((await core.recommendContextualSize(base,profile,input)).providerStatus,'cached');assert.equal(calls.length-before,1);
-  await core.recommendContextualSize(base,{...profile,fitNote:'Changed fit evidence'},input);assert.equal(calls.length-before,2);
+  await core.recommendContextualSize(base,{...profile,cut:'Changed cut evidence'},input);assert.equal(calls.length-before,2);
+  const {applyColorFitRule}=load('src/lib/size-color-fit.ts');
+  for(const color of profile.colorGrids.colors){
+    const first=applyColorFitRule(base.id,color,{size:'L',baseSize:'L',fitAdjustmentIncluded:false},false);
+    assert.equal(first.size,color.key==='dark'?'L':'XL');
+    assert.equal(applyColorFitRule(base.id,color,first,false).size,first.size);
+    assert.equal(applyColorFitRule(base.id,color,{size:'L',baseSize:'L'},true).size,'L');
+  }
+  factory=p=>p.requestedKeys.map(key=>({key,size:key==='dark'?'L':'XL',baseSize:'L',fitAdjustmentIncluded:true,reason:'Synthetic already corrected result',clarification:null,basis:'owner_examples',exampleIndexes:[0,1]}));
+  assert.deepEqual((await core.recommendContextualSize(base,{...profile,cut:'already adjusted'},input)).colorResults.map(r=>r.size),['XL','L','XL']);
+  assert.equal(applyColorFitRule(base.id,profile.colorGrids.colors[1],{size:'2XL',baseSize:'2XL',fitAdjustmentIncluded:false},false).size,null);
   console.log('PASS model transport: one selected item, all color grids/ranges/properties/examples, optional measurements; content cache invalidates on edits');
   factory=p=>p.requestedKeys.map(key=>({key,size:key==='main'?'3XL':'XL',reason:'Synthetic measured candidate',clarification:null,basis:'measurements',exampleIndexes:[]}));
   const measured=await core.recommendContextualSize(base,profile,{...input,shouldersCm:50,chestWidthCm:54});
   assert.deepEqual(measured.colorResults.map(r=>r.size),['3XL','XL','2XL']);assert.equal(measured.colorResults[2].approximate,false);assert(!calls.at(-1).payload.requestedKeys.includes('light_beige'));
+  assert(calls.at(-1).payload.product.colors.every(row=>row.fitRule===null));
   const exactPlan=core.planSizeRecommendation(base,profile,{...input,shouldersCm:50,chestWidthCm:54,colorKey:'light_beige'});
   assert.equal(core.hasPendingSizeDecisions(exactPlan),false);
   const dark=await core.recommendContextualSize(base,profile,{...input,shouldersCm:50,chestWidthCm:56,colorKey:'dark'});assert.equal(dark.size,null);assert.equal(dark.providerStatus,'not_needed');
-  before=calls.length;const known={...base,id:'confirmed',examples:[{...input,size:'M',confirmed:true,colorKey:'main'}]};
+  before=calls.length;const known={...base,examples:[{...input,size:'M',confirmed:true,colorKey:'main'}]};
   const fitted=await core.recommendContextualSize(known,profile,{...input,colorKey:'main'});assert.equal(fitted.size,'M');assert.equal(calls.length,before);
   console.log('PASS priority: exact beige 2XL and confirmed fitting locked, no offset; dark calculated rows blocked');
   factory=p=>p.requestedKeys.map(key=>({key,size:key==='dark'?'3XL':'XL',reason:'Synthetic answer',clarification:null,basis:'owner_examples',exampleIndexes:[0]}));

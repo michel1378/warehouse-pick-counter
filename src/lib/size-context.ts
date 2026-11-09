@@ -6,6 +6,7 @@ import { FIT_LABELS } from "@/lib/sizes";
 import { isTrousers, STRETCH_LABELS, type SizeAiResult, type SizeCustomer, type SizeProfile } from "@/lib/size-profile";
 import { compareSizeMeasurements, sizeAllowedCandidates, type SizeProductFacts } from "@/lib/size-evidence";
 import { recommendColorGrids, type ColorSizeResult } from "@/lib/color-size-grids";
+import { applyColorFitRule, colorFitRule, hasColorFitRules } from "@/lib/size-color-fit";
 
 export const CONTEXT_SIZE_MODEL = "gpt-5.4-mini-2026-03-17";
 type Decision = SizeAiResult & { key: string; name: string; allowedSizes: string[]; locked: boolean; evidence: unknown; color?: ColorSizeResult };
@@ -15,6 +16,7 @@ const hasMeasures = (profile: SizeProfile | null, input: SizeCustomer) => profil
 const question = (profile: SizeProfile | null) => profile && isTrousers(profile) ? "Уточните полупояс любимых брюк" : "Уточните ширину груди любимой вещи";
 const outputSchema = z.object({ results: z.array(z.object({
   key: z.string(), size: z.string().nullable(), reason: z.string(), clarification: z.string().nullable(),
+  baseSize:z.string().nullable(),fitAdjustmentIncluded:z.boolean(),
   basis: z.enum(["measurements", "size_chart", "confirmed_fitting", "owner_examples", "insufficient"]), exampleIndexes: z.array(z.number().int()),
 }).strict()) }).strict();
 
@@ -27,6 +29,7 @@ allowedSizes — серверные кандидаты конкретного ц
 Не называй ширину вещи «нужной клиенту», если его мерка неизвестна. Пример при другом росте/весе — не точное совпадение; сравни различия параметров и свойства модели, не копируй его размер автоматически. Не назначай размер только потому, что он следующий после минимального.
 Верни каждый запрошенный key ровно один раз. size — только из allowedSizes; при size=null дай одно короткое уточнение (до 90 символов), без длинного объяснения. При размере clarification строго null, не пустая строка. reason кратко указывает реальные основания. basis=owner_examples для предварительного выбора по примерам: у КАЖДОГО цвета перечисли exampleIndexes реально использованных примеров этой вещи, даже когда они общие для цветов. basis=size_chart допустим только при явных столбцах роста/возраста в самой сетке, не для плеч/груди неизвестного клиента. basis=measurements — только при введённых дополнительных мерках. basis=confirmed_fitting — только для confirmed=true. Не обещай точную посадку, наличие или подтверждённую примерку, которой нет.
 Не обосновывай выбор длиной или рукавом: желаемые длина и рукав клиента неизвестны. В reason не упоминай длину/рукав как подходящие или требуемые. Рост не определяет нужную длину изделия.`;
+const colorFitInstructions=`Если у цвета есть fitRule, общая маломерность карточки к нему НЕ применяется. Оцени базовый размер по параметрам, примерам, крою и сетке, без этой цветовой поправки. Верни базу в baseSize. Можешь вернуть size=baseSize и fitAdjustmentIncluded=false: сервер применит smallBySteps ровно один раз по строкам этой сетки. Если уже применил указанную цветовую поправку, верни исходный baseSize, итоговый size и fitAdjustmentIncluded=true; сервер проверит переход и не прибавит снова. При введённых дополнительных мерках или подтверждённой примерке поправка не применяется. Не выдумывай базу, если данных мало: size=null, baseSize=null и одно короткое уточнение. Для вещи без fitRule baseSize=size и fitAdjustmentIncluded=false: отдельный сдвиг запрещён. Сохранённые примеры уже относятся к размерам НА БИРКЕ этой конкретной вещи с её особенностями. Нельзя сначала подобрать по этим примерам, а затем ещё прибавить размер из общей пометки «маломерит».`;
 
 function confirmedExample(product: SizeProductFacts, input: SizeCustomer, key: string) {
   const matches = (product.examples ?? []).filter(row => row.confirmed === true && (row.colorKey === key || key === "single" && !row.colorKey)
@@ -74,10 +77,12 @@ export function planSizeRecommendation(product: SizeProductFacts, profile: SizeP
 
 export function sizeContextPayload(plan: SizePlan) {
   const {product,profile,customer}=plan;
-  return {product:{name:product.name,note:product.note,garment:profile?.garment??"unknown",fabric:profile?.fabric||product.stock_details?.material||"",composition:product.stock_details?.composition??"",
-    cut:profile?.cut??"",stretch:profile?STRETCH_LABELS[profile.stretch]:product.stock_details?.stretch||"Не указано",fitNote:profile?.fitNote??"",
+  const separateFit=hasColorFitRules(product.id);
+  const direct=hasMeasures(profile,customer);
+  return {product:{name:product.name,note:separateFit?"Посадка указана отдельно по цветам":product.note,garment:profile?.garment??"unknown",fabric:profile?.fabric||product.stock_details?.material||"",composition:product.stock_details?.composition??"",
+    cut:profile?.cut??"",stretch:profile?STRETCH_LABELS[profile.stretch]:product.stock_details?.stretch||"Не указано",fitNote:separateFit?(direct?"Мерки введены: поправки запрещены, сравни фактическую сетку":"Используй fitRule каждого цвета, общей поправки нет"):profile?.fitNote??"",
     examples:(product.examples??[]).map((row,index)=>({...row,index,confirmed:row.confirmed===true})),
-    colors:plan.decisions.map(row=>({key:row.key,name:row.name,allowedSizes:row.allowedSizes,lockedSize:row.locked?row.size:null,...row.evidence as object})),
+    colors:plan.decisions.map(row=>({key:row.key,name:row.name,allowedSizes:row.allowedSizes,lockedSize:row.locked?row.size:null,fitRule:direct?null:colorFitRule(product.id,row),...row.evidence as object})),
   },customer:{heightCm:customer.height,weightKg:customer.weight,ageYears:customer.ageYears??null,fit:FIT_LABELS[customer.fit],
     halfWaistCm:customer.halfWaistCm??null,shouldersCm:customer.shouldersCm??null,chestWidthCm:customer.chestWidthCm??null},
   requestedKeys:plan.decisions.filter(row=>!row.locked).map(row=>row.key)};
@@ -85,7 +90,7 @@ export function sizeContextPayload(plan: SizePlan) {
 
 export function composeSizeResult(plan: SizePlan, status: NonNullable<SizeAiResult["providerStatus"]> = "not_needed"): SizeAiResult {
   const first=plan.decisions[0];
-  const clarification=(row:Decision)=>!row.locked&&status==="limited"?"Подождите несколько секунд":!row.locked&&["not_configured","unavailable"].includes(status)?"Повторите подбор позже":row.clarification;
+  const clarification=(row:Decision)=>!row.locked&&status==="limited"?"Лимит подбора. Повторите позже":!row.locked&&["not_configured","unavailable"].includes(status)?"Повторите подбор позже":row.clarification;
   const base={size:first.size,approximate:first.approximate,explanation:first.explanation,clarification:clarification(first),providerStatus:status};
   if (!plan.profile?.colorGrids) return base;
   const colorResults=plan.decisions.map(row=>({...row.color!,size:row.size,approximate:row.approximate,explanation:row.explanation,clarification:clarification(row)}));
@@ -122,7 +127,7 @@ async function requestSizePlan(plan: SizePlan): Promise<SizeAiResult> {
   if (!process.env.OPENAI_API_KEY?.trim()) return composeSizeResult(plan,"not_configured");
   try {
     const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY,timeout:20000,maxRetries:0});
-    const response=await client.responses.parse({model:process.env.OPENAI_MODEL_SIZES?.trim()||CONTEXT_SIZE_MODEL,instructions,
+    const response=await client.responses.parse({model:process.env.OPENAI_MODEL_SIZES?.trim()||CONTEXT_SIZE_MODEL,instructions:instructions+"\n"+colorFitInstructions,
       input:JSON.stringify(sizeContextPayload(plan)),text:{format:zodTextFormat(outputSchema,"garment_size_results")},
       reasoning:{effort:"low"},max_output_tokens:3500,store:false});
     if(response.status!=="completed"||!response.output_parsed) throw new Error("SIZE_CONTEXT_INCOMPLETE");
@@ -135,18 +140,28 @@ async function requestSizePlan(plan: SizePlan): Promise<SizeAiResult> {
       const refs=answer.exampleIndexes.filter(index=>index>=0&&index<(plan.product.examples?.length??0));
       const direct=hasMeasures(plan.profile,plan.customer);
       const confirmedRefs=refs.length>0&&refs.every(index=>plan.product.examples![index].confirmed===true);
+      const grid=plan.profile?.colorGrids?.colors.find(color=>color.key===decision.key);
+      const adjusted=grid?applyColorFitRule(plan.product.id,grid,answer,direct||answer.basis==="confirmed_fitting"&&confirmedRefs):{size:answer.size};
+      if(answer.size&&adjusted.size===null&&"clarification" in adjusted){decision.size=null;decision.clarification=adjusted.clarification!;continue;}
       const chartBasis=answer.basis==="size_chart"&&plan.profile?.columns.some(label=>/рост|возраст/i.test(label));
-      const validSize=answer.size!==null&&decision.allowedSizes.includes(answer.size)&&answer.clarification===null
+      const explicitRule=!direct&&colorFitRule(plan.product.id,decision);
+      const validSize=adjusted.size!==null&&decision.allowedSizes.includes(adjusted.size)&&answer.clarification===null
+        &&(explicitRule||!answer.fitAdjustmentIncluded||answer.baseSize===answer.size)
         &&answer.reason.trim().length>0&&answer.reason.length<=1000
         &&(answer.basis!=="confirmed_fitting"||confirmedRefs)
         &&(direct?answer.basis==="measurements"||refs.length>0:chartBasis||refs.length>0&&["owner_examples","confirmed_fitting"].includes(answer.basis));
-      if(validSize){decision.size=answer.size;decision.approximate=true;decision.explanation=answer.reason;decision.clarification=null;}
+      if(validSize){decision.size=adjusted.size;decision.approximate=true;decision.explanation=answer.reason;decision.clarification=null;}
       else if(answer.size===null&&answer.clarification?.trim()){
         decision.clarification=answer.clarification.trim().slice(0,90);decision.explanation=answer.reason.slice(0,1000);
       }
     }
     return composeSizeResult(plan,"completed");
-  } catch { return composeSizeResult(plan,"unavailable"); }
+  } catch(error) {
+    // Only machine status, never provider messages, request contents or credentials.
+    const status=error&&typeof error==="object"&&"status" in error&&typeof error.status==="number"?error.status:null;
+    console.warn("[SizeAI] provider_failure",{status});
+    return composeSizeResult(plan,"unavailable");
+  }
 }
 
 export async function recommendContextualSize(product:SizeProductFacts,profile:SizeProfile|null,input:SizeCustomer) {

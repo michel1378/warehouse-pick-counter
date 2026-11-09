@@ -28,7 +28,8 @@ globalThis.fetch=async(input,init)=>{
     ['Alpaca 175/70 without garment measures',alpaca,profile,{height:175,weight:70,fit:'regular'}],
     ['Alpaca 180/75 without garment measures',alpaca,profile,{height:180,weight:75,fit:'regular'}],
     ['Alpaca shoulders 50 chest 54',alpaca,profile,{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54}],
-    ['Huge trousers, different cut and loose fit',trousers,load('src/lib/size-profile.ts').hugeTrousersProfile(),{height:175,weight:70,fit:'loose'}],
+    ['Huge trousers 175/67 without waist',trousers,load('src/lib/size-profile.ts').hugeTrousersProfile(),{height:175,weight:67,fit:'regular'}],
+    ['Huge trousers 175/67 waist 39, no OpenAI',trousers,load('src/lib/size-profile.ts').hugeTrousersProfile(),{height:175,weight:67,fit:'regular',halfWaistCm:39}],
   ]){
     observations=[];
     const result=await recommendContextualSize(product,grid,customer);
@@ -36,7 +37,8 @@ globalThis.fetch=async(input,init)=>{
       result,realApiCalls:observations.length,observations};checks.push(record);console.log(JSON.stringify(record));
     assert.notEqual(result.providerStatus,'unavailable');
     if(customer.shouldersCm===50){const beige=result.colorResults.find(r=>r.key==='light_beige');assert.equal(beige.size,'2XL');assert.equal(beige.approximate,false);}
+    if(customer.halfWaistCm===39){assert.equal(result.size,'M');assert.equal(observations.length,0);assert.equal(result.providerStatus,'not_needed');}
     assert(!result.colorResults?.some(r=>r.key==='dark'&&['2XL','3XL'].includes(r.size)));
   }
-  fs.writeFileSync('docs/sizes-context-live-2026-11-09.json',JSON.stringify({model,productionDatabaseChanged:false,checks},null,2)+'\n');
+  fs.writeFileSync('docs/sizes-color-fit-pants-live-2026-11-09.json',JSON.stringify({model,productionDatabaseChanged:false,checks},null,2)+'\n');
 })().catch(error=>{console.error(JSON.stringify({status:'live_check_failed',name:error.name,statusCode:error.status??null}));process.exitCode=1;});
