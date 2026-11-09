@@ -6,6 +6,7 @@ const fs = require('node:fs'), path = require('node:path'), http = require('node
 const { spawn } = require('node:child_process');
 const { PGlite } = require('@electric-sql/pglite');
 const pilotForm = process.argv.includes('--pilot-form');
+const colorForm = process.argv.includes('--color-form');
 const keepOpen = process.argv.includes('--keep-open');
 const liveForm = process.argv.includes('--live-form') || pilotForm;
 if (liveForm) {
@@ -28,7 +29,7 @@ const fixture = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://fixture.test');
     // Local fixture server only; these entry links never exist in the product application.
-    if (pilotForm && ['/enter/employee','/enter/admin'].includes(url.pathname)) {
+    if ((pilotForm || colorForm) && ['/enter/employee','/enter/admin'].includes(url.pathname)) {
       const role = url.pathname.endsWith('/admin') ? 'admin' : 'employee';
       const { SignJWT } = await import('jose');
       const token = await new SignJWT(role === 'admin' ? { role, name: 'Тестовый администратор' } : { role })
@@ -105,7 +106,8 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await db.query('update size_products set size_profile=$1 where id=$2',[JSON.stringify(load('src/lib/size-profile.ts').hugeTrousersProfile()),id]);
     await db.exec('create table employees (id uuid, name text, active boolean, role text, permissions jsonb)');
     await db.query("insert into employees values ($1,'Тестовый сотрудник',true,'warehouse','[\"picking\"]')", [employee]);
-    if (pilotForm) await db.query("insert into size_products(id,name,note,sizes,examples,photo,photos,photo_count,active,show_in_sizes,show_in_availability) values ($1,'Тестовый верх','Не маломерит','[\"S\",\"M\",\"L\"]','[]',$2,$3,1,true,true,false)", [topId, image, JSON.stringify([image])]);
+    if (pilotForm || colorForm) await db.query("insert into size_products(id,name,note,sizes,examples,photo,photos,photo_count,active,show_in_sizes,show_in_availability) values ($1,'Тестовый верх','Не маломерит','[\"S\",\"M\",\"L\"]','[]',$2,$3,1,true,true,false)", [topId, image, JSON.stringify([image])]);
+    if (colorForm) await db.query('update size_products set size_profile=$1 where id=$2',[JSON.stringify({garment:'top',fabric:'',stretch:'none',cut:'Прямой',fitNote:'',columns:['Плечи','Грудь','Длина'],columnKeys:['shouldersCm','chestWidthCm','lengthCm'],rows:[{size:'M',values:[44,48,64]}]}),topId]);
     const original = (await db.query('select * from size_products where id=$1', [id])).rows[0];
     const fixtureOrigin = 'http://127.0.0.1:' + await listen(fixture);
     const portProbe = net.createServer(); const port = await listen(portProbe); await new Promise(resolve => portProbe.close(resolve));
@@ -125,6 +127,13 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
       try { if ((await fetch(baseURL + '/admin/login')).ok) break; } catch {}
       if (i > 90 || next.exitCode !== null) throw new Error('Local test server did not start: ' + logs.slice(-1200));
       await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    if (colorForm) {
+      const child=spawn(process.execPath,['tests/color-size-form.cjs'],{windowsHide:true,stdio:'inherit',env:{...process.env,SIZE_TEST_ENTRY:fixtureOrigin,SIZE_TEST_BASE:baseURL}});
+      const code=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('exit',resolve);});
+      assert.equal(code,0,'All-color browser checks must pass');
+      assert.equal(providerCalls,0,'Color comparisons do not use OpenAI transport');
+      return;
     }
     browser = await chromium.launch({ channel: 'msedge', headless: !liveForm });
     const context = await browser.newContext();
@@ -178,7 +187,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     assert.equal(providerCalls, 0);
     await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
     await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Положить: M');
+    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: M');
     await page.getByRole('button', { name: 'Новый клиент', exact: true }).click();
     assert.equal(await page.getByLabel('Рост, см', { exact: true }).inputValue(), '');
     assert.equal(await page.locator('.size-answer strong').count(), 0);
@@ -187,13 +196,13 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
     await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill('39.5');
     await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
     await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Положить: M');
+    assert.equal(providerCalls, 1); assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: M');
     assert.match(await page.locator('.size-length-assessment').innerText(), /106 см/);
     for (const [waist, size, length] of [['42','L','107'], ['44','XL','108']]) {
       await page.getByLabel('Полупояс подходящих брюк, см (необязательно)').fill(waist);
       await page.getByRole('button', { name: 'Подобрать', exact: true }).click();
       await page.getByText('Предварительная рекомендация по бирке', { exact: true }).waitFor();
-      assert.equal(await page.locator('.size-answer strong').innerText(), 'Положить: ' + size);
+      assert.equal(await page.locator('.size-answer strong').innerText(), 'Размер: ' + size);
       assert((await page.locator('.size-length-assessment').innerText()).includes(length + ' см'));
       assert.match(await page.locator('.size-length-assessment').innerText(), /По одному росту нельзя/);
       assert.equal(providerCalls, 1);

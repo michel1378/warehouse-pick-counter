@@ -27,7 +27,7 @@ export const colorGridsSchema = z.object({
     ctx.addIssue({code:"custom",message:`${color.name}: размеры не должны повторяться.`});
 });
 export type ColorGrids = z.infer<typeof colorGridsSchema>;
-export type ColorSizeResult = SizeAiResult & { key: string; name: string; prefix: string; source: "measured" | "calculated" | null; requiresWarehouseCheck: boolean; lengthText: string; comparisons: ColorComparison[] };
+export type ColorSizeResult = SizeAiResult & { key: string; name: string; prefix: string; source: "measured" | "calculated" | null; requiresWarehouseCheck: boolean; lengthText: string; shortNote?: string; comparisons: ColorComparison[] };
 export type ColorComparison = { size: string; source: "measured" | "calculated"; distanceCm: number; shoulders: Spread; chest: Spread };
 export const spreadBounds = (spread: Spread): [number, number] => typeof spread === "number" ? [spread, spread]
   : "samples" in spread ? [Math.min(...spread.samples),Math.max(...spread.samples)] : [spread.min,spread.max];
@@ -65,7 +65,7 @@ export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, exam
     if (!measured.length) return {...base,comparisons,size:null,source:"calculated" as const,requiresWarehouseCheck:true,
       explanation:`Ближайшие строки ${closest.map(row=>row.size).join(" / ")} — расчётные, не измерены. Они не подтверждают размер к отправке.`,
       clarification:"Уточните плечи и ширину по груди этой вещи на складе."};
-    let selected = min === 0 && measured.length === 1 ? color.rows.find(row=>row.size===measured[0].size) : undefined;
+    let selected = measured.length === 1 ? color.rows.find(row=>row.size===measured[0].size) : undefined;
     let ownerHint = false;
     if (min === 0 && measured.length > 1) {
       const hints = [...new Set(examples.filter(e=>e.height===input.height&&e.weight===input.weight&&e.fit===input.fit&&measured.some(row=>row.size===e.size)).map(e=>e.size))];
@@ -76,10 +76,16 @@ export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, exam
         : `Нет совпадения по обеим меркам. Ближайшие измеренные строки: ${measured.map(row=>row.size).join(" / ")}; растяжимость не задаёт известный запас в сантиметрах.`,
       clarification:"Уточните на складе фактическую ширину по груди конкретной вещи."};
     return {...base,comparisons,size:selected.size,source:"measured" as const,
-      explanation:`Плечи ${spreadText(selected.shoulders)} см, грудь ${spreadText(selected.chest)} см: обе мерки входят в измеренные значения этого цвета. ${ownerHint ? "При перекрытии использован старый ориентир владельца, не подтверждённая примерка. " : ""}Маломерность не прибавляет размер поверх сетки.`,
+      shortNote:min > 0 ? `ближайший по замерам: плечи ${spreadText(selected.shoulders)}, грудь ${spreadText(selected.chest)} см; посадку уточнить` : ownerHint ? "по старому ориентиру владельца; замеры размеров перекрываются" : undefined,
+      explanation:`Плечи ${spreadText(selected.shoulders)} см, грудь ${spreadText(selected.chest)} см: ${min > 0 ? "ближайший измеренный вариант, точного совпадения по обеим меркам нет; растяжимость не гарантирует посадку" : "обе мерки входят в измеренные значения этого цвета"}. ${ownerHint ? "При перекрытии использован старый ориентир владельца, не подтверждённая примерка. " : ""}Маломерность не прибавляет размер поверх сетки.`,
       clarification:null,lengthText:`Длина ${spreadText(selected.length)} см, рукав ${spreadText(selected.sleeve)} см. Сравните отдельно с любимой вещью; по росту точную длину не определить.`};
   });
   const primary=colorResults[0];
-  const summary=colorResults.map(result=>`${result.prefix} — ${result.size ?? (result.requiresWarehouseCheck ? "уточнить замеры на складе" : "уточнить мерку")}`).join(". ");
+  const summary=colorResults.map(colorSizeLine).join("\n");
   return {size:primary.size,explanation:primary.explanation,clarification:primary.clarification,summary,colorResults};
+}
+
+export function colorSizeLine(result: ColorSizeResult): string {
+  if (result.size) return `${result.name} — ${result.size}${result.shortNote ? ` (${result.shortNote})` : ""}`;
+  return `${result.name} — ${result.requiresWarehouseCheck ? "уточнить замеры на складе" : result.clarification ?? "уточнить мерку"}`;
 }

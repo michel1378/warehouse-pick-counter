@@ -236,11 +236,11 @@ const resetLimit = () => db.exec('delete from size_ai_limits');
     assert.deepEqual(savedOther.size_profile.colorGrids.colors[0].rows[0].sleeve,{min:62,max:64});
     session={role:'employee',sub:subject};delete process.env.OPENAI_API_KEY;
     const beforeColorCalls=providerCalls.length;
-    for(const [shouldersCm,chestWidthCm,sizesExpected] of [[42,50,['M','M']],[48,54,[null,'XL']],[50,56,[null,null]],[52,58,[null,null]]]){
+    for(const [shouldersCm,chestWidthCm,sizesExpected] of [[42,50,['M','M']],[48,54,[null,'XL']],[50,56,['3XL',null]],[52,58,['3XL',null]]]){
       response=await api.POST(request('/recommend',{productId:other,revision:savedOther.revision,height:175,weight:70,fit:'regular',shouldersCm,chestWidthCm}));
       assert.equal(response.status,200);const result=(await response.json()).result;
       assert.deepEqual(result.colorResults.map(r=>r.size),sizesExpected);
-      if(shouldersCm>=50)assert.match(result.summary,/Если тёмная — уточнить замеры на складе/);
+      if(shouldersCm>=50)assert.match(result.summary,/Тёмный цвет — уточнить замеры на складе/);
     }
     assert.equal(providerCalls.length,beforeColorCalls);
     session={role:'admin',sub:subject};
@@ -256,6 +256,8 @@ const resetLimit = () => db.exec('delete from size_ai_limits');
     session={role:'employee',sub:subject};
     const employeeCatalog=await(await sizes.GET()).json();assert.equal(employeeCatalog.products.find(p=>p.id===other).size_profile.colorGrids.colors.length,3);
     const selectedInput={productId:other,revision:savedOther.revision,height:175,weight:70,fit:'regular'};
+    response=await api.POST(request('/recommend',{...selectedInput,shouldersCm:50,chestWidthCm:54}));assert.equal(response.status,200);
+    assert.deepEqual((await response.json()).result.colorResults.map(r=>r.size),['3XL','XL','2XL']);
     for(const [colorKey,shouldersCm,chestWidthCm,size] of [['light_beige',44,48,'M'],['light_beige',47,52,'L'],['light_beige',47,54,'XL'],['light_beige',50,54,'2XL'],['light_beige',52,56,'3XL'],['dark',50,56,null],['dark',52,58,null]]){
       response=await api.POST(request('/recommend',{...selectedInput,colorKey,shouldersCm,chestWidthCm}));assert.equal(response.status,200);
       const result=(await response.json()).result;assert.equal(result.size,size);assert.equal(result.colorResults.length,1);assert.equal(result.colorResults[0].key,colorKey);

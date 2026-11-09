@@ -63,32 +63,36 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const staffCard=staff.locator('article').filter({has:staff.getByText('Тестовый верх',{exact:true})});
   await staffCard.getByRole('button',{name:/Тестовый верх/}).click();
   await staffCard.getByLabel('Рост, см',{exact:true}).fill('175');await staffCard.getByLabel('Вес, кг',{exact:true}).fill('70');
-  for(const [shoulders,chest,expected] of [['42','50','Альпака — M. Если тёмная — M'],['48','54','Альпака — уточнить замеры на складе. Если тёмная — XL'],['50','56','Альпака — уточнить замеры на складе. Если тёмная — уточнить замеры на складе'],['52','58','Альпака — уточнить замеры на складе. Если тёмная — уточнить замеры на складе'],['','','Альпака — уточнить мерку. Если тёмная — уточнить мерку']]){
+  assert.equal(await staffCard.getByLabel('Цвет для подбора',{exact:true}).count(),0);
+  let requests=0;staff.on('request',r=>{if(r.url()===base+'/api/sizes/recommend')requests++;});
+  for(const [shoulders,chest,expected] of [['42','50',['M','M','M']],['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[null,null,null]],['50','54',['3XL','XL','2XL']]]){
     await staffCard.getByLabel('Плечи любимой вещи, см (необязательно)',{exact:true}).fill(shoulders);
     await staffCard.getByLabel('Ширина по груди любимой вещи, см (необязательно)',{exact:true}).fill(chest);
-    const waiting=staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend');
+    const beforeRequests=requests,waiting=staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend');
     await staffCard.getByRole('button',{name:'Подобрать',exact:true}).click();const response=await waiting;assert.equal(response.status(),200);
-    const {result}=await response.json();const expectedThree=expected+`. Светло-бежевый — ${shoulders?'уточнить замеры на складе':'уточнить мерку'}`;assert.equal(result.summary,expectedThree);
-    await staffCard.locator('.size-final-choice').filter({hasText:expectedThree}).waitFor();
-    const actual=await staffCard.locator('.size-final-choice').innerText();assert.equal(actual,expectedThree);
-    checks.push({input:{height:175,weight:70,fit:'regular',shouldersCm:shoulders||null,chestWidthCm:chest||null},expected:expectedThree,actual,explanations:result.colorResults.map(r=>({color:r.name,explanation:r.explanation,clarification:r.clarification})),passed:true,realOpenAiCall:false});
+    assert.equal(requests-beforeRequests,1);assert.equal(response.request().postDataJSON().colorKey,undefined);
+    const {result}=await response.json();assert.deepEqual(result.colorResults.map(r=>r.size),expected);
+    const lines=staffCard.locator('.size-color-result');await lines.first().waitFor();
+    const actual=await lines.allTextContents();assert.equal(actual.length,3);assert.deepEqual(actual,result.summary.split('\n'));
+    for(let i=0;i<3;i++)assert(actual[i].startsWith(withThird.size_profile.colorGrids.colors[i].name+' — '));
+    if(shoulders==='50'&&chest==='54'){assert.equal(actual[2],'Светло-бежевый — 2XL');assert(actual.slice(0,2).every(line=>line.includes('ближайший')));}
+    checks.push({input:{height:175,weight:70,fit:'regular',shouldersCm:shoulders||null,chestWidthCm:chest||null},expected,actual,requests:requests-beforeRequests,passed:true,realOpenAiCall:false});
   }
-  const colorSelect=staffCard.getByLabel('Цвет для подбора',{exact:true});assert.equal(await colorSelect.locator('option').count(),4);
-  await colorSelect.selectOption({label:'Светло-бежевый'});
   for(const row of beige.rows){
     await staffCard.getByLabel('Плечи любимой вещи, см (необязательно)',{exact:true}).fill(String(row.shoulders));
     await staffCard.getByLabel('Ширина по груди любимой вещи, см (необязательно)',{exact:true}).fill(String(row.chest));
     const waiting=staff.waitForResponse(r=>r.url()===base+'/api/sizes/recommend');await staffCard.getByRole('button',{name:'Подобрать',exact:true}).click();
-    const response=await waiting;assert.equal(response.status(),200);assert.equal(response.request().postDataJSON().colorKey,savedBeige.key);
-    const {result}=await response.json();assert.equal(result.size,row.size);assert.equal(result.colorResults.length,1);assert.equal(result.colorResults[0].key,savedBeige.key);
-    await staffCard.locator('.size-final-choice').filter({hasText:`Светло-бежевый — ${row.size}`}).waitFor();
-    checks.push({test:'selected beige grid',input:{shouldersCm:row.shoulders,chestWidthCm:row.chest,colorKey:savedBeige.key},actual:result.summary,passed:true,realOpenAiCall:false});
+    const response=await waiting;assert.equal(response.status(),200);assert.equal(response.request().postDataJSON().colorKey,undefined);
+    const {result}=await response.json();assert.equal(result.colorResults.length,3);assert.equal(result.colorResults.find(c=>c.key===savedBeige.key).size,row.size);
+    await staffCard.locator('.size-color-result').filter({hasText:`Светло-бежевый — ${row.size}`}).waitFor();
+    checks.push({test:'one click, all colors, beige grid exact row',input:{shouldersCm:row.shoulders,chestWidthCm:row.chest},actual:result.summary,passed:true,realOpenAiCall:false});
   }
   await employee.close();
 }finally{
-  if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
-  if(browser)await browser.close();
+  try{
+    if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
+  }finally{if(browser)await browser.close();}
 }
-fs.writeFileSync('docs/alpaca-beige-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
-console.log('PASS browser: third grid added in existing fixture editor, saved and reopened; three color choices, five beige recommendations and prior-color scenarios; original grids and metadata retained, fixture restored');
+fs.writeFileSync('docs/alpaca-all-colors-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
+console.log('PASS browser: save/reopen three grids; no color selector; one click and one request produce three separate lines; five exact beige rows; partial clarification and calculated-row guards; fixture restored');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});
