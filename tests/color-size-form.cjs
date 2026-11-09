@@ -9,7 +9,8 @@ const {chromium}=require(path.resolve(bin,'..','playwright'));
 const entry=process.env.SIZE_TEST_ENTRY||'http://127.0.0.1:64919';
 const base=process.env.SIZE_TEST_BASE||'http://127.0.0.1:64920';
 if(![entry,base].every(url=>new URL(url).hostname==='127.0.0.1'))throw new Error('Isolated loopback stand only');
-const id='e5f81908-0a6a-4514-af98-54770af6d603';
+const id=process.env.SIZE_TEST_PRODUCT_ID||'e5f81908-0a6a-4514-af98-54770af6d603';
+const preliminarySize=id==='a92d78d6-90c1-4938-8d14-f01859925511'?'XL':'L';
 const profile=require('../scripts/lib/alpaca-size-profile.cjs')({...load('src/lib/size-profile.ts'),...load('src/lib/color-size-grids.ts')});
 profile.colorGrids.colors=profile.colorGrids.colors.slice(0,2);
 let browser,admin,original,touched=false;const checks=[];
@@ -83,10 +84,10 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   let before=requests,waiting=waitResponse();
   await picker.getByLabel('Рост',{exact:true}).pressSequentially('175',{delay:40});
   await picker.getByLabel('Вес',{exact:true}).pressSequentially('70',{delay:40});
-  let actual=await verifyResponse(await waiting,['L','L','L'],before);
-  assert.deepEqual(actual,['Основной цвет — ≈ L','Тёмный цвет — ≈ L','Светло-бежевый — ≈ L']);
+  let actual=await verifyResponse(await waiting,[preliminarySize,preliminarySize,preliminarySize],before);
+  assert.deepEqual(actual,['Основной цвет','Тёмный цвет','Светло-бежевый'].map(name=>name+' — ≈ '+preliminarySize));
   assert.equal(sent.at(-1).input.shouldersCm,undefined);assert.equal(sent.at(-1).input.chestWidthCm,undefined);
-  const preliminaryScreenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-preliminary-green.png');
+  const preliminaryScreenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-adjusted-preliminary.png');
   await picker.screenshot({path:preliminaryScreenshot});
   checks.push({test:'height weight and fit alone produce shared approximate owner anchor, no fabricated item measurements',input:{height:175,weight:70,fit:'regular'},actual,screenshot:preliminaryScreenshot,passed:true,realOpenAiCall:false});
   before=requests;waiting=waitResponse();
@@ -108,7 +109,7 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
   const screenshot=path.join(require('node:os').tmpdir(),'warehouse-alpaca-measured-green.png');
   await picker.screenshot({path:screenshot});
   checks.push({test:'narrow card, measured grid overrides owner anchor; exact beige 2XL and green 24px size',width:bounds.width,input:{height:175,weight:70,fit:'regular',shouldersCm:50,chestWidthCm:54},actual,styles,requests:requests-before,screenshot,passed:true,realOpenAiCall:false});
-  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',['L','L','L']]]){
+  for(const [shoulders,chest,expected] of [['48','54',[null,'XL','XL']],['50','56',['3XL',null,null]],['52','58',['3XL',null,'3XL']],['','',[preliminarySize,preliminarySize,preliminarySize]]]){
     before=requests;waiting=waitResponse();
     await picker.getByLabel('Плечи',{exact:true}).fill(shoulders);
     assert.equal(await lines.count(),0,'Old result disappears immediately');
@@ -158,6 +159,6 @@ async function save(row,grid){const response=await admin.request.post(base+'/api
     if(touched){const current=await getCard();await save(current,original.size_profile);const restored=await getCard();assert.deepEqual(restored.size_profile,original.size_profile);}
   }finally{if(browser)await browser.close();}
 }
-fs.writeFileSync('docs/alpaca-preliminary-green-form-check-2026-11-09.json',JSON.stringify({environment:'existing isolated generic test fixture using Alpaca grids and two unconfirmed owner anchors, source cards not cloned; photo requests blocked; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
+fs.writeFileSync('docs/alpaca-adjustment-form-check-2026-11-09.json',JSON.stringify({environment:'synthetic in-memory top with Alpaca policy ID, grids and two unconfirmed owner anchors; no source card or photos copied; original profile restored; fixture revision advanced by saves',productionChanged:false,realOpenAiCalls:0,checks},null,2)+'\n');
 console.log('PASS compact browser: automatic three-color results in narrow card; debounce, optional measurements, fit updates, partial dashes, stale response guard and reset; original fixture restored');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

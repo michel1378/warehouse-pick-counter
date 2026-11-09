@@ -17,7 +17,8 @@ const bin = process.env.PATH.split(path.delimiter).find(p => fs.existsSync(path.
 if (!bin) throw new Error('Run with npm exec --package playwright as documented');
 const { chromium } = require(path.resolve(bin, '..', 'playwright'));
 const id = 'e5f81908-0a6a-4514-af98-54770af6d601', employee = 'e5f81908-0a6a-4514-af98-54770af6d602';
-const topId = 'e5f81908-0a6a-4514-af98-54770af6d603';
+// Identity alone activates the policy on a synthetic in-memory top; no source card is copied.
+const topId = colorForm ? 'a92d78d6-90c1-4938-8d14-f01859925511' : 'e5f81908-0a6a-4514-af98-54770af6d603';
 const fixtureSecret = 'synthetic-browser-test-secret-for-isolated-db-only';
 let siteBaseURL = '';
 const db = new PGlite();
@@ -130,7 +131,7 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     if (colorForm) {
-      const child=spawn(process.execPath,['tests/color-size-form.cjs'],{windowsHide:true,stdio:'inherit',env:{...process.env,SIZE_TEST_ENTRY:fixtureOrigin,SIZE_TEST_BASE:baseURL}});
+      const child=spawn(process.execPath,['tests/color-size-form.cjs'],{windowsHide:true,stdio:'inherit',env:{...process.env,SIZE_TEST_ENTRY:fixtureOrigin,SIZE_TEST_BASE:baseURL,SIZE_TEST_PRODUCT_ID:topId}});
       const code=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('exit',resolve);});
       assert.equal(code,0,'All-color browser checks must pass');
       assert.equal(providerCalls,0,'Color comparisons do not use OpenAI transport');

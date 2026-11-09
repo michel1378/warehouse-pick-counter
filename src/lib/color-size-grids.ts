@@ -3,6 +3,8 @@ import { normalizeSize, type SizeExample } from "@/lib/sizes";
 import { sizeDistance } from "@/lib/size-model";
 import type { SizeAiResult, SizeCustomer } from "@/lib/size-profile";
 
+const ALPACA_PRODUCT_ID = "a92d78d6-90c1-4938-8d14-f01859925511";
+
 const value = z.number().finite().positive().max(400);
 export const spreadSchema = z.union([
   value,
@@ -63,7 +65,7 @@ function nearbyOwnerSize(grids: ColorGrids, input: SizeCustomer, examples: SizeE
   return labels.size === 1 ? [...labels][0] : null;
 }
 
-export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[] = []): SizeAiResult & { summary: string; colorResults: ColorSizeResult[] } {
+export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[] = [], productId?: string): SizeAiResult & { summary: string; colorResults: ColorSizeResult[] } {
   const colors = input.colorKey ? grids.colors.filter(color => color.key === input.colorKey) : grids.colors;
   if (!colors.length) throw new Error("SIZE_COLOR_NOT_FOUND");
   const ownerSize = nearbyOwnerSize(grids, input, examples);
@@ -75,9 +77,13 @@ export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, exam
       distanceCm:Math.round(((input.shouldersCm === undefined ? 0 : spreadDistance(row.shoulders,input.shouldersCm))
         +(input.chestWidthCm === undefined ? 0 : spreadDistance(row.chest,input.chestWidthCm)))*1000)/1000}));
     if (noMeasurements) {
-      const anchor = color.rows.find(row => row.size === ownerSize);
+      // Explicit owner rule for this existing card only. Start from the raw owner
+      // anchor on every call, step once in this color's grid, never shift measurements.
+      const step = productId === ALPACA_PRODUCT_ID ? 1 : 0;
+      const anchorIndex = color.rows.findIndex(row => row.size === ownerSize);
+      const anchor = anchorIndex >= 0 ? color.rows[anchorIndex + step] : undefined;
       if (anchor?.source === "measured") return {...base,size:anchor.size,source:"measured" as const,approximate:true,
-        explanation:"Общий предварительный ориентир по ближайшему примеру владельца этой посадки. Пример не привязан к цвету и не подтверждён примеркой; строка сетки измерена. Мерки клиента из роста и веса не выводились.",clarification:null};
+        explanation:`Общий предварительный ориентир по ближайшему примеру владельца этой посадки. ${step ? "Поправка владельца на маломерность: одна ступень по сетке этого цвета, применена один раз. " : ""}Пример не привязан к цвету и не подтверждён примеркой; строка сетки измерена. Мерки клиента из роста и веса не выводились.`,clarification:null};
       return {...base,size:null,source:anchor?.source ?? null,requiresWarehouseCheck:anchor?.source === "calculated",
         explanation:anchor?.source === "calculated" ? "Строка общего ориентира этого цвета расчётная, не измерена." : "Нет близкого однозначного примера выбранной посадки и измеренной строки этого размера.",
         clarification:"Какая ширина по груди любимой вещи от подмышки до подмышки?"};

@@ -79,7 +79,7 @@ export function sizeMeasurementDecision(profile: SizeProfile, input: SizeAiInput
 }
 
 export async function recommendSizeWithAi(product: SizeProductFacts, profile: SizeProfile, input: SizeAiInput): Promise<SizeAiResult> {
-  if (profile.colorGrids) return recommendColorGrids(profile.colorGrids,input,product.examples);
+  if (profile.colorGrids) return recommendColorGrids(profile.colorGrids,input,product.examples,product.id);
   const clarification = sizeMeasurementDecision(profile, input);
   if (clarification) return clarification;
   const apiKey = process.env.OPENAI_API_KEY?.trim();

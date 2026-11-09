@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   if (!profile.success) return json({ error: "Администратору нужно сохранить числовую таблицу и свойства этой вещи." }, 409);
   if (parsed.data.colorKey && !profile.data.colorGrids?.colors.some(color => color.key === parsed.data.colorKey))
     return json({error:"Этот цвет недоступен. Обновите карточку и выберите цвет заново."},400);
-  if (profile.data.colorGrids) return json({result:recommendColorGrids(profile.data.colorGrids,parsed.data,product.examples),revision:product.revision});
+  if (profile.data.colorGrids) return json({result:recommendColorGrids(profile.data.colorGrids,parsed.data,product.examples,product.id),revision:product.revision});
   const clarification = sizeMeasurementDecision(profile.data, parsed.data);
   const comparison = compareSizeMeasurements(profile.data, parsed.data);
   if (clarification) return json({ result: clarification, comparison, revision: product.revision });
