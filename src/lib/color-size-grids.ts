@@ -14,12 +14,13 @@ export const colorGridRowSchema = z.object({
   shoulders: spreadSchema, chest: spreadSchema, length: spreadSchema, sleeve: spreadSchema,
   source: z.enum(["measured", "calculated"]), note: z.string().max(300).optional(),
 }).strict();
-export const colorGridsSchema = z.object({
-  title: z.string().trim().min(1).max(60), chestDefinition: z.string().max(300),
-  colors: z.array(z.object({
+export const colorGridSchema = z.object({
     key: z.string().regex(/^[a-z0-9_-]{1,30}$/), name: z.string().trim().min(1).max(80),
     prefix: z.string().trim().min(1).max(60), rows: z.array(colorGridRowSchema).min(1).max(30),
-  }).strict()).min(2).max(6),
+}).strict();
+export const colorGridsSchema = z.object({
+  title: z.string().trim().min(1).max(60), chestDefinition: z.string().max(300),
+  colors: z.array(colorGridSchema).min(2).max(6),
 }).strict().superRefine((grids, ctx) => {
   if (new Set(grids.colors.map(c => c.key)).size !== grids.colors.length) ctx.addIssue({code:"custom",message:"Ключи цветов не должны повторяться."});
   for (const color of grids.colors) if (new Set(color.rows.map(r => r.size)).size !== color.rows.length)
@@ -48,7 +49,9 @@ export function spreadDistance(spread: Spread, client: number): number {
 }
 
 export function recommendColorGrids(grids: ColorGrids, input: SizeCustomer, examples: SizeExample[] = []): SizeAiResult & { summary: string; colorResults: ColorSizeResult[] } {
-  const colorResults = grids.colors.map(color => {
+  const colors = input.colorKey ? grids.colors.filter(color => color.key === input.colorKey) : grids.colors;
+  if (!colors.length) throw new Error("SIZE_COLOR_NOT_FOUND");
+  const colorResults = colors.map(color => {
     const base = {key:color.key,name:color.name,prefix:color.prefix,source:null,lengthText:"Длину и рукав нужно сравнить отдельно с любимой вещью; по росту точную длину не определить.",requiresWarehouseCheck:false,comparisons:[] as ColorComparison[]};
     const comparisons = color.rows.map(row => ({size:row.size,source:row.source,shoulders:row.shoulders,chest:row.chest,
       distanceCm:Math.round(((input.shouldersCm === undefined ? 0 : spreadDistance(row.shoulders,input.shouldersCm))

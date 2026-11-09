@@ -3,8 +3,13 @@ import { STRETCH_LABELS, MEASUREMENT_LABELS, columnKey, isTrousers, hugeTrousers
 import {ColorGridEditor} from "./ColorGridEditor";
 import {spreadBounds} from "@/lib/color-size-grids";
 
-export function SizeProfileEditor({ value, onChange, name }: { value: SizeProfile | null; onChange: (value: SizeProfile | null) => void; name: string }) {
+export function SizeProfileEditor({ value, onChange, name, productId }: { value: SizeProfile | null; onChange: (value: SizeProfile | null) => void; name: string; productId?: string }) {
   function change(patch: Partial<SizeProfile>) { if (value) onChange({ ...value, ...patch }); }
+  function changeColorGrids(grids: NonNullable<SizeProfile["colorGrids"]>) {
+    if (!value?.colorGrids) return;
+    const mainRowsChanged=JSON.stringify(grids.colors[0].rows)!==JSON.stringify(value.colorGrids.colors[0].rows);
+    change({colorGrids:grids,...(mainRowsChanged?{rows:grids.colors[0].rows.map(row=>({size:row.size,values:[row.shoulders,row.chest,row.length,row.sleeve].map(v=>spreadBounds(v)[0])}))}:{})});
+  }
   function start(garment: "trousers" | "top") {
     const columns = garment === "trousers" ? ["Полупояс", "Длина", "Выход"] : ["Плечи", "Ширина по груди", "Длина"];
     onChange({ garment, fabric: "", stretch: "unknown", cut: "", columns, rows: [{ size: "", values: columns.map(() => 0) }] });
@@ -26,7 +31,7 @@ export function SizeProfileEditor({ value, onChange, name }: { value: SizeProfil
         <label>Крой<input maxLength={500} value={value.cut} onChange={e => change({ cut: e.target.value })} placeholder="Например, широкий" /></label>
         <label>Описание маломерности для сетки<textarea rows={2} maxLength={1000} value={value.fitNote??''} onChange={e=>change({fitNote:e.target.value})}/></label>
       </div>
-      {value.colorGrids ? <ColorGridEditor grids={value.colorGrids} onChange={grids=>change({colorGrids:grids,rows:grids.colors[0].rows.map(row=>({size:row.size,values:[row.shoulders,row.chest,row.length,row.sleeve].map(v=>spreadBounds(v)[0])}))})}/> : <>
+      {value.colorGrids ? <ColorGridEditor grids={value.colorGrids} productId={productId} onChange={changeColorGrids}/> : <>
       <div className="table-wrap size-example-table"><table><caption>Замеры вещи, см</caption><thead><tr><th>По бирке</th>{value.columns.map((column, index) => <th key={index}>
         <input aria-label={`Название мерки ${index + 1}`} maxLength={60} value={column} readOnly={isTrousers(value) && index === 0}
           onChange={e => change({ columns: value.columns.map((c, i) => i === index ? e.target.value : c) })} />

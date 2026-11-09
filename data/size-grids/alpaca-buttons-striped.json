@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "productId": "a92d78d6-90c1-4938-8d14-f01859925511",
   "productName": "Лонгслив Альпака пуговицы (в полоску)",
   "units": "cm",
   "columns": ["Размер", "Плечи", "Грудь", "Длина", "Рукав"],
@@ -29,6 +30,17 @@
         {"size":"2XL", "shoulders":50, "chest":56, "length":69, "sleeve":67, "source":"calculated", "note":"Расчётные значения, не измерены"},
         {"size":"3XL", "shoulders":52, "chest":58, "length":70, "sleeve":68, "source":"calculated", "note":"Расчётные значения, не измерены"}
       ]
+    },
+    {
+      "key": "light_beige",
+      "name": "Светло-бежевый",
+      "rows": [
+        {"size":"M", "shoulders":44, "chest":48, "length":64, "sleeve":60, "source":"measured"},
+        {"size":"L", "shoulders":47, "chest":52, "length":66, "sleeve":62, "source":"measured"},
+        {"size":"XL", "shoulders":47, "chest":54, "length":70, "sleeve":65, "source":"measured"},
+        {"size":"2XL", "shoulders":50, "chest":54, "length":70, "sleeve":65, "source":"measured"},
+        {"size":"3XL", "shoulders":52, "chest":56, "length":71, "sleeve":66, "source":"measured"}
+      ]
     }
   ],
   "rules": {
@@ -38,7 +50,7 @@
     "compareShouldersAndChest": true,
     "labelOrderDoesNotImplyWidth": true,
     "automaticSmallSizingOffset": false,
-    "resultFormat": "Альпака — {main}. Если тёмная — {dark}",
+    "resultFormat": "Альпака — {main}. Если тёмная — {dark}. Светло-бежевый — {light_beige}",
     "darkCalculatedOnlyText": "Если тёмная — уточнить замеры на складе",
     "calculatedRowsConfirmShipment": false
   }

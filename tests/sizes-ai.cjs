@@ -218,6 +218,7 @@ const resetLimit = () => db.exec('delete from size_ai_limits');
     session={role:'admin',sub:subject};
     const colorTools=load('src/lib/color-size-grids.ts');
     const colorProfile=require('../scripts/lib/alpaca-size-profile.cjs')({sizeProfileSchema,...colorTools});
+    colorProfile.colorGrids.colors=colorProfile.colorGrids.colors.slice(0,2);
     const originalOther=(await db.query('select * from size_products where id=$1',[other])).rows[0];
     response=await sizes.POST(request('',{id:other,revision:originalOther.revision,name:originalOther.name,note:originalOther.note,
       sizes:originalOther.sizes,examples:originalOther.examples,active:originalOther.active,show_in_sizes:originalOther.show_in_sizes,
@@ -242,7 +243,28 @@ const resetLimit = () => db.exec('delete from size_ai_limits');
       if(shouldersCm>=50)assert.match(result.summary,/Если тёмная — уточнить замеры на складе/);
     }
     assert.equal(providerCalls.length,beforeColorCalls);
+    session={role:'admin',sub:subject};
+    const beforeThird=structuredClone(savedOther);
+    const thirdProfile=structuredClone(savedOther.size_profile);
+    thirdProfile.colorGrids.colors.push(require('../scripts/lib/alpaca-size-profile.cjs')({sizeProfileSchema,...colorTools}).colorGrids.colors.find(c=>c.key==='light_beige'));
+    response=await sizes.POST(request('',{id:other,revision:savedOther.revision,name:savedOther.name,note:savedOther.note,
+      sizes:savedOther.sizes,examples:savedOther.examples,active:savedOther.active,show_in_sizes:savedOther.show_in_sizes,
+      show_in_availability:savedOther.show_in_availability,size_profile:thirdProfile}));
+    assert.equal(response.status,200);savedOther=(await db.query('select * from size_products where id=$1',[other])).rows[0];
+    assert.deepEqual(savedOther.size_profile.colorGrids.colors.slice(0,2),beforeThird.size_profile.colorGrids.colors);
+    for(const field of Object.keys(beforeThird).filter(k=>!['size_profile','revision','updated_at'].includes(k)))assert.deepEqual(savedOther[field],beforeThird[field],field);
+    session={role:'employee',sub:subject};
+    const employeeCatalog=await(await sizes.GET()).json();assert.equal(employeeCatalog.products.find(p=>p.id===other).size_profile.colorGrids.colors.length,3);
+    const selectedInput={productId:other,revision:savedOther.revision,height:175,weight:70,fit:'regular'};
+    for(const [colorKey,shouldersCm,chestWidthCm,size] of [['light_beige',44,48,'M'],['light_beige',47,52,'L'],['light_beige',47,54,'XL'],['light_beige',50,54,'2XL'],['light_beige',52,56,'3XL'],['dark',50,56,null],['dark',52,58,null]]){
+      response=await api.POST(request('/recommend',{...selectedInput,colorKey,shouldersCm,chestWidthCm}));assert.equal(response.status,200);
+      const result=(await response.json()).result;assert.equal(result.size,size);assert.equal(result.colorResults.length,1);assert.equal(result.colorResults[0].key,colorKey);
+      if(colorKey==='dark')assert.match(result.summary,/уточнить замеры на складе/);
+    }
+    assert.equal((await api.POST(request('/recommend',{...selectedInput,colorKey:'not_in_this_card'}))).status,400);
+    assert.equal(providerCalls.length,beforeColorCalls);
     assert.deepEqual((await db.query('select photos,examples from size_products where id=$1',[other])).rows[0],{photos:originalOther.photos,examples:originalOther.examples});
     console.log('PASS color API: admin saves and edits/reloads full range grids on existing fixture; employee receives separate colors; calculated rows blocked; no photo payload, provider calls or source-card copies');
+    console.log('PASS third color API: existing fixture reloads three grids, old grids/photos/examples/flags retained; chosen beige grid only, all five measured sizes, dark calculated rows blocked, unknown color rejected');
   } finally { if (savedKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = savedKey; await db.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -9,7 +9,7 @@ function load(relative) {
   if (cache.has(filename)) return cache.get(filename).exports;
   const mod = new Module(filename, module); mod.filename = filename; mod.paths = module.paths; cache.set(filename, mod);
   const original = mod.require.bind(mod);
-  mod.require = name => name.startsWith('@/') ? load('src/' + name.slice(2) + '.ts')
+  mod.require = name => name.endsWith('.json') ? original(name) : name.startsWith('@/') ? load('src/' + name.slice(2) + '.ts')
     : name.startsWith('.') ? load(path.relative(root, path.resolve(path.dirname(filename), name + '.ts'))) : original(name);
   mod._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);
   return mod.exports;
@@ -47,7 +47,7 @@ function prepare(catalog) {
       return { ...base, status:alreadyMatches ? 'existing_card_grid_already_matches' : 'identity_resolved_review_only',
         currentProfileIncluded:profileIncluded, currentProfilePresent:profileIncluded ? !!card.size_profile : 'unknown_export_field_missing',
         ...(profileIncluded ? {currentProfileFingerprint:hash(card.size_profile),expectedProfile:card.size_profile} : {}),
-        ...(isAlpaca ? {gridFile:'data/size-grids/alpaca-buttons-striped.json', logicalProductCount:1, colorCount:2} : {}),
+        ...(isAlpaca ? {gridFile:'data/size-grids/alpaca-buttons-striped.json', logicalProductCount:1, colorCount:alpaca.colors.length} : {}),
         ...(alreadyMatches ? {} : {set:{size_profile:preset}}),sizingAlgorithmChanged:false };
     })
   };

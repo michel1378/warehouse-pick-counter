@@ -99,7 +99,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         {product && <label className="size-checkbox"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />Показывать в размерах</label>}
         <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Товар активен</label>
       </div></div>
-      <SizeProfileEditor name={name} value={profile} onChange={value => { setProfile(value); setDirty(true); }} />
+      <SizeProfileEditor name={name} productId={product?.id} value={profile} onChange={value => { setProfile(value); setDirty(true); }} />
       <h3>Ваши рекомендации</h3><p className="size-hint">Начните с 10–20 разных примеров. Указывайте желаемую посадку и размер, который вы действительно положили бы. Для каждой посадки нужны свои примеры.</p>
       {preview && <SizeConflicts product={preview} />}
       <div className="table-wrap size-example-table"><table><thead><tr><th>Рост, см</th><th>Вес, кг</th><th>Посадка</th><th>По бирке</th><th><span className="visually-hidden">Удаление</span></th></tr></thead><tbody>

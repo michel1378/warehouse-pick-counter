@@ -14,6 +14,7 @@ export const sizeAiInputSchema = z.object({
   shouldersCm: z.number().finite().min(15).max(100).optional(),
   chestWidthCm: z.number().finite().min(20).max(150).optional(),
   beltFit: z.enum(["unknown", "snug", "roomy"]).optional(),
+  colorKey: z.string().regex(/^[a-z0-9_-]{1,30}$/).optional(),
 }).strict();
 export type SizeAiInput = z.infer<typeof sizeAiInputSchema>;
 export const SIZE_AI_MODEL = "gpt-5.4-mini-2026-03-17";

@@ -3,7 +3,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const {load,prepare}=require('../scripts/prepare-existing-size-transfer.cjs');
 const {sizeProfileSchema}=load('src/lib/size-profile.ts');
 const {spreadBounds,spreadDistance,parseSpread,recommendColorGrids}=load('src/lib/color-size-grids.ts');
-const profile=require('../scripts/lib/alpaca-size-profile.cjs')({sizeProfileSchema,spreadBounds});
+const fullProfile=require('../scripts/lib/alpaca-size-profile.cjs')({sizeProfileSchema,spreadBounds});
+// Keep coverage for cards saved before the third color was added.
+const profile={...fullProfile,colorGrids:{...fullProfile.colorGrids,colors:fullProfile.colorGrids.colors.slice(0,2)}};
 assert.equal(sizeProfileSchema.safeParse({...profile,garment:'trousers'}).success,false);
 const {renderToStaticMarkup}=require('react-dom/server'),{createElement}=require('react');
 const table=renderToStaticMarkup(createElement(load('src/components/sizes/ColorGridsTable.tsx').ColorGridsTable,{grids:profile.colorGrids}));
@@ -12,6 +14,24 @@ const editor=renderToStaticMarkup(createElement(load('src/components/sizes/Color
 assert.match(editor,/value="42\/43\/44"/);assert.match(editor,/value="calculated" selected/);
 const examples=[{height:150,weight:50,fit:'regular',size:'M'},{height:163,weight:60,fit:'regular',size:'L'}];
 const customer={height:175,weight:70,fit:'regular'};
+const {ALPACA_PRODUCT_ID,appendAlpacaLightBeige,alpacaLightBeigeColor}=load('src/lib/size-color-presets.ts');
+const prior=structuredClone(profile.colorGrids),threeColors=appendAlpacaLightBeige(profile.colorGrids,ALPACA_PRODUCT_ID);
+assert.deepEqual(profile.colorGrids,prior);assert.deepEqual(threeColors.colors.slice(0,2),prior.colors);assert.equal(threeColors.colors.length,3);
+assert.strictEqual(appendAlpacaLightBeige(threeColors,ALPACA_PRODUCT_ID),threeColors);
+assert.throws(()=>appendAlpacaLightBeige(prior,'another-product'),/существующей карточки/);
+const presetEditor=renderToStaticMarkup(createElement(load('src/components/sizes/ColorGridEditor.tsx').ColorGridEditor,{grids:prior,productId:ALPACA_PRODUCT_ID,onChange(){}}));
+assert.match(presetEditor,/Добавить сетку «Светло-бежевый»/);assert(!editor.includes('Добавить сетку «Светло-бежевый»'));
+const savedEditor=renderToStaticMarkup(createElement(load('src/components/sizes/ColorGridEditor.tsx').ColorGridEditor,{grids:threeColors,productId:ALPACA_PRODUCT_ID,onChange(){}}));
+assert.match(savedEditor,/disabled=""[^>]*>Светло-бежевый уже добавлен/);
+assert.deepEqual(alpacaLightBeigeColor().rows.map(r=>[r.size,r.shoulders,r.chest,r.length,r.sleeve,r.source]),[
+  ['M',44,48,64,60,'measured'],['L',47,52,66,62,'measured'],['XL',47,54,70,65,'measured'],['2XL',50,54,70,65,'measured'],['3XL',52,56,71,66,'measured']]);
+for(const [shouldersCm,chestWidthCm,size] of [[44,48,'M'],[47,52,'L'],[47,54,'XL'],[50,54,'2XL'],[52,56,'3XL']]){
+  const result=recommendColorGrids(threeColors,{...customer,colorKey:'light_beige',shouldersCm,chestWidthCm},examples);
+  assert.equal(result.size,size);assert.equal(result.colorResults.length,1);assert.equal(result.colorResults[0].key,'light_beige');assert.equal(result.colorResults[0].source,'measured');
+}
+assert.throws(()=>recommendColorGrids(threeColors,{...customer,colorKey:'missing'}),/SIZE_COLOR_NOT_FOUND/);
+const selectedTable=renderToStaticMarkup(createElement(load('src/components/sizes/ColorGridsTable.tsx').ColorGridsTable,{grids:threeColors,colorKey:'light_beige'}));
+assert.match(selectedTable,/Светло-бежевый/);assert(!selectedTable.includes('Основной цвет'));assert(!selectedTable.includes('Тёмный цвет'));
 assert.deepEqual(profile.colorGrids.colors[0].rows[0].shoulders,{samples:[42,43,44]});
 assert.deepEqual(profile.colorGrids.colors[0].rows[4].length,{samples:[68,70,71]});
 assert.equal(spreadDistance({samples:[42,43,44]},42.5),0.5);
@@ -49,3 +69,4 @@ if(fs.existsSync('source-catalog.json')){
 }
 fs.writeFileSync('docs/alpaca-size-grid-check-2026-11-09.json',JSON.stringify({test:'server comparisons, no OpenAI and no production updates',results},null,2)+'\n');
 console.log('PASS: two independent colors; ranges versus discrete samples; M/M and measured dark XL; dark calculated 2XL/3XL never ship (841 comparisons); old guidance unconfirmed; no-measure clarification; original export unchanged.');
+console.log('PASS beige: exact five measured rows, append-only preset bound to original ID, duplicate blocked, prior colors unchanged, selected color only used and rendered');

@@ -6,7 +6,7 @@ import type { ColorSizeResult } from "@/lib/color-size-grids";
 
 export const MEASUREMENT_LABELS = { halfWaistCm: "Полупояс", shouldersCm: "Плечи", chestWidthCm: "Ширина по груди", lengthCm: "Длина", other: "Другая мерка" } as const;
 export type MeasurementKey = keyof typeof MEASUREMENT_LABELS;
-export type SizeCustomer = { height: number; weight: number; fit: Fit; halfWaistCm?: number; shouldersCm?: number; chestWidthCm?: number; beltFit?: "unknown" | "snug" | "roomy" };
+export type SizeCustomer = { height: number; weight: number; fit: Fit; halfWaistCm?: number; shouldersCm?: number; chestWidthCm?: number; beltFit?: "unknown" | "snug" | "roomy"; colorKey?: string };
 
 export const STRETCH_LABELS = {
   unknown: "Не указано", none: "Не тянется", slight: "Почти не тянется", stretch: "Тянется",
