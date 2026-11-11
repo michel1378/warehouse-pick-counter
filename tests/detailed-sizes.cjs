@@ -44,7 +44,7 @@ expect('samurai-shirt', input(175, 70, { fit: 'closer' }), '3XL');
 assert.ok(expect('samurai-shirt', input(183, 80), null).message.includes('рукав'));
 expect('black-cold-gray-longsleeve', input(185, 65), 'L');
 expect('black-cold-gray-longsleeve', input(175, 70, { fit: 'closer', reference: { shoulders: 46, chest: 53 } }), 'M');
-expect('black-cold-gray-longsleeve', input(175, 70, { reference: { shoulders: 46, chest: 53 } }), null);
+expect('black-cold-gray-longsleeve', input(175, 70, { reference: { shoulders: 46, chest: 53 } }), 'M');
 const acceptedColdEstimate = expect('black-cold-gray-longsleeve', input(190, 115), '5XL');
 assert.ok(!acceptedColdEstimate.checks.some(x => x.includes('Перемерьте')));
 assert.equal(byKey.get('black-cold-gray-longsleeve').rows.find(r => r.tag === '5XL').estimated, true);
@@ -85,7 +85,7 @@ expect('huge-pants', input(163, 48), 'L');
 expect('old-textured-collar-shirt', input(165, 55), 'L');
 expect('old-textured-collar-shirt', input(175, 70, { reference: { shoulders: 46, chest: 51, length: 70, sleeve: 61 } }), 'XL');
 expect('old-textured-collar-shirt', input(183, 78, { reference: { shoulders: 48, chest: 51, length: 73, sleeve: 63 } }), '2XL');
-assert.ok(expect('old-textured-collar-shirt', input(180, 100, { reference: { chest: 60 } }), '3XL').requiresCheck);
+assert.equal(expect('old-textured-collar-shirt', input(180, 100, { reference: { chest: 60 } }), null).basis, 'incompatible');
 expect('old-textured-collar-shirt', input(179, 99, { reference: { chest: 60 } }), null);
 // Validation, color isolation and stock never silently replace the chosen size.
 for (const extra of [{ height: NaN }, { weight: Infinity }, { reference: { chest: -1 } }, { reference: { chest: NaN } }, { reference: { chest: 100 }, measurementSubject: 'body' }])

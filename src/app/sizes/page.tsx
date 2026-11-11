@@ -9,5 +9,5 @@ export default async function SizesPage() {
   if (session.role === "admin") redirect("/admin/sizes");
   return <main className="sizes-page"><header className="sizes-header"><div><p className="eyebrow">Подбор для отправки</p><h1>Размеры</h1><p className="size-hint">Выберите вещь и укажите параметры клиента.</p></div>
     <nav className="employee-links"><Link href="/availability">Наличие</Link>{session.permissions?.includes("picking") && <Link href="/scan">Сборка заказов</Link>}<form action={logout}><button className="secondary">Выйти</button></form></nav>
-  </header><SizeCatalog /></main>;
+  </header><SizeCatalog detailed /></main>;
 }

@@ -14,21 +14,25 @@ export type SizeVariant = { id: string; name: string; aliases?: string[] };
 export type MeasureRow = {
   tag: string; measures: Partial<Record<keyof GarmentMeasures, [number, number]>>;
   estimated: boolean; relaxedWaist?: number; stretchedWaist?: number;
+  unreliableMeasures?: (keyof GarmentMeasures)[];
 };
 export type ReviewedSizeRule = {
   id: string; height: number; weight: number; fit: DetailedFit;
   lengthPreference: "standard" | "cropped";
   colors: string[]; reference: GarmentMeasures;
   size: string | null; manual: boolean; reason?: string;
+  source?: "owner" | "catalog" | "inference";
 };
 export type DetailedSizeDefinition = {
   id: string; key: string; name: string; kind: "top" | "pants";
   variants: SizeVariant[]; sizes: string[]; unavailableSizes: string[];
-  stretch: "none" | "low" | "moderate";
+  stretch: "none" | "low" | "moderate" | "unknown";
   buttoned: boolean; rows: MeasureRow[]; rules: ReviewedSizeRule[];
   checkWaistBeforeShipping: boolean;
   sharedSizeAcrossColors?: boolean;
   acceptedEstimatedGrading?: boolean;
+  catalogAnchors?: boolean;
+  fitPolicy?: { closerStep: number; relaxedStep: number; shouldersWeight?: number };
 };
 export type SizeCalibration = { version: number; products: DetailedSizeDefinition[] };
 export type DetailedSizeProduct = SizeProduct & {
@@ -36,6 +40,6 @@ export type DetailedSizeProduct = SizeProduct & {
 };
 export type VariantSizeResult = {
   colorId: string; colorName: string; size: string | null;
-  basis: "owner" | "measurements" | "estimate" | "legacy" | "clarification";
+  basis: "owner" | "measurements" | "estimate" | "legacy" | "clarification" | "incompatible";
   message: string; checks: string[]; requiresCheck: boolean;
 };

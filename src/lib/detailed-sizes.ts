@@ -1,7 +1,8 @@
 import snapshot from "./detailed-size-data.json";
-import { recommendSize, type Fit, type SizeExample } from "./sizes";
+import { recommendSize } from "./sizes";
+import { profileDistance, profileWithFit } from "./detailed-size-model";
 import type {
-  DetailedFit, DetailedSizeDefinition, DetailedSizeInput, DetailedSizeProduct,
+  DetailedSizeDefinition, DetailedSizeInput, DetailedSizeProduct,
   GarmentMeasures, MeasureRow, ReviewedSizeRule, SizeCalibration, SizeVariant, VariantSizeResult,
 } from "./detailed-size-types";
 
@@ -10,7 +11,6 @@ const definitions = new Map(reviewedSizeData.products.map(p => [p.id, p]));
 export const getDetailedSizeDefinition = (id: string) => definitions.get(id);
 export const isPantsProduct = (product: DetailedSizeProduct) =>
   definitions.get(product.id)?.kind === "pants" || /брюк|джинс/i.test(product.name);
-const legacyFit: Record<DetailedFit, Fit> = { closer: "tight", regular: "regular", relaxed: "loose" };
 const measureKeys: (keyof GarmentMeasures)[] = ["shoulders", "chest", "halfWaist", "length", "sleeve"];
 const normalizeColor = (s: string) => s.toLocaleLowerCase("ru").replace(/ё/g, "е").replace(/[^а-яa-z0-9]/g, "");
 const hasMeasures = (r: GarmentMeasures) => measureKeys.some(k => r[k] !== undefined);
@@ -59,30 +59,52 @@ function invalidInput(input: DetailedSizeInput): string | null {
 function rangeDistance(value: number, range: [number, number]) {
   return value < range[0] ? range[0] - value : value > range[1] ? value - range[1] : 0;
 }
-function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: string | null): MeasureRow | undefined {
+const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
+const reliable = (row: MeasureRow, key: keyof GarmentMeasures) => row.measures[key] && !row.unreliableMeasures?.includes(key);
+const chestTolerance = (def: DetailedSizeDefinition) => def.stretch === "moderate" && !def.buttoned ? 2 : 0.5;
+
+function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: string | null, input: DetailedSizeInput): MeasureRow | undefined {
   const relevant = def.kind === "pants" ? ["halfWaist", "length"] as const : ["shoulders", "chest", "length", "sleeve"] as const;
-  const weights: Partial<Record<keyof GarmentMeasures, number>> = def.kind === "pants" ? { halfWaist: 1.5, length: 0.5 } : { shoulders: 1, chest: 1.4, length: 0.5, sleeve: 0.7 };
+  const weights: Partial<Record<keyof GarmentMeasures, number>> = def.kind === "pants" ? { halfWaist: 2, length: 0.4 } : { shoulders: def.fitPolicy?.shouldersWeight ?? 0.8, chest: 1.5, length: 0.4, sleeve: 0.6 };
+  const shift = input.fit === "relaxed" ? 1 : input.fit === "closer" ? -1 : 0;
+  const target = { ...ref };
+  if (target.chest !== undefined) target.chest += shift * 2;
+  if (target.shoulders !== undefined) target.shoulders += shift;
+  if (target.halfWaist !== undefined) target.halfWaist += shift;
   const scored = def.rows.filter(row => !def.unavailableSizes.includes(row.tag)).map(row => {
     let score = 0, fields = 0;
-    for (const k of relevant) if (ref[k] !== undefined && row.measures[k]) {
-      score += rangeDistance(ref[k]!, row.measures[k]!) * weights[k]!; fields++;
+    for (const k of relevant) if (target[k] !== undefined && reliable(row, k)) {
+      score += rangeDistance(target[k]!, row.measures[k]!) ** 2 * weights[k]!; fields++;
     }
+    // A shoulder measurement alone is not evidence that a much smaller chest fits.
+    if (def.kind === "top" && ref.shoulders !== undefined && ref.chest === undefined && tieSize)
+      score += Math.max(0, def.sizes.indexOf(tieSize) - def.sizes.indexOf(row.tag) - 1) ** 2 * 8;
+    if (ref.chest !== undefined && reliable(row, "chest") && row.measures.chest![1] < target.chest! - chestTolerance(def)) score += 100;
     return { row, score, fields };
   }).filter(r => r.fields);
   scored.sort((a, b) => a.score - b.score || (a.row.tag === tieSize ? -1 : b.row.tag === tieSize ? 1 : 0) || def.sizes.indexOf(a.row.tag) - def.sizes.indexOf(b.row.tag));
   return scored[0]?.row;
 }
 
-function modelSize(def: DetailedSizeDefinition, rules: ReviewedSizeRule[], input: DetailedSizeInput): { size: string | null; fitKnown: boolean } {
-  const usable = rules.filter(r => r.size && !r.manual && !hasMeasures(r.reference) && r.lengthPreference === "standard");
-  const rowsFor = (fit: DetailedFit): SizeExample[] => usable.filter(r => r.fit === fit).map(r => ({ height: r.height, weight: r.weight, size: r.size!, fit: legacyFit[fit] }));
-  const exactFit = rowsFor(input.fit);
-  const fitKnown = exactFit.length > 0;
-  const rows = fitKnown ? exactFit : rowsFor("regular");
-  const fit = fitKnown ? legacyFit[input.fit] : "regular";
-  if (!rows.length) return { size: null, fitKnown: false };
-  const result = recommendSize({ sizes: def.sizes.filter(s => !def.unavailableSizes.includes(s)), examples: rows }, input.height, input.weight, fit);
-  return { size: result.size, fitKnown };
+function modelSize(def: DetailedSizeDefinition, rules: ReviewedSizeRule[], input: DetailedSizeInput) {
+  const sizes = def.sizes.filter(s => !def.unavailableSizes.includes(s));
+  const policy = def.fitPolicy ?? { closerStep: -0.7, relaxedStep: 0.8 };
+  const prior = input.fit === "closer" ? policy.closerStep : policy.relaxedStep;
+  const profile = profileWithFit(rules, sizes, input, prior);
+  if (!profile) return null;
+  const index = Math.max(0, Math.min(sizes.length - 1, Math.round(profile.score)));
+  return { size: sizes[index], outside: profile.outside };
+}
+
+// A larger label is useful for a looser fit only if it adds actual volume.
+function addsVolume(def: DetailedSizeDefinition, regular: string, candidate: string) {
+  const a = def.rows.find(r => r.tag === regular), b = def.rows.find(r => r.tag === candidate);
+  if (!a || !b) return true; // No invented dimensions for Huge or buttoned Alpaca.
+  const key = def.kind === "pants" ? "halfWaist" : "chest";
+  if (!reliable(a, key) || !reliable(b, key)) return false;
+  const difference = midpoint(b.measures[key]!) - midpoint(a.measures[key]!);
+  if (difference > 0.25) return true;
+  return difference >= 0 && def.kind === "top" && reliable(a, "shoulders") && reliable(b, "shoulders") && midpoint(b.measures.shoulders!) > midpoint(a.measures.shoulders!) + 0.5;
 }
 
 function compareMeasures(def: DetailedSizeDefinition, row: MeasureRow | undefined, ref: GarmentMeasures): string[] {
@@ -105,67 +127,93 @@ function compareMeasures(def: DetailedSizeDefinition, row: MeasureRow | undefine
 
 function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | undefined, variant: ResolvedVariant, input: DetailedSizeInput): VariantSizeResult {
   const base = { colorId: variant.id, colorName: variant.name };
-  const clarification = (message: string): VariantSizeResult => ({ ...base, size: null, basis: "clarification", message, checks: [], requiresCheck: true });
-  if (!variant.supported) return clarification("Для этого цвета рекомендации ещё не проверены. Уточните размер у владельца.");
+  const clarification = (message: string, incompatible = false): VariantSizeResult => ({ ...base, size: null, basis: incompatible ? "incompatible" : "clarification", message, checks: [], requiresCheck: true });
+  if (!variant.supported) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
   const ref = input.reference ?? {};
   if (!def) {
-    const result = recommendSize(product, input.height, input.weight, legacyFit[input.fit]);
-    const checks = hasMeasures(ref) ? ["Для этой модели ещё нет проверенной сетки: дополнительные мерки нужно сверить с конкретной вещью."] : [];
-    if (input.lengthPreference === "cropped") checks.push("Уточните длину укороченной посадки перед отправкой.");
-    return { ...base, size: result.size, basis: "legacy", message: result.message, checks, requiresCheck: result.kind === "uncertain" || checks.length > 0 };
+    const result = recommendSize(product, input.height, input.weight, "regular");
+    return { ...base, size: result.size, basis: "legacy", message: result.message,
+      checks: ["Для новой модели пока нет размерной сетки и правил посадки."], requiresCheck: true };
   }
-  const rules = def.rules.filter(r => colorApplies(r, variant.id));
+  let rules = def.rules.filter(r => colorApplies(r, variant.id));
+  if (def.catalogAnchors && product.examples.length) rules = product.examples.filter(r => def.sizes.includes(r.size)).map((r, i) => ({
+    id: `catalog-${i}`, height: r.height, weight: r.weight, size: r.size, fit: r.fit === "tight" ? "closer" : r.fit === "loose" ? "relaxed" : "regular",
+    colors: [], reference: {}, manual: false, lengthPreference: "standard", source: "catalog",
+  }));
+  // A physically incompatible garment must not be sold as fitting merely because
+  // an old height/weight example happened to carry its largest label.
+  const chestRows = def.rows.filter(r => reliable(r, "chest") && !def.unavailableSizes.includes(r.tag));
+  if (ref.chest !== undefined && chestRows.length) {
+    const max = Math.max(...chestRows.map(r => r.measures.chest![1]));
+    if (ref.chest > max + chestTolerance(def)) return clarification(`Грудь любимой вещи ${ref.chest} см, максимум этой модели ${max} см. Подходящего размера по этим меркам нет${def.buttoned ? ": учитываем застёгнутые пуговицы" : ""}.`, true);
+  }
+  const waistRows = def.rows.filter(r => reliable(r, "halfWaist") && !def.unavailableSizes.includes(r.tag));
+  if (ref.halfWaist !== undefined && waistRows.length && ref.halfWaist > Math.max(...waistRows.map(r => r.measures.halfWaist![1])) + 1)
+    return clarification("Полупояс любимых брюк больше спокойного полупояса всех размеров этой модели. Растянутый максимум не заменяет нужную ширину.", true);
+  // The owner's try-on found a real sleeve limit, not an ordinal label problem.
+  if (def.key === "samurai-shirt" && rules.some(r => r.manual && !r.size && sameProfile(r, input)) && ref.sleeve === undefined)
+    return clarification("Для этих параметров корпус Самурайки подходит, но рукава коротки. Нужна длина рукава подходящей вещи: у 2XL–5XL здесь всего 58–60 см.");
   const qualified = rules.filter(r => sameProfile(r, input) && r.fit === input.fit && r.lengthPreference === input.lengthPreference &&
-    (hasMeasures(ref) ? hasMeasures(r.reference) && referenceMatches(r.reference, ref) : !hasMeasures(r.reference)));
+    (hasMeasures(ref) ? hasMeasures(r.reference) && sameMeasures(r.reference, ref) : !hasMeasures(r.reference)));
   qualified.sort((a, b) => measureCount(b.reference) - measureCount(a.reference) || (b.colors.length ? 1 : 0) - (a.colors.length ? 1 : 0));
-  // These two weight/height choices were explicitly kept even when reference waist was supplied.
   const waistOverride = input.fit === "regular" && input.lengthPreference === "standard" && ref.halfWaist !== undefined && (
     (def.key === "dense-new-stripe-pants" && input.height === 183 && input.weight === 88) ||
     (def.key === "margiela-striped-pants" && input.height === 180 && input.weight === 60)
   );
-  const ownerRule = qualified[0] ?? (waistOverride ? rules.find(r => sameProfile(r, input) && r.fit === "regular" && !hasMeasures(r.reference)) : undefined);
+  const referenceAnchor = hasMeasures(ref) ? rules.filter(r => r.size && !r.manual && hasMeasures(r.reference) && r.fit === input.fit &&
+    r.lengthPreference === input.lengthPreference && sameMeasures(r.reference, ref) && profileDistance(r, input) <= 1.2)
+    .sort((a, b) => measureCount(b.reference) - measureCount(a.reference) || profileDistance(a, input) - profileDistance(b, input))[0] : undefined;
+  const ownerRule = qualified[0] ?? (waistOverride ? rules.find(r => sameProfile(r, input) && r.fit === "regular" && !hasMeasures(r.reference)) : referenceAnchor);
+  const model = modelSize(def, rules, input);
   let size: string | null = null;
   let basis: VariantSizeResult["basis"] = "estimate";
-  let message = "Предварительный размер по согласованным рекомендациям магазина.";
+  let message = "Размер по рекомендациям магазина, меркам и выбранной посадке.";
   let manual = false;
   const checks: string[] = [];
   if (ownerRule) {
-    size = ownerRule.size; basis = "owner"; manual = ownerRule.manual;
-    message = ownerRule.reason ?? "По согласованному примеру магазина для этих параметров и посадки.";
+    size = ownerRule.size; basis = ownerRule.source === "catalog" ? "legacy" : ownerRule.source === "inference" ? hasMeasures(ref) ? "measurements" : "estimate" : "owner";
+    manual = ownerRule.manual;
+    message = ownerRule.reason ?? "По рекомендациям магазина для этих параметров и посадки.";
     if (!size) return clarification(message);
-  } else {
-    const model = modelSize(def, rules, input);
-    if (hasMeasures(ref)) {
-      const hasVolumeMeasure = def.kind === "pants" ? ref.halfWaist !== undefined : ref.shoulders !== undefined || ref.chest !== undefined;
-      if (input.lengthPreference === "cropped" && !hasVolumeMeasure) {
-        if (!model.size) return clarification("Уточните плечи и грудь любимой вещи либо полупояс брюк. Одна длина не определяет размер по объёму.");
-        size = model.size;
-        message = "Размер по объёму; желаемую укороченную длину проверьте отдельно.";
-      } else {
-      const row = closestRow(def, ref, model.size);
-      if (!row) return clarification("Для этих мерок нужна проверка конкретной вещи: проверенной сетки пока нет.");
-      size = row.tag; basis = "measurements"; message = "Ближе к замерам любимой вещи по размерной сетке.";
-      if (ref.chest !== undefined && row.measures.chest && ref.chest > row.measures.chest[1] + (def.stretch === "moderate" && !def.buttoned ? 2 : 1))
-        return clarification("По груди подходящий размер не подтверждён. Проверьте конкретную вещь; растяжение не заменяет нужную ширину.");
-      if (ref.halfWaist !== undefined && row.measures.halfWaist && rangeDistance(ref.halfWaist, row.measures.halfWaist) > 3)
-        return clarification("Спокойный полупояс не совпадает с любимыми брюками. Нужен фактический замер подходящей пары.");
-      }
+  } else if (hasMeasures(ref) && def.rows.length) {
+    const hasVolumeMeasure = def.kind === "pants" ? ref.halfWaist !== undefined : ref.shoulders !== undefined || ref.chest !== undefined;
+    if (input.lengthPreference === "cropped" && !hasVolumeMeasure) {
+      size = model?.size ?? null;
+      message = "Размер по объёму; укороченную длину проверяем отдельно.";
     } else {
-      size = def.key === "huge-pants" && input.weight < 50 ? "L" : model.size;
-      if (!size) return clarification("Для этих параметров недостаточно проверенных рекомендаций. Уточните мерки любимой вещи.");
-      if (!model.fitKnown && input.fit !== "regular") checks.push("Это ориентир по обычной посадке. Для выбранной посадки уточните мерки любимой вещи.");
+      const row = closestRow(def, ref, model?.size ?? null, input);
+      if (!row) return clarification("Нет достоверной сетки для введённого замера.");
+      size = row.tag; basis = "measurements"; message = "Размер по меркам вещи с учётом выбранной посадки.";
+    }
+  } else {
+    size = def.key === "huge-pants" && input.weight < 50 ? "L" : model?.size ?? null;
+    if (model?.outside && !hasMeasures(ref) && !(def.key === "huge-pants" && input.weight < 50))
+      return clarification(`Для этих роста и веса нужны ${def.kind === "pants" ? "замеры полупояса подходящих брюк" : "плечи и ширина груди подходящей вещи"}: параметры выходят за ориентиры этой модели.`);
+    if (hasMeasures(ref) && !def.rows.length) checks.push("Полной сетки этой модели нет: указанный замер пока нельзя связать с биркой.");
+  }
+  if (!size || !def.sizes.includes(size) || def.unavailableSizes.includes(size)) return clarification("В размерном ряду нет подходящего размера по этим параметрам.");
+  if (input.fit !== "regular") {
+    const regular = resultFor(product, def, variant, { ...input, fit: "regular" });
+    if (regular.size) {
+      const regularIndex = def.sizes.indexOf(regular.size), candidateIndex = def.sizes.indexOf(size);
+      // Fit ordering is enforced even for sparse fits and inputs with measurements.
+      if (input.fit === "relaxed" && candidateIndex < regularIndex || input.fit === "closer" && candidateIndex > regularIndex) size = regular.size;
+      if (!ownerRule && input.fit === "relaxed" && def.sizes.indexOf(size) > regularIndex && !addsVolume(def, regular.size, size)) {
+        size = regular.size;
+        checks.push("Следующая бирка не даёт подтверждённой прибавки по ширине. Для более свободной посадки сравните фактическую ширину вещи.");
+      }
     }
   }
-  if (!def.sizes.includes(size) || def.unavailableSizes.includes(size)) return clarification("Этот размер не входит в проверенный ряд модели.");
   const row = def.rows.find(r => r.tag === size);
   checks.push(...compareMeasures(def, row, ref));
+  if (row?.unreliableMeasures?.includes("chest") && (ref.chest !== undefined || input.fit === "relaxed"))
+    checks.push("У Цветов в исходной сетке грудь L указана 60 см, XL — 56 см. Спорный замер L не используется как доказательство нужной ширины.");
   if (row?.estimated && !def.acceptedEstimatedGrading) checks.push("Замеры этого размера расчётные. Перемерьте вещь перед отправкой.");
   if (def.checkWaistBeforeShipping) checks.push("Перед отправкой перемерьте полупояс этой пары: экземпляры с одинаковой биркой отличаются.");
   if (input.lengthPreference === "cropped" && ref.length === undefined)
-    checks.push(`Уточните желаемую длину${row?.measures.length ? `: у этого размера ${row.measures.length[0] === row.measures.length[1] ? row.measures.length[0] : row.measures.length.join("–")} см` : ""}. Укороченность сама по себе не меняет размер по объёму.`);
+    checks.push("Укороченность сама по себе не меняет размер по объёму. Проверьте длину выбранной вещи.");
   const available = variant.stockSizes ?? product.sizes;
   if (!available.includes(size)) checks.push(`Проверьте наличие ${size} для этого цвета. Подходящий размер автоматически не заменяется соседним.`);
-  if (input.fit === "closer") checks.push("Посадка ближе к телу; облегание без примерки не гарантировано.");
   return { ...base, size, basis, message, checks: [...new Set(checks)], requiresCheck: manual || checks.length > 0 };
 }
 

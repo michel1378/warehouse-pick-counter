@@ -83,6 +83,6 @@ for (const [pi,p] of products.entries()) {
   stress.push({product:p.name,profiles:profiles.length,answerRows:rows.filter(x=>x.productId===p.id).length,same,unknown,smaller,probes,weightDrops:weightDrops.length,dropExamples:weightDrops.slice(0,4)});
 }
 const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:path.join(__dirname,'..'),encoding:'utf8'}).trim();
-const out={date:new Date().toISOString(),commit,sourceVersion:reviewedSizeData.version,productCount:products.length,pickerProducts:selected.length,calls,rows,employees,catalog,grids,stress};
+const out={date:new Date().toISOString(),commit,sourceVersion:reviewedSizeData.version,productCount:products.length,pickerProducts:selected.length,calls,rows,employeeMode:"same-detailed-picker-as-admin",legacyEmployees:employees,catalog,grids,stress};
 fs.writeFileSync(path.join(folder,'audit.json'),JSON.stringify(out,null,2));
 console.log(JSON.stringify({products:products.length,pickerProducts:selected.length,profiles:stress.reduce((s,x)=>s+x.profiles,0),answerRows:rows.length,calls,summary:stress.map(({product,profiles,answerRows,same,unknown,smaller,weightDrops,dropExamples})=>({product,profiles,answerRows,same,unknown,smaller,weightDrops,dropExamples}))}));

@@ -31,7 +31,7 @@ for p in draft["products"]:
             measures = { {"half_waist": "halfWaist"}.get(k, k): v for k, v in row.items() if k in ["shoulders", "chest", "length", "sleeve", "half_waist"] }
             if "half_waist_relaxed_cm" in row:
                 measures["halfWaist"] = [row["half_waist_relaxed_cm"]] * 2
-            rows.append({"tag": row["tag"], "measures": measures, "estimated": row.get("measurement_status") == "estimated", **({"relaxedWaist": row["half_waist_relaxed_cm"], "stretchedWaist": row["half_waist_stretched_cm"]} if "half_waist_relaxed_cm" in row else {})})
+            rows.append({"tag": row["tag"], "measures": measures, "estimated": row.get("measurement_status") == "estimated", **({"relaxedWaist": row["half_waist_relaxed_cm"], "stretchedWaist": row["half_waist_stretched_cm"]} if "half_waist_relaxed_cm" in row else {}), **({"unreliableMeasures": row["unreliable_measures"]} if row.get("unreliable_measures") else {})})
     variants = [{"id": v["id"], "name": v["name"]} for v in p.get("color_variants", [])]
     if not variants:
         variants = [{"id": "all", "name": "Оба цвета" if p.get("color_variants_count") == 2 else "Размер"}]
@@ -45,7 +45,8 @@ for p in draft["products"]:
         if x.get("product_id") != key or x.get("current_applicability"):
             continue
         special_guard = status == "needs_regular_fit_choice_after_conditional_M"
-        if not (status.startswith("owner_") or special_guard) or status in ["owner_mentioned_without_explicit_size", "owner_size_accepted_profile_needs_clarification"]:
+        inferred = status == "assistant_derived_after_owner_authorization"
+        if not (status.startswith("owner_") or special_guard or inferred) or status in ["owner_mentioned_without_explicit_size", "owner_size_accepted_profile_needs_clarification"]:
             continue
         ref = {measure_names[k]: v for k, v in (x.get("reference_garment") or {}).items() if k in measure_names and isinstance(v, (int, float))}
         raw_fit = x.get("requested_body_fit")
@@ -66,7 +67,7 @@ for p in draft["products"]:
             reason = "Выбор магазина — 3XL, но грудь по сетке меньше любимой рубашки. Проверьте вещь застёгнутой перед отправкой."
         elif size is None:
             reason = "Подходящий размер не подтверждён. Нужен замер конкретной вещи перед отправкой."
-        rule = {"id": x["id"], "height": x["height_cm"], "weight": x["weight_kg"], "fit": fit, "lengthPreference": length, "colors": x.get("color_ids", []), "reference": ref, "size": size, "manual": manual}
+        rule = {"id": x["id"], "height": x["height_cm"], "weight": x["weight_kg"], "fit": fit, "lengthPreference": length, "colors": x.get("color_ids", []), "reference": ref, "size": size, "manual": manual, "source": "inference" if inferred else "owner"}
         if p.get("shared_size_across_colors"):
             rule["colors"] = []
         if reason: rule["reason"] = reason
@@ -83,12 +84,16 @@ for p in draft["products"]:
     elif key == "margiela-striped-pants": stretch = "none"
     elif key == "samurai-shirt": stretch = "none"
     else: stretch = (p.get("fabric") or {}).get("stretch") or "none"
+    if p.get("catalog_anchors"):
+        stretch = (p.get("fabric") or {}).get("stretch") or "unknown"
+        for i, x in enumerate(p["catalog_examples_snapshot"]):
+            selected[f"catalog-{i}"] = {"id": f"{key}-catalog-{i}", "height": x["height"], "weight": x["weight"], "fit": fit_names.get(x["fit"], "regular"), "lengthPreference": "standard", "colors": [], "reference": {}, "size": x["size"], "manual": False, "source": "catalog"}
     sizes = list(dict.fromkeys(r["tag"] for r in rows)) or p.get("owner_confirmed_sizes") or p.get("existing_catalog_sizes") or []
     if key == "black-cold-gray-longsleeve":
         # This product's source distinguishes measured S/M/L from calculated XL–5XL.
         for row in rows:
             if row["tag"] not in ["S", "M", "L"]: row["estimated"] = True
-    products.append({"id": p.get("catalog_product_id") or ids[key], "key": key, "name": p["card_title"], "kind": "pants" if p.get("product_type") == "pants" or key == "margiela-striped-pants" else "top", "variants": variants, "sizes": sizes, "unavailableSizes": p.get("unavailable_sizes", ["S"] if key == "margiela-striped-pants" else []), "stretch": stretch if stretch in ["none", "low", "moderate"] else "moderate", "buttoned": key in ["samurai-shirt", "best-distress-shirt", "old-textured-collar-shirt"], "rows": rows, "rules": list(selected.values()), "checkWaistBeforeShipping": key == "huge-pants", "sharedSizeAcrossColors": bool(p.get("shared_size_across_colors")), "acceptedEstimatedGrading": bool(p.get("estimated_grading_accepted_without_remeasurement"))})
+    products.append({"id": p.get("catalog_product_id") or ids[key], "key": key, "name": p["card_title"], "kind": "pants" if p.get("product_type") == "pants" or key == "margiela-striped-pants" else "top", "variants": variants, "sizes": sizes, "unavailableSizes": p.get("unavailable_sizes", ["S"] if key == "margiela-striped-pants" else []), "stretch": stretch if stretch in ["none", "low", "moderate", "unknown"] else "unknown", "buttoned": key in ["samurai-shirt", "best-distress-shirt", "old-textured-collar-shirt", "asym-shirt", "flowers-shirt"], "rows": rows, "rules": list(selected.values()), "checkWaistBeforeShipping": key == "huge-pants", "sharedSizeAcrossColors": bool(p.get("shared_size_across_colors")), "acceptedEstimatedGrading": bool(p.get("estimated_grading_accepted_without_remeasurement")), "catalogAnchors": bool(p.get("catalog_anchors")), "fitPolicy": p.get("fit_policy", {"closerStep": -0.7, "relaxedStep": 0.75})})
 output = {"version": source_version, "products": products}
 dest = root / "src/lib/detailed-size-data.json"
 dest.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n")

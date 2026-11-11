@@ -1,5 +1,5 @@
 {
-  "version": 47,
+  "version": 48,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -151,7 +151,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-002",
@@ -165,7 +166,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-003",
@@ -182,7 +184,8 @@
             "chest": 49
           },
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-004",
@@ -196,7 +199,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-005",
@@ -210,7 +214,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-006",
@@ -227,7 +232,8 @@
             "chest": 52
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-008",
@@ -241,7 +247,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-010",
@@ -255,7 +262,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-011",
@@ -269,7 +277,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-012",
@@ -286,7 +295,8 @@
             "chest": 56
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-013",
@@ -300,7 +310,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-014",
@@ -314,7 +325,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-015",
@@ -331,7 +343,8 @@
             "chest": 58
           },
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-016",
@@ -345,7 +358,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-017",
@@ -359,7 +373,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-b02-018",
@@ -373,7 +388,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-001",
@@ -384,7 +400,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-002",
@@ -398,7 +415,8 @@
             "chest": 53
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-003",
@@ -409,12 +427,19 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "7bc3067f-d34b-4080-be07-39bf2ab2afab",
@@ -521,7 +546,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-002",
@@ -532,7 +558,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-004",
@@ -543,7 +570,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-004",
@@ -554,7 +582,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-006",
@@ -567,7 +596,8 @@
             "halfWaist": 40
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-007",
@@ -578,7 +608,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-008",
@@ -589,7 +620,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-009",
@@ -602,7 +634,8 @@
             "halfWaist": 42
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-010",
@@ -613,7 +646,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-011",
@@ -624,7 +658,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-012",
@@ -637,7 +672,8 @@
             "halfWaist": 44
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-013",
@@ -648,7 +684,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-014",
@@ -659,7 +696,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-015",
@@ -672,7 +710,8 @@
             "halfWaist": 46
           },
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-b01-016",
@@ -685,7 +724,8 @@
             "halfWaist": 40
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-019",
@@ -696,7 +736,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-020",
@@ -707,7 +748,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-021",
@@ -718,7 +760,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-022",
@@ -729,7 +772,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-023",
@@ -740,7 +784,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "margiela-owner-024",
@@ -751,7 +796,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-005",
@@ -764,7 +810,8 @@
             "halfWaist": 38
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-006",
@@ -777,7 +824,8 @@
             "halfWaist": 40
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-006-conditional",
@@ -790,12 +838,19 @@
             "halfWaist": 40
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.65,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "a2bbcd7b-60d3-4248-934f-82ca1072c0f1",
@@ -924,7 +979,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-006",
@@ -938,7 +994,8 @@
           ],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-008",
@@ -952,7 +1009,8 @@
           ],
           "reference": {},
           "size": "5XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-001",
@@ -966,7 +1024,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-002",
@@ -980,7 +1039,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-004",
@@ -994,7 +1054,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-005",
@@ -1008,7 +1069,8 @@
           ],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-007",
@@ -1022,7 +1084,8 @@
           ],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "samurai-revised-b02-009",
@@ -1037,6 +1100,7 @@
           "reference": {},
           "size": null,
           "manual": true,
+          "source": "owner",
           "reason": "Проверьте рукав конкретной рубашки: увеличение бирки не гарантирует нужную длину."
         },
         {
@@ -1051,12 +1115,19 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.85,
+        "relaxedStep": 0.65,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "2886d56d-b216-4873-b26a-d26c84ecf928",
@@ -1270,7 +1341,8 @@
           "colors": [],
           "reference": {},
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-002",
@@ -1281,7 +1353,8 @@
           "colors": [],
           "reference": {},
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-003",
@@ -1292,7 +1365,8 @@
           "colors": [],
           "reference": {},
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-005",
@@ -1303,7 +1377,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-b01-005",
@@ -1314,7 +1389,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-007",
@@ -1325,7 +1401,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-b01-007",
@@ -1336,7 +1413,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-009",
@@ -1347,7 +1425,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-008",
@@ -1361,7 +1440,8 @@
             "chest": 55
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-010",
@@ -1372,7 +1452,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-011",
@@ -1383,7 +1464,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-012",
@@ -1394,7 +1476,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-013",
@@ -1405,7 +1488,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-016",
@@ -1416,7 +1500,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-b01-015",
@@ -1427,7 +1512,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-b01-016",
@@ -1438,7 +1524,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-017",
@@ -1449,7 +1536,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-018",
@@ -1460,7 +1548,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-019",
@@ -1471,7 +1560,8 @@
           "colors": [],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-020",
@@ -1482,7 +1572,8 @@
           "colors": [],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-021",
@@ -1493,7 +1584,8 @@
           "colors": [],
           "reference": {},
           "size": "4XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-022",
@@ -1504,7 +1596,8 @@
           "colors": [],
           "reference": {},
           "size": "5XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-023",
@@ -1515,7 +1608,8 @@
           "colors": [],
           "reference": {},
           "size": "5XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-024",
@@ -1526,7 +1620,8 @@
           "colors": [],
           "reference": {},
           "size": "5XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-b01-026",
@@ -1539,22 +1634,32 @@
             "chest": 55
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
-          "id": "mixed-control-r01-011",
-          "height": 175,
-          "weight": 70,
+          "id": "mixed-control-r01-012",
+          "height": 186,
+          "weight": 66,
           "fit": "regular",
           "lengthPreference": "standard",
           "colors": [],
-          "reference": {
-            "shoulders": 46,
-            "chest": 53
-          },
-          "size": null,
-          "manual": true,
-          "reason": "Для этих мерок M согласован при посадке ближе к телу. Обычную посадку нужно уточнить."
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "blackcold-r02-004",
+          "height": 173,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "S",
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-006",
@@ -1568,29 +1673,8 @@
             "chest": 53
           },
           "size": "M",
-          "manual": false
-        },
-        {
-          "id": "mixed-control-r01-012",
-          "height": 186,
-          "weight": 66,
-          "fit": "regular",
-          "lengthPreference": "standard",
-          "colors": [],
-          "reference": {},
-          "size": "L",
-          "manual": false
-        },
-        {
-          "id": "blackcold-r02-004",
-          "height": 173,
-          "weight": 60,
-          "fit": "regular",
-          "lengthPreference": "standard",
-          "colors": [],
-          "reference": {},
-          "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-014",
@@ -1604,7 +1688,8 @@
             "chest": 59
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-r02-015",
@@ -1615,7 +1700,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "blackcold-owner-reported-172-85-M",
@@ -1626,12 +1712,46 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "cold-derived-175-70-reference-M",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 46,
+            "chest": 53
+          },
+          "size": "M",
+          "manual": false,
+          "source": "inference"
+        },
+        {
+          "id": "cold-derived-183-78-regular-L",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "inference"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": true,
-      "acceptedEstimatedGrading": true
+      "acceptedEstimatedGrading": true,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "0e2d3b86-0d43-4664-845d-15250840897b",
@@ -1781,7 +1901,8 @@
             "sleeve": 56
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-owner-best-153-50",
@@ -1792,7 +1913,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "best-distress-b01-005",
@@ -1803,7 +1925,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "best-distress-b01-007",
@@ -1814,7 +1937,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "best-distress-b01-012",
@@ -1830,7 +1954,8 @@
             "sleeve": 59
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "best-distress-owner-019",
@@ -1841,7 +1966,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-013",
@@ -1852,7 +1978,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-014",
@@ -1863,7 +1990,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-015",
@@ -1874,7 +2002,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-owner-best-173-50",
@@ -1885,7 +2014,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "best-owner-175-80-regular-2XL",
@@ -1896,12 +2026,31 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "best-derived-188-90-3XL",
+          "height": 188,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "inference"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "b35b2865-46ce-441f-a536-fa62072061f1",
@@ -2046,7 +2195,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-002",
@@ -2057,7 +2207,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-003",
@@ -2068,7 +2219,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-004",
@@ -2079,7 +2231,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-005",
@@ -2090,7 +2243,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-006",
@@ -2106,7 +2260,8 @@
             "sleeve": 58
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-016",
@@ -2117,7 +2272,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-008",
@@ -2128,7 +2284,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-009",
@@ -2141,7 +2298,8 @@
             "chest": 60
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-010",
@@ -2152,7 +2310,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-011",
@@ -2163,7 +2322,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-012",
@@ -2179,7 +2339,8 @@
             "sleeve": 60
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-013",
@@ -2190,7 +2351,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-014",
@@ -2201,7 +2363,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-015",
@@ -2212,7 +2375,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-016",
@@ -2223,7 +2387,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "muzhik-b01-018",
@@ -2239,7 +2404,8 @@
             "sleeve": 58
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-017",
@@ -2250,7 +2416,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-018",
@@ -2261,12 +2428,20 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.65,
+        "relaxedStep": 0.4,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112",
+        "shouldersWeight": 0.25
+      }
     },
     {
       "id": "3611e140-b330-4545-8237-03abbbc98d65",
@@ -2434,7 +2609,8 @@
           "colors": [],
           "reference": {},
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-002",
@@ -2445,7 +2621,8 @@
           "colors": [],
           "reference": {},
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-020",
@@ -2461,7 +2638,8 @@
             "sleeve": 63
           },
           "size": "S",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-004",
@@ -2472,7 +2650,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-005",
@@ -2483,7 +2662,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-006",
@@ -2499,7 +2679,8 @@
             "sleeve": 65
           },
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-007",
@@ -2510,7 +2691,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-008",
@@ -2521,7 +2703,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-009",
@@ -2534,7 +2717,8 @@
             "chest": 54
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-010",
@@ -2545,7 +2729,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-011",
@@ -2556,7 +2741,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-012",
@@ -2567,7 +2753,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-013",
@@ -2578,7 +2765,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-021",
@@ -2589,7 +2777,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-015",
@@ -2602,7 +2791,8 @@
             "chest": 58
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-016",
@@ -2613,7 +2803,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-017",
@@ -2624,7 +2815,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "wooden-b01-018",
@@ -2640,7 +2832,8 @@
             "sleeve": 69
           },
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-019",
@@ -2651,12 +2844,19 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "319144e7-e3ef-49ca-ae23-7ad6ad088fe1",
@@ -2773,7 +2973,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-002",
@@ -2784,7 +2985,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-003",
@@ -2798,7 +3000,8 @@
             "length": 108
           },
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-004",
@@ -2809,7 +3012,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-005",
@@ -2820,7 +3024,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-006",
@@ -2834,7 +3039,8 @@
             "length": 109
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-008",
@@ -2845,7 +3051,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-009",
@@ -2859,7 +3066,8 @@
             "length": 110
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-010",
@@ -2870,7 +3078,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-011",
@@ -2881,7 +3090,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-013",
@@ -2892,7 +3102,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-014",
@@ -2903,7 +3114,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-015",
@@ -2917,7 +3129,8 @@
             "length": 112
           },
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-016",
@@ -2928,7 +3141,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-017",
@@ -2941,7 +3155,8 @@
             "halfWaist": 40
           },
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "dense-b01-018",
@@ -2955,6 +3170,7 @@
           },
           "size": null,
           "manual": true,
+          "source": "owner",
           "reason": "Подходящий размер не подтверждён. Нужен замер конкретной вещи перед отправкой."
         },
         {
@@ -2966,7 +3182,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-023",
@@ -2980,7 +3197,8 @@
             "length": 111
           },
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-024",
@@ -2991,12 +3209,19 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "7474f167-d6eb-46b6-82be-f07f2275b18f",
@@ -3030,7 +3255,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-002",
@@ -3041,7 +3267,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-003",
@@ -3052,7 +3279,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-004",
@@ -3063,7 +3291,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-005",
@@ -3074,7 +3303,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-006",
@@ -3085,7 +3315,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-025",
@@ -3096,18 +3327,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
-        },
-        {
-          "id": "huge-b01-008",
-          "height": 165,
-          "weight": 72,
-          "fit": "regular",
-          "lengthPreference": "standard",
-          "colors": [],
-          "reference": {},
-          "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-009",
@@ -3118,7 +3339,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-010",
@@ -3129,7 +3351,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-011",
@@ -3140,7 +3363,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-012",
@@ -3151,7 +3375,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-013",
@@ -3162,7 +3387,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-014",
@@ -3173,7 +3399,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "huge-b01-015",
@@ -3184,7 +3411,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-026",
@@ -3195,7 +3423,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-027",
@@ -3206,12 +3435,43 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "huge-derived-165-72-2XL",
+          "height": 165,
+          "weight": 72,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "inference"
+        },
+        {
+          "id": "huge-derived-165-73-2XL",
+          "height": 165,
+          "weight": 73,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "inference"
         }
       ],
       "checkWaistBeforeShipping": true,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.65,
+        "relaxedStep": 0.65,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "a92d78d6-90c1-4938-8d14-f01859925511",
@@ -3262,7 +3522,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-002",
@@ -3275,7 +3536,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-003",
@@ -3288,7 +3550,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-004",
@@ -3301,7 +3564,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-005",
@@ -3314,7 +3578,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-006",
@@ -3327,7 +3592,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-007",
@@ -3340,7 +3606,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-008",
@@ -3353,7 +3620,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-009",
@@ -3366,7 +3634,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-010",
@@ -3379,7 +3648,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-011",
@@ -3392,7 +3662,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-012",
@@ -3405,7 +3676,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-013",
@@ -3418,7 +3690,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-014",
@@ -3431,7 +3704,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-015",
@@ -3444,7 +3718,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-016",
@@ -3457,7 +3732,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-017",
@@ -3470,7 +3746,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-dark-b01-018",
@@ -3483,7 +3760,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-001",
@@ -3496,7 +3774,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-001",
@@ -3509,7 +3788,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-002",
@@ -3522,7 +3802,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-002",
@@ -3535,7 +3816,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-003",
@@ -3548,7 +3830,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-003",
@@ -3561,7 +3844,8 @@
           ],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-004",
@@ -3574,7 +3858,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-004",
@@ -3587,7 +3872,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-005",
@@ -3600,7 +3886,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-005",
@@ -3613,7 +3900,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-006",
@@ -3626,7 +3914,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-006",
@@ -3639,7 +3928,8 @@
           ],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-007",
@@ -3652,7 +3942,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-007",
@@ -3665,7 +3956,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-008",
@@ -3678,7 +3970,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-008",
@@ -3691,7 +3984,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-009",
@@ -3704,7 +3998,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-009",
@@ -3717,7 +4012,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-010",
@@ -3730,7 +4026,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-010",
@@ -3743,7 +4040,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-011",
@@ -3756,7 +4054,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-011",
@@ -3769,7 +4068,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-012",
@@ -3782,7 +4082,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-012",
@@ -3795,7 +4096,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-013",
@@ -3808,7 +4110,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-013",
@@ -3821,7 +4124,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-014",
@@ -3834,7 +4138,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-014",
@@ -3847,7 +4152,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-015",
@@ -3860,7 +4166,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-015",
@@ -3873,7 +4180,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-016",
@@ -3886,7 +4194,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-016",
@@ -3899,7 +4208,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-017",
@@ -3912,7 +4222,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-beige-b01-017",
@@ -3925,7 +4236,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "alpaca-buttons-light-gray-b01-018",
@@ -3938,7 +4250,8 @@
           ],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-028",
@@ -3951,7 +4264,8 @@
           ],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-029",
@@ -3964,7 +4278,8 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "mixed-control-r01-030",
@@ -3977,12 +4292,33 @@
           ],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "alpaca-beige-derived-184-79-regular-2XL",
+          "height": 184,
+          "weight": 79,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "inference"
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     },
     {
       "id": "4703b08c-593c-4ff0-ac6c-d9223011784a",
@@ -4127,7 +4463,8 @@
           "colors": [],
           "reference": {},
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-002",
@@ -4143,7 +4480,8 @@
             "sleeve": 57
           },
           "size": "M",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-003",
@@ -4154,7 +4492,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-004",
@@ -4165,7 +4504,8 @@
           "colors": [],
           "reference": {},
           "size": "L",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-005",
@@ -4176,7 +4516,8 @@
           "colors": [],
           "reference": {},
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-006",
@@ -4192,7 +4533,8 @@
             "sleeve": 61
           },
           "size": "XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-007",
@@ -4203,7 +4545,8 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-008",
@@ -4219,7 +4562,8 @@
             "sleeve": 63
           },
           "size": "2XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-009",
@@ -4230,7 +4574,8 @@
           "colors": [],
           "reference": {},
           "size": "3XL",
-          "manual": false
+          "manual": false,
+          "source": "owner"
         },
         {
           "id": "textured-collar-b01-010",
@@ -4244,12 +4589,1321 @@
           },
           "size": "3XL",
           "manual": true,
+          "source": "owner",
           "reason": "Выбор магазина — 3XL, но грудь по сетке меньше любимой рубашки. Проверьте вещь застёгнутой перед отправкой."
         }
       ],
       "checkWaistBeforeShipping": false,
       "sharedSizeAcrossColors": false,
-      "acceptedEstimatedGrading": false
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": false,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
+    },
+    {
+      "id": "90ec05e5-a0bb-474f-9a97-5b5caaf7ccea",
+      "key": "asym-shirt",
+      "name": "Асим Рубашка",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "unknown",
+      "buttoned": true,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              46,
+              46
+            ],
+            "chest": [
+              52,
+              52
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              56,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              48,
+              48
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              70,
+              70
+            ],
+            "sleeve": [
+              57,
+              57
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              72,
+              72
+            ],
+            "sleeve": [
+              58,
+              58
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              52,
+              52
+            ],
+            "chest": [
+              58,
+              58
+            ],
+            "length": [
+              74,
+              74
+            ],
+            "sleeve": [
+              59,
+              59
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              54,
+              54
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              76,
+              76
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "asym-shirt-catalog-0",
+          "height": 155,
+          "weight": 45,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-1",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-2",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-3",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-4",
+          "height": 175,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-5",
+          "height": 160,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-6",
+          "height": 170,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-7",
+          "height": 170,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-8",
+          "height": 170,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-9",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-10",
+          "height": 180,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-11",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-12",
+          "height": 185,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-13",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-14",
+          "height": 190,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "asym-shirt-catalog-15",
+          "height": 195,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        }
+      ],
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": true,
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": true,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
+    },
+    {
+      "id": "ff1ff290-583b-448f-83bb-49f321ff72e7",
+      "key": "old-textured-longsleeve",
+      "name": "Лонгслив Старый Фактурный",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "unknown",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              52,
+              52
+            ],
+            "length": [
+              66,
+              66
+            ],
+            "sleeve": [
+              54,
+              54
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              52,
+              52
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              56,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              54,
+              54
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              70,
+              70
+            ],
+            "sleeve": [
+              58,
+              58
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              56,
+              56
+            ],
+            "chest": [
+              58,
+              58
+            ],
+            "length": [
+              72,
+              72
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              58,
+              58
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              74,
+              74
+            ],
+            "sleeve": [
+              62,
+              62
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "old-textured-longsleeve-catalog-0",
+          "height": 168,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-1",
+          "height": 163,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-2",
+          "height": 182,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-3",
+          "height": 178,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-4",
+          "height": 176,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-5",
+          "height": 170,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-6",
+          "height": 175,
+          "weight": 52,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-7",
+          "height": 182,
+          "weight": 93,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        }
+      ],
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": true,
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": true,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
+    },
+    {
+      "id": "32ca3a79-4bf2-4762-826e-2ea63e24425e",
+      "key": "flowers-shirt",
+      "name": "Рубашка Цветы",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "unknown",
+      "buttoned": true,
+      "rows": [
+        {
+          "tag": "S",
+          "measures": {
+            "shoulders": [
+              46,
+              46
+            ],
+            "chest": [
+              52,
+              52
+            ],
+            "length": [
+              66,
+              66
+            ],
+            "sleeve": [
+              56,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              57,
+              57
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              54,
+              54
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              72,
+              72
+            ],
+            "sleeve": [
+              58,
+              58
+            ]
+          },
+          "estimated": false,
+          "unreliableMeasures": [
+            "chest"
+          ]
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              56,
+              56
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              73,
+              73
+            ],
+            "sleeve": [
+              59,
+              59
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              58,
+              58
+            ],
+            "chest": [
+              58,
+              58
+            ],
+            "length": [
+              74,
+              74
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              60,
+              60
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              75,
+              75
+            ],
+            "sleeve": [
+              61,
+              61
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "flowers-shirt-catalog-0",
+          "height": 158,
+          "weight": 44,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-1",
+          "height": 162,
+          "weight": 47,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-2",
+          "height": 166,
+          "weight": 49,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-3",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-4",
+          "height": 160,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-5",
+          "height": 165,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-6",
+          "height": 165,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-7",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-8",
+          "height": 170,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-9",
+          "height": 170,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-10",
+          "height": 170,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-11",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-12",
+          "height": 175,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-13",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-14",
+          "height": 180,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-15",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-16",
+          "height": 180,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-17",
+          "height": 185,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-18",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-19",
+          "height": 190,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-20",
+          "height": 190,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-21",
+          "height": 195,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "flowers-shirt-catalog-22",
+          "height": 195,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false,
+          "source": "catalog"
+        }
+      ],
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": true,
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": true,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
+    },
+    {
+      "id": "3694bd06-686c-432b-a601-dcaa37ed6efd",
+      "key": "black-cold-tshirt",
+      "name": "Футболка Черный Холод (+Серый)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "unknown",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              47,
+              47
+            ],
+            "chest": [
+              53,
+              53
+            ],
+            "length": [
+              70,
+              70
+            ],
+            "sleeve": [
+              19,
+              19
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              48.5,
+              48.5
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              71.5,
+              71.5
+            ],
+            "sleeve": [
+              20,
+              20
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              59,
+              59
+            ],
+            "length": [
+              73,
+              73
+            ],
+            "sleeve": [
+              21,
+              21
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              51.5,
+              51.5
+            ],
+            "chest": [
+              62,
+              62
+            ],
+            "length": [
+              74.5,
+              74.5
+            ],
+            "sleeve": [
+              22,
+              22
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              53,
+              53
+            ],
+            "chest": [
+              64,
+              64
+            ],
+            "length": [
+              76,
+              76
+            ],
+            "sleeve": [
+              23,
+              23
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "black-cold-tshirt-catalog-0",
+          "height": 165,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-1",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-2",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-3",
+          "height": 185,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-4",
+          "height": 180,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-5",
+          "height": 173,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-6",
+          "height": 175,
+          "weight": 52,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-7",
+          "height": 173,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-8",
+          "height": 170,
+          "weight": 84,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-9",
+          "height": 190,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "black-cold-tshirt-catalog-10",
+          "height": 167,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        }
+      ],
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": true,
+      "acceptedEstimatedGrading": false,
+      "catalogAnchors": true,
+      "fitPolicy": {
+        "closerStep": -0.7,
+        "relaxedStep": 0.8,
+        "source": "assistant_inference_from_owner_corrections_authorized_20261112"
+      }
     }
   ]
 }

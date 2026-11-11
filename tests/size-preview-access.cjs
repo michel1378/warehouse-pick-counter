@@ -37,6 +37,8 @@ function findCatalog(node) {
   assert.equal(findCatalog(await adminCatalog()).props.admin, true);
   session = { role: 'employee', permissions: [] };
   const ordinary = load('src/app/sizes/page.tsx');
-  assert.equal(findCatalog(await ordinary()).props.detailed, undefined);
-  console.log('PASS admin catalog opens detailed picker; both admin routes protected; employee picker unchanged.');
+  assert.equal(findCatalog(await ordinary()).props.detailed, true);
+  session = null;
+  await assert.rejects(ordinary, e => e.redirect === '/');
+  console.log('PASS admin and employee catalogs use the same detailed picker; admin routes and employee login remain protected.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

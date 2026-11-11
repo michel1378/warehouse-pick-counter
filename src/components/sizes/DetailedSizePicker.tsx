@@ -50,7 +50,7 @@ export function DetailedSizePicker({ product }: { product: DetailedSizeProduct }
     </label>)}</fieldset>
     <div className="size-color-results" aria-live="polite" aria-atomic="true">
       {results?.map(result => <section key={result.colorId} className={`size-color-answer ${result.requiresCheck ? "needs-check" : ""}`}>
-        <div className="size-color-answer-heading"><h3>{result.colorName}</h3><strong>{result.size ?? "Уточнить"}</strong></div>
+        <div className="size-color-answer-heading"><h3>{result.colorName}</h3><strong>{result.size ?? (result.basis === "incompatible" ? "Нет размера" : "Проверить мерки")}</strong></div>
         {!result.size && <p>{result.message}</p>}
         {!!result.checks.length && <ul>{result.checks.map(check => <li key={check}>{check}</li>)}</ul>}
       </section>)}
