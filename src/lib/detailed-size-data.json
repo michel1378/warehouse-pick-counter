@@ -1,5 +1,5 @@
 {
-  "version": 45,
+  "version": 46,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1404,7 +1404,7 @@
           "lengthPreference": "standard",
           "colors": [],
           "reference": {},
-          "size": "3XL",
+          "size": "2XL",
           "manual": false
         },
         {
@@ -1615,6 +1615,17 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-owner-reported-172-85-M",
+          "height": 172,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
           "manual": false
         }
       ],
