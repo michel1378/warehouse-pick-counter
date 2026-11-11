@@ -27,6 +27,8 @@ export type DetailedSizeDefinition = {
   stretch: "none" | "low" | "moderate";
   buttoned: boolean; rows: MeasureRow[]; rules: ReviewedSizeRule[];
   checkWaistBeforeShipping: boolean;
+  sharedSizeAcrossColors?: boolean;
+  acceptedEstimatedGrading?: boolean;
 };
 export type SizeCalibration = { version: number; products: DetailedSizeDefinition[] };
 export type DetailedSizeProduct = SizeProduct & {

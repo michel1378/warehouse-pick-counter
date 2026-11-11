@@ -1,14 +1,18 @@
 """Compile reviewed owner data, without conversation text, into the picker snapshot.
 
-Usage: python3 scripts/prepare-reviewed-sizes.py /absolute/path/michelle_sizes_draft.json
+Usage: python3 scripts/prepare-reviewed-sizes.py /absolute/path/michelle_sizes_draft.json [source-version]
 The source stays outside the repository. Re-run only after reviewing new owner corrections.
+The source version defaults to its Library metadata; pass it explicitly for exported copies.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-draft = json.loads(Path(sys.argv[1]).read_text())
+source = Path(sys.argv[1])
+draft = json.loads(source.read_text())
+source_version = int(sys.argv[2]) if len(sys.argv) > 2 else int(os.getxattr(source, "user.library-file-version").decode())
 ids = {
     "alpaca-striped-no-buttons": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
     "margiela-striped-pants": "7bc3067f-d34b-4080-be07-39bf2ab2afab",
@@ -31,6 +35,8 @@ for p in draft["products"]:
     variants = [{"id": v["id"], "name": v["name"]} for v in p.get("color_variants", [])]
     if not variants:
         variants = [{"id": "all", "name": "Оба цвета" if p.get("color_variants_count") == 2 else "Размер"}]
+    if p.get("shared_size_across_colors"):
+        variants = [{"id": "all", "name": "Размер"}]
     if key == "alpaca-striped-buttons":
         variants = [{"id": "dark-gray", "name": "Тёмно-серый", "aliases": ["темный серый"]}, {"id": "light-gray", "name": "Светло-серый"}, {"id": "light-beige", "name": "Светло-бежевый", "aliases": ["бежевый", "светлый бежевый"]}]
     selected = {}
@@ -61,6 +67,8 @@ for p in draft["products"]:
         elif size is None:
             reason = "Подходящий размер не подтверждён. Нужен замер конкретной вещи перед отправкой."
         rule = {"id": x["id"], "height": x["height_cm"], "weight": x["weight_kg"], "fit": fit, "lengthPreference": length, "colors": x.get("color_ids", []), "reference": ref, "size": size, "manual": manual}
+        if p.get("shared_size_across_colors"):
+            rule["colors"] = []
         if reason: rule["reason"] = reason
         def save(r):
             signature = json.dumps([r["height"], r["weight"], r["fit"], r["lengthPreference"], sorted(r["colors"]), r["reference"]], sort_keys=True)
@@ -80,8 +88,8 @@ for p in draft["products"]:
         # This product's source distinguishes measured S/M/L from calculated XL–5XL.
         for row in rows:
             if row["tag"] not in ["S", "M", "L"]: row["estimated"] = True
-    products.append({"id": p.get("catalog_product_id") or ids[key], "key": key, "name": p["card_title"], "kind": "pants" if p.get("product_type") == "pants" or key == "margiela-striped-pants" else "top", "variants": variants, "sizes": sizes, "unavailableSizes": p.get("unavailable_sizes", ["S"] if key == "margiela-striped-pants" else []), "stretch": stretch if stretch in ["none", "low", "moderate"] else "moderate", "buttoned": key in ["samurai-shirt", "best-distress-shirt", "old-textured-collar-shirt"], "rows": rows, "rules": list(selected.values()), "checkWaistBeforeShipping": key == "huge-pants"})
-output = {"version": 42, "products": products}
+    products.append({"id": p.get("catalog_product_id") or ids[key], "key": key, "name": p["card_title"], "kind": "pants" if p.get("product_type") == "pants" or key == "margiela-striped-pants" else "top", "variants": variants, "sizes": sizes, "unavailableSizes": p.get("unavailable_sizes", ["S"] if key == "margiela-striped-pants" else []), "stretch": stretch if stretch in ["none", "low", "moderate"] else "moderate", "buttoned": key in ["samurai-shirt", "best-distress-shirt", "old-textured-collar-shirt"], "rows": rows, "rules": list(selected.values()), "checkWaistBeforeShipping": key == "huge-pants", "sharedSizeAcrossColors": bool(p.get("shared_size_across_colors")), "acceptedEstimatedGrading": bool(p.get("estimated_grading_accepted_without_remeasurement"))})
+output = {"version": source_version, "products": products}
 dest = root / "src/lib/detailed-size-data.json"
 dest.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n")
 print(json.dumps({"products": len(products), "rules": sum(len(p["rules"]) for p in products), "output": str(dest)}))

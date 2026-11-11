@@ -1,5 +1,5 @@
 {
-  "version": 42,
+  "version": 45,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -412,7 +412,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "7bc3067f-d34b-4080-be07-39bf2ab2afab",
@@ -791,7 +793,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "a2bbcd7b-60d3-4248-934f-82ca1072c0f1",
@@ -1050,7 +1054,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "2886d56d-b216-4873-b26a-d26c84ecf928",
@@ -1059,8 +1065,8 @@
       "kind": "top",
       "variants": [
         {
-          "id": "gray",
-          "name": "Серый"
+          "id": "all",
+          "name": "Размер"
         }
       ],
       "sizes": [
@@ -1074,7 +1080,7 @@
         "5XL"
       ],
       "unavailableSizes": [],
-      "stretch": "low",
+      "stretch": "none",
       "buttoned": false,
       "rows": [
         {
@@ -1256,53 +1262,45 @@
       ],
       "rules": [
         {
-          "id": "blackcold-b01-001",
+          "id": "blackcold-r02-001",
           "height": 163,
           "weight": 52,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "S",
           "manual": false
         },
         {
-          "id": "blackcold-b01-002",
+          "id": "blackcold-r02-002",
           "height": 168,
           "weight": 55,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "S",
           "manual": false
         },
         {
-          "id": "blackcold-b01-003",
+          "id": "blackcold-r02-003",
           "height": 170,
           "weight": 58,
           "fit": "closer",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "S",
           "manual": false
         },
         {
-          "id": "blackcold-b01-004",
+          "id": "blackcold-r02-005",
           "height": 174,
           "weight": 64,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "M",
           "manual": false
@@ -1313,22 +1311,18 @@
           "weight": 64,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "M",
           "manual": false
         },
         {
-          "id": "blackcold-b01-006",
+          "id": "blackcold-r02-007",
           "height": 185,
           "weight": 65,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "L",
           "manual": false
@@ -1339,35 +1333,29 @@
           "weight": 74,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "L",
           "manual": false
         },
         {
-          "id": "blackcold-b01-008",
+          "id": "blackcold-r02-009",
           "height": 178,
           "weight": 80,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "L",
           "manual": false
         },
         {
-          "id": "blackcold-b01-009",
+          "id": "blackcold-r02-008",
           "height": 183,
           "weight": 78,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {
             "shoulders": 49,
             "chest": 55
@@ -1376,66 +1364,56 @@
           "manual": false
         },
         {
-          "id": "blackcold-b01-010",
+          "id": "blackcold-r02-010",
           "height": 185,
           "weight": 84,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-011",
+          "id": "blackcold-r02-011",
           "height": 187,
           "weight": 74,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-012",
+          "id": "blackcold-r02-012",
           "height": 183,
           "weight": 85,
           "fit": "relaxed",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-013",
+          "id": "blackcold-r02-013",
           "height": 188,
           "weight": 90,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
-          "size": "2XL",
+          "size": "3XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-014",
+          "id": "blackcold-r02-016",
           "height": 190,
           "weight": 93,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "3XL",
           "manual": false
@@ -1446,9 +1424,7 @@
           "weight": 92,
           "fit": "regular",
           "lengthPreference": "cropped",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "2XL",
           "manual": false
@@ -1459,113 +1435,95 @@
           "weight": 96,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "3XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-017",
+          "id": "blackcold-r02-017",
           "height": 185,
           "weight": 100,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "3XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-018",
+          "id": "blackcold-r02-018",
           "height": 180,
           "weight": 95,
           "fit": "relaxed",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "3XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-019",
+          "id": "blackcold-r02-019",
           "height": 180,
           "weight": 105,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "4XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-020",
+          "id": "blackcold-r02-020",
           "height": 190,
           "weight": 105,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "4XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-021",
+          "id": "blackcold-r02-021",
           "height": 185,
           "weight": 100,
           "fit": "relaxed",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "4XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-022",
+          "id": "blackcold-r02-022",
           "height": 185,
           "weight": 115,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "5XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-023",
+          "id": "blackcold-r02-023",
           "height": 190,
           "weight": 115,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "5XL",
           "manual": false
         },
         {
-          "id": "blackcold-b01-024",
+          "id": "blackcold-r02-024",
           "height": 195,
           "weight": 120,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {},
           "size": "5XL",
           "manual": false
@@ -1576,23 +1534,10 @@
           "weight": 78,
           "fit": "regular",
           "lengthPreference": "standard",
-          "colors": [
-            "gray"
-          ],
+          "colors": [],
           "reference": {
             "chest": 55
           },
-          "size": "L",
-          "manual": false
-        },
-        {
-          "id": "mixed-control-r01-010",
-          "height": 185,
-          "weight": 65,
-          "fit": "regular",
-          "lengthPreference": "standard",
-          "colors": [],
-          "reference": {},
           "size": "L",
           "manual": false
         },
@@ -1612,7 +1557,7 @@
           "reason": "Для этих мерок M согласован при посадке ближе к телу. Обычную посадку нужно уточнить."
         },
         {
-          "id": "mixed-control-r01-011-conditional",
+          "id": "blackcold-r02-006",
           "height": 175,
           "weight": 70,
           "fit": "closer",
@@ -1635,9 +1580,47 @@
           "reference": {},
           "size": "L",
           "manual": false
+        },
+        {
+          "id": "blackcold-r02-004",
+          "height": 173,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "blackcold-r02-014",
+          "height": 185,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 51,
+            "chest": 59
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-r02-015",
+          "height": 183,
+          "weight": 92,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": true,
+      "acceptedEstimatedGrading": true
     },
     {
       "id": "0e2d3b86-0d43-4664-845d-15250840897b",
@@ -1894,7 +1877,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "b35b2865-46ce-441f-a536-fa62072061f1",
@@ -2257,7 +2242,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "3611e140-b330-4545-8237-03abbbc98d65",
@@ -2645,7 +2632,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "319144e7-e3ef-49ca-ae23-7ad6ad088fe1",
@@ -2983,7 +2972,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "7474f167-d6eb-46b6-82be-f07f2275b18f",
@@ -3196,7 +3187,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": true
+      "checkWaistBeforeShipping": true,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "a92d78d6-90c1-4938-8d14-f01859925511",
@@ -3965,7 +3958,9 @@
           "manual": false
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     },
     {
       "id": "4703b08c-593c-4ff0-ac6c-d9223011784a",
@@ -4230,7 +4225,9 @@
           "reason": "Выбор магазина — 3XL, но грудь по сетке меньше любимой рубашки. Проверьте вещь застёгнутой перед отправкой."
         }
       ],
-      "checkWaistBeforeShipping": false
+      "checkWaistBeforeShipping": false,
+      "sharedSizeAcrossColors": false,
+      "acceptedEstimatedGrading": false
     }
   ]
 }

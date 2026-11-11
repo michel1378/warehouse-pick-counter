@@ -23,6 +23,7 @@ const sameMeasures = (a: GarmentMeasures, b: GarmentMeasures) => referenceMatche
 
 type ResolvedVariant = SizeVariant & { supported: boolean; stockSizes?: string[] | null };
 function variantsFor(product: DetailedSizeProduct, def?: DetailedSizeDefinition): ResolvedVariant[] {
+  if (def?.sharedSizeAcrossColors) return [{ id: "all", name: "Размер", supported: true }];
   const colors = product.stock_details?.colors ?? [];
   if (!def || def.variants.every(v => v.id === "all")) {
     return colors.length ? colors.map(c => ({ id: normalizeColor(c.name), name: c.name, supported: true, stockSizes: c.sizes }))
@@ -158,7 +159,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   if (!def.sizes.includes(size) || def.unavailableSizes.includes(size)) return clarification("Этот размер не входит в проверенный ряд модели.");
   const row = def.rows.find(r => r.tag === size);
   checks.push(...compareMeasures(def, row, ref));
-  if (row?.estimated) checks.push("Замеры этого размера расчётные. Перемерьте вещь перед отправкой.");
+  if (row?.estimated && !def.acceptedEstimatedGrading) checks.push("Замеры этого размера расчётные. Перемерьте вещь перед отправкой.");
   if (def.checkWaistBeforeShipping) checks.push("Перед отправкой перемерьте полупояс этой пары: экземпляры с одинаковой биркой отличаются.");
   if (input.lengthPreference === "cropped" && ref.length === undefined)
     checks.push(`Уточните желаемую длину${row?.measures.length ? `: у этого размера ${row.measures.length[0] === row.measures.length[1] ? row.measures.length[0] : row.measures.length.join("–")} см` : ""}. Укороченность сама по себе не меняет размер по объёму.`);

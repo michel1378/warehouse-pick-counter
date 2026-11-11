@@ -45,7 +45,20 @@ assert.ok(expect('samurai-shirt', input(183, 80), null).message.includes('рук
 expect('black-cold-gray-longsleeve', input(185, 65), 'L');
 expect('black-cold-gray-longsleeve', input(175, 70, { fit: 'closer', reference: { shoulders: 46, chest: 53 } }), 'M');
 expect('black-cold-gray-longsleeve', input(175, 70, { reference: { shoulders: 46, chest: 53 } }), null);
-assert.ok(expect('black-cold-gray-longsleeve', input(190, 115), '5XL').checks.some(x => x.includes('расчётные')));
+const acceptedColdEstimate = expect('black-cold-gray-longsleeve', input(190, 115), '5XL');
+assert.ok(!acceptedColdEstimate.checks.some(x => x.includes('Перемерьте')));
+assert.equal(byKey.get('black-cold-gray-longsleeve').rows.find(r => r.tag === '5XL').estimated, true);
+assert.equal(byKey.get('black-cold-gray-longsleeve').stretch, 'none'); checks += 2;
+expect('black-cold-gray-longsleeve', input(173, 60), 'S');
+expect('black-cold-gray-longsleeve', input(174, 64), 'M');
+expect('black-cold-gray-longsleeve', input(178, 80), 'L');
+expect('black-cold-gray-longsleeve', input(188, 90), '3XL');
+const sharedCold = recommendAllColors({ ...product('black-cold-gray-longsleeve'), stock_details: { colors: [
+  { name: 'Серый' }, { name: 'Серые' }, { name: 'Чёрные' },
+] } }, input(173, 60));
+assert.equal(sharedCold.length, 1);
+assert.equal(sharedCold[0].colorName, 'Размер');
+assert.equal(sharedCold[0].size, 'S'); checks++;
 expect('best-distress-shirt', input(183, 78), '2XL');
 expect('best-distress-shirt', input(183, 78, { fit: 'closer' }), 'XL');
 expect('best-distress-shirt', input(176, 72), 'XL');
