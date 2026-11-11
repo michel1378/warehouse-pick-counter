@@ -26,7 +26,7 @@ export async function loginEmployee(_: FormState, formData: FormData): Promise<F
     if (await bcrypt.compare(parsed.data, employee.pin_hash)) {
       const permissions = employee.permissions ?? (employee.role === "online" ? [] : ["picking"]);
       await createSession({ sub: employee.id, name: employee.name, role: "employee", employeeRole: employee.role, permissions });
-      redirect(permissions.includes("picking") ? "/scan" : permissions.includes("reviews") ? "/reviews" : "/sizes");
+      redirect(permissions.includes("picking") ? "/scan" : "/sizes");
     }
   }
   return { error: "Неверный PIN или сотрудник отключен" };
@@ -96,7 +96,7 @@ export async function saveEmployee(_: FormState, formData: FormData): Promise<Fo
   const { id, name, pin, role } = parsed.data;
   if (!id && !pinSchema.safeParse(pin).success) return { error: "Для нового сотрудника задайте PIN от 4 символов" };
   const db = createAdminClient();
-  const permissions = formData.getAll("permissions").filter((x): x is string => typeof x === "string" && ["picking", "reviews"].includes(x));
+  const permissions = formData.getAll("permissions").filter((x): x is string => typeof x === "string" && ["picking"].includes(x));
   const values: { name: string; role: string; permissions: string[]; pin_hash?: string } = { name, role, permissions };
   if (pin) values.pin_hash = await bcrypt.hash(pin, 12);
   const result = id

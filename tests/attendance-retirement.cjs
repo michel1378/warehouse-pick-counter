@@ -21,11 +21,10 @@ const destination = async (call, expected) => assert.rejects(call, error => erro
 (async () => {
   const loginPage = load('src/app/page.tsx').default;
   const scanPage = load('src/app/scan/page.tsx').default;
-  const reviewPage = load('src/app/reviews/page.tsx').default;
   const actions = load('src/app/actions.ts');
   const form = new FormData(); form.set('pin', '1234');
   for (const [permissions, expected] of [
-    [['attendance'], '/sizes'], [[], '/sizes'], [['reviews'], '/reviews'],
+    [['attendance'], '/sizes'], [[], '/sizes'], [['reviews'], '/sizes'],
     [['attendance', 'picking'], '/scan'], [['picking', 'reviews'], '/scan'],
   ]) {
     current = { sub: 'worker', name: 'Worker', role: 'employee', permissions };
@@ -35,13 +34,12 @@ const destination = async (call, expected) => assert.rejects(call, error => erro
   }
   current.permissions = [];
   await destination(() => scanPage(), '/sizes');
-  await destination(() => reviewPage(), '/sizes');
   current.permissions = ['reviews'];
-  await destination(() => scanPage(), '/reviews');
+  await destination(() => scanPage(), '/sizes');
   current.permissions = ['picking'];
-  await destination(() => reviewPage(), '/scan');
   current = { role: 'admin' };
   await destination(() => loginPage(), '/admin');
+  for (const path of ['src/app/reviews/page.tsx', 'src/app/admin/reviews/page.tsx', 'src/app/api/reviews/generate/route.ts', 'src/components/ReviewsWorkspace.tsx', 'src/lib/reviews-ai.ts']) assert.equal(fs.existsSync(path), false);
   assert.equal(actions.startTimeSession, undefined);
   assert.equal(actions.finishTimeSession, undefined);
   console.log('PASS retired attendance: existing and new logins, catalog-only access, redirects without loops, removed mutations.');

@@ -50,9 +50,9 @@ export async function getSession(): Promise<AppSession | null> {
     const permissions = employee.permissions ?? (employee.role === "online" ? [] : ["picking"]);
     if (!Array.isArray(permissions)) return null;
     const allowed = permissions.filter((permission): permission is string =>
-      typeof permission === "string" && ["picking", "reviews"].includes(permission));
+      typeof permission === "string" && ["picking"].includes(permission));
     // Active employees without extra permissions retain catalog access.
-    // Legacy attendance permission is ignored; it never grants picking or reviews.
+    // Retired permissions are ignored; they never grant picking access.
     return { sub: employee.id, name: employee.name, role: "employee",
       employeeRole: employee.role === "online" ? "online" : "warehouse", permissions: allowed };
   } catch {

@@ -1,0 +1,4236 @@
+{
+  "version": 42,
+  "products": [
+    {
+      "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
+      "key": "alpaca-striped-no-buttons",
+      "name": "Лонгслив Альпака (в полоску)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "dark-gray",
+          "name": "Тёмно-серый"
+        },
+        {
+          "id": "light-beige",
+          "name": "Светлый бежевый"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "moderate",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              47,
+              48
+            ],
+            "chest": [
+              48,
+              50
+            ],
+            "length": [
+              65,
+              66
+            ],
+            "sleeve": [
+              59,
+              61
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              49,
+              49
+            ],
+            "chest": [
+              51,
+              52
+            ],
+            "length": [
+              67,
+              67
+            ],
+            "sleeve": [
+              59,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              52,
+              53
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              62,
+              63
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              52,
+              54
+            ],
+            "chest": [
+              55,
+              56
+            ],
+            "length": [
+              70,
+              71
+            ],
+            "sleeve": [
+              63,
+              64
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              56,
+              56
+            ],
+            "chest": [
+              57,
+              58
+            ],
+            "length": [
+              70,
+              72
+            ],
+            "sleeve": [
+              64,
+              65
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "alpaca-b02-001",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-002",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-003",
+          "height": 178,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {
+            "shoulders": 47,
+            "chest": 49
+          },
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-004",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-005",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-006",
+          "height": 182,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {
+            "shoulders": 49,
+            "chest": 52
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-008",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-010",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-011",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-012",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {
+            "shoulders": 53,
+            "chest": 56
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-013",
+          "height": 180,
+          "weight": 98,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-014",
+          "height": 190,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-015",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {
+            "shoulders": 56,
+            "chest": 58
+          },
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-016",
+          "height": 175,
+          "weight": 70,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-017",
+          "height": 175,
+          "weight": 70,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-b02-018",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray",
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-001",
+          "height": 178,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-002",
+          "height": 172,
+          "weight": 74,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 50,
+            "chest": 53
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-003",
+          "height": 179,
+          "weight": 76,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "7bc3067f-d34b-4080-be07-39bf2ab2afab",
+      "key": "margiela-striped-pants",
+      "name": "Брюки Маржелы (в полоску)",
+      "kind": "pants",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [
+        "S"
+      ],
+      "stretch": "none",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "halfWaist": [
+              38,
+              38
+            ],
+            "length": [
+              106,
+              106
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "halfWaist": [
+              40,
+              40
+            ],
+            "length": [
+              107,
+              107
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "halfWaist": [
+              42,
+              42
+            ],
+            "length": [
+              108,
+              108
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "halfWaist": [
+              44,
+              44
+            ],
+            "length": [
+              109,
+              109
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "halfWaist": [
+              46,
+              46
+            ],
+            "length": [
+              110,
+              110
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "margiela-b01-001",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-002",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-004",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-004",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-006",
+          "height": 182,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-007",
+          "height": 175,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-008",
+          "height": 183,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-009",
+          "height": 172,
+          "weight": 74,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 42
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-010",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-011",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-012",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 44
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-013",
+          "height": 175,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-014",
+          "height": 190,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-015",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 46
+          },
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-b01-016",
+          "height": 175,
+          "weight": 70,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-019",
+          "height": 180,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-020",
+          "height": 185,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-021",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-022",
+          "height": 180,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-023",
+          "height": 175,
+          "weight": 70,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "margiela-owner-024",
+          "height": 183,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-005",
+          "height": 180,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 38
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-006",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "cropped",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-006-conditional",
+          "height": 175,
+          "weight": 70,
+          "fit": "closer",
+          "lengthPreference": "cropped",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40
+          },
+          "size": "L",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "a2bbcd7b-60d3-4248-934f-82ca1072c0f1",
+      "key": "samurai-shirt",
+      "name": "Рубашка Самурайка",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "black",
+          "name": "Чёрный"
+        },
+        {
+          "id": "white",
+          "name": "Белый"
+        }
+      ],
+      "sizes": [
+        "2XL",
+        "3XL",
+        "4XL",
+        "5XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "none",
+      "buttoned": true,
+      "rows": [
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              48,
+              50
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              70,
+              71
+            ],
+            "sleeve": [
+              58,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              49,
+              49
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              71,
+              72
+            ],
+            "sleeve": [
+              59,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "4XL",
+          "measures": {
+            "shoulders": [
+              49,
+              50
+            ],
+            "chest": [
+              57,
+              59
+            ],
+            "length": [
+              72,
+              73
+            ],
+            "sleeve": [
+              58,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "5XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              72,
+              72
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "samurai-revised-b02-003",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-006",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-008",
+          "height": 181,
+          "weight": 76,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "5XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-001",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-002",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-004",
+          "height": 173,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-005",
+          "height": 170,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-007",
+          "height": 178,
+          "weight": 72,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "samurai-revised-b02-009",
+          "height": 183,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": null,
+          "manual": true,
+          "reason": "Проверьте рукав конкретной рубашки: увеличение бирки не гарантирует нужную длину."
+        },
+        {
+          "id": "samurai-revised-b02-010",
+          "height": 175,
+          "weight": 70,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "black",
+            "white"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "2886d56d-b216-4873-b26a-d26c84ecf928",
+      "key": "black-cold-gray-longsleeve",
+      "name": "Черный Холод (серый)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "gray",
+          "name": "Серый"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL",
+        "4XL",
+        "5XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "low",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "S",
+          "measures": {
+            "shoulders": [
+              45,
+              47
+            ],
+            "chest": [
+              52,
+              53
+            ],
+            "length": [
+              68,
+              70
+            ],
+            "sleeve": [
+              62,
+              64
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              45,
+              48
+            ],
+            "chest": [
+              52,
+              53
+            ],
+            "length": [
+              68,
+              70
+            ],
+            "sleeve": [
+              62,
+              64
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              48,
+              49
+            ],
+            "chest": [
+              54,
+              56
+            ],
+            "length": [
+              70,
+              76
+            ],
+            "sleeve": [
+              63,
+              68
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              49,
+              50
+            ],
+            "chest": [
+              56,
+              58
+            ],
+            "length": [
+              71,
+              77
+            ],
+            "sleeve": [
+              64,
+              69
+            ]
+          },
+          "estimated": true
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              50,
+              51
+            ],
+            "chest": [
+              58,
+              60
+            ],
+            "length": [
+              72,
+              78
+            ],
+            "sleeve": [
+              65,
+              70
+            ]
+          },
+          "estimated": true
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              51,
+              52
+            ],
+            "chest": [
+              60,
+              62
+            ],
+            "length": [
+              73,
+              79
+            ],
+            "sleeve": [
+              66,
+              71
+            ]
+          },
+          "estimated": true
+        },
+        {
+          "tag": "4XL",
+          "measures": {
+            "shoulders": [
+              52,
+              53
+            ],
+            "chest": [
+              62,
+              64
+            ],
+            "length": [
+              74,
+              80
+            ],
+            "sleeve": [
+              67,
+              72
+            ]
+          },
+          "estimated": true
+        },
+        {
+          "tag": "5XL",
+          "measures": {
+            "shoulders": [
+              53,
+              54
+            ],
+            "chest": [
+              64,
+              66
+            ],
+            "length": [
+              75,
+              81
+            ],
+            "sleeve": [
+              68,
+              73
+            ]
+          },
+          "estimated": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "blackcold-b01-001",
+          "height": 163,
+          "weight": 52,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-002",
+          "height": 168,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-003",
+          "height": 170,
+          "weight": 58,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-004",
+          "height": 174,
+          "weight": 64,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-005",
+          "height": 180,
+          "weight": 64,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-006",
+          "height": 185,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-007",
+          "height": 175,
+          "weight": 74,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-008",
+          "height": 178,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-009",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {
+            "shoulders": 49,
+            "chest": 55
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-010",
+          "height": 185,
+          "weight": 84,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-011",
+          "height": 187,
+          "weight": 74,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-012",
+          "height": 183,
+          "weight": 85,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-013",
+          "height": 188,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-014",
+          "height": 190,
+          "weight": 93,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-015",
+          "height": 183,
+          "weight": 92,
+          "fit": "regular",
+          "lengthPreference": "cropped",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-016",
+          "height": 193,
+          "weight": 96,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-017",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-018",
+          "height": 180,
+          "weight": 95,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-019",
+          "height": 180,
+          "weight": 105,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-020",
+          "height": 190,
+          "weight": 105,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-021",
+          "height": 185,
+          "weight": 100,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "4XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-022",
+          "height": 185,
+          "weight": 115,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "5XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-023",
+          "height": 190,
+          "weight": 115,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "5XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-024",
+          "height": 195,
+          "weight": 120,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {},
+          "size": "5XL",
+          "manual": false
+        },
+        {
+          "id": "blackcold-b01-026",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "gray"
+          ],
+          "reference": {
+            "chest": 55
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-010",
+          "height": 185,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-011",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 46,
+            "chest": 53
+          },
+          "size": null,
+          "manual": true,
+          "reason": "Для этих мерок M согласован при посадке ближе к телу. Обычную посадку нужно уточнить."
+        },
+        {
+          "id": "mixed-control-r01-011-conditional",
+          "height": 175,
+          "weight": 70,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 46,
+            "chest": 53
+          },
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-012",
+          "height": 186,
+          "weight": 66,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "0e2d3b86-0d43-4664-845d-15250840897b",
+      "key": "best-distress-shirt",
+      "name": "Рубашка Лучшая (дистресс)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "none",
+      "buttoned": true,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              66,
+              66
+            ],
+            "sleeve": [
+              56,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              52,
+              54
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              55,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              54,
+              54
+            ],
+            "chest": [
+              58,
+              58
+            ],
+            "length": [
+              71,
+              71
+            ],
+            "sleeve": [
+              58,
+              58
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              56,
+              56
+            ],
+            "chest": [
+              58,
+              60
+            ],
+            "length": [
+              72,
+              74
+            ],
+            "sleeve": [
+              59,
+              59
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              56,
+              56
+            ],
+            "chest": [
+              58,
+              60
+            ],
+            "length": [
+              74,
+              74
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "best-distress-b01-003",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 50,
+            "chest": 54,
+            "length": 66,
+            "sleeve": 56
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-owner-best-153-50",
+          "height": 153,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "best-distress-b01-005",
+          "height": 170,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "best-distress-b01-007",
+          "height": 165,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "best-distress-b01-012",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 56,
+            "chest": 59,
+            "length": 73,
+            "sleeve": 59
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "best-distress-owner-019",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-013",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-014",
+          "height": 183,
+          "weight": 78,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-015",
+          "height": 176,
+          "weight": 72,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-owner-best-173-50",
+          "height": 173,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "b35b2865-46ce-441f-a536-fa62072061f1",
+      "key": "muzhik-longsleeve",
+      "name": "Лонгслив Мужик",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "moderate",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              52,
+              53
+            ],
+            "chest": [
+              54,
+              56
+            ],
+            "length": [
+              69,
+              70
+            ],
+            "sleeve": [
+              55,
+              56
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              54,
+              57
+            ],
+            "chest": [
+              57,
+              58
+            ],
+            "length": [
+              71,
+              72
+            ],
+            "sleeve": [
+              56,
+              58
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              56,
+              57
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              72,
+              75
+            ],
+            "sleeve": [
+              56,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              58,
+              58
+            ],
+            "chest": [
+              62,
+              62
+            ],
+            "length": [
+              74,
+              76
+            ],
+            "sleeve": [
+              58,
+              62
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              60,
+              60
+            ],
+            "chest": [
+              64,
+              64
+            ],
+            "length": [
+              76,
+              78
+            ],
+            "sleeve": [
+              60,
+              64
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "muzhik-b01-001",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-002",
+          "height": 175,
+          "weight": 74,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-003",
+          "height": 172,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-004",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-005",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-006",
+          "height": 185,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 54,
+            "chest": 58,
+            "length": 72,
+            "sleeve": 58
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-016",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-008",
+          "height": 187,
+          "weight": 89,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-009",
+          "height": 182,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "chest": 60
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-010",
+          "height": 188,
+          "weight": 92,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-011",
+          "height": 190,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-012",
+          "height": 185,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 58,
+            "chest": 62,
+            "length": 75,
+            "sleeve": 60
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-013",
+          "height": 195,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-014",
+          "height": 190,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-015",
+          "height": 185,
+          "weight": 105,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-016",
+          "height": 183,
+          "weight": 78,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "muzhik-b01-018",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "cropped",
+          "colors": [],
+          "reference": {
+            "shoulders": 56,
+            "chest": 60,
+            "length": 73,
+            "sleeve": 58
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-017",
+          "height": 184,
+          "weight": 79,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-018",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "3611e140-b330-4545-8237-03abbbc98d65",
+      "key": "wooden-buttons-longsleeve",
+      "name": "Деревянные пуговицы",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "low",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "S",
+          "measures": {
+            "shoulders": [
+              44,
+              44
+            ],
+            "chest": [
+              50,
+              50
+            ],
+            "length": [
+              70,
+              70
+            ],
+            "sleeve": [
+              63,
+              63
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              46,
+              46
+            ],
+            "chest": [
+              52,
+              52
+            ],
+            "length": [
+              72,
+              72
+            ],
+            "sleeve": [
+              65,
+              65
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              48,
+              48
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              74,
+              74
+            ],
+            "sleeve": [
+              66,
+              66
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              56,
+              56
+            ],
+            "length": [
+              75,
+              75
+            ],
+            "sleeve": [
+              67,
+              67
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              52,
+              52
+            ],
+            "chest": [
+              58,
+              58
+            ],
+            "length": [
+              76,
+              76
+            ],
+            "sleeve": [
+              68,
+              68
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              54,
+              54
+            ],
+            "chest": [
+              60,
+              60
+            ],
+            "length": [
+              77,
+              77
+            ],
+            "sleeve": [
+              69,
+              69
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "wooden-b01-001",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-002",
+          "height": 170,
+          "weight": 58,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-020",
+          "height": 178,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 44,
+            "chest": 50,
+            "length": 70,
+            "sleeve": 63
+          },
+          "size": "S",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-004",
+          "height": 170,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-005",
+          "height": 175,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-006",
+          "height": 183,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 46,
+            "chest": 52,
+            "length": 72,
+            "sleeve": 65
+          },
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-007",
+          "height": 175,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-008",
+          "height": 180,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-009",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "chest": 54
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-010",
+          "height": 180,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-011",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "cropped",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-012",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-013",
+          "height": 185,
+          "weight": 92,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-021",
+          "height": 190,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-015",
+          "height": 180,
+          "weight": 88,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "chest": 58
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-016",
+          "height": 190,
+          "weight": 102,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-017",
+          "height": 195,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "wooden-b01-018",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 54,
+            "chest": 60,
+            "length": 77,
+            "sleeve": 69
+          },
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-019",
+          "height": 178,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "319144e7-e3ef-49ca-ae23-7ad6ad088fe1",
+      "key": "dense-new-stripe-pants",
+      "name": "Брюки Плотные (Новая Полоса)",
+      "kind": "pants",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [
+        "S"
+      ],
+      "stretch": "none",
+      "buttoned": false,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "halfWaist": [
+              38,
+              38
+            ],
+            "length": [
+              108,
+              108
+            ]
+          },
+          "estimated": false,
+          "relaxedWaist": 38,
+          "stretchedWaist": 44
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "halfWaist": [
+              40,
+              40
+            ],
+            "length": [
+              109,
+              109
+            ]
+          },
+          "estimated": false,
+          "relaxedWaist": 40,
+          "stretchedWaist": 46
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "halfWaist": [
+              41,
+              41
+            ],
+            "length": [
+              110,
+              110
+            ]
+          },
+          "estimated": false,
+          "relaxedWaist": 41,
+          "stretchedWaist": 47
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "halfWaist": [
+              42,
+              42
+            ],
+            "length": [
+              111,
+              111
+            ]
+          },
+          "estimated": false,
+          "relaxedWaist": 42,
+          "stretchedWaist": 48
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "halfWaist": [
+              43,
+              43
+            ],
+            "length": [
+              112,
+              112
+            ]
+          },
+          "estimated": false,
+          "relaxedWaist": 43,
+          "stretchedWaist": 49
+        }
+      ],
+      "rules": [
+        {
+          "id": "dense-b01-001",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-002",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-003",
+          "height": 178,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 38,
+            "length": 108
+          },
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-004",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-005",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-006",
+          "height": 182,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40,
+            "length": 109
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-008",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-009",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 41,
+            "length": 110
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-010",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-011",
+          "height": 185,
+          "weight": 90,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-013",
+          "height": 180,
+          "weight": 98,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-014",
+          "height": 190,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-015",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 43,
+            "length": 112
+          },
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-016",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-017",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "cropped",
+          "colors": [],
+          "reference": {
+            "halfWaist": 40
+          },
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "dense-b01-018",
+          "height": 185,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 49
+          },
+          "size": null,
+          "manual": true,
+          "reason": "Подходящий размер не подтверждён. Нужен замер конкретной вещи перед отправкой."
+        },
+        {
+          "id": "mixed-control-r01-022",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-023",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "halfWaist": 42,
+            "length": 111
+          },
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-024",
+          "height": 176,
+          "weight": 71,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "7474f167-d6eb-46b6-82be-f07f2275b18f",
+      "key": "huge-pants",
+      "name": "Брюки Огромнейшие",
+      "kind": "pants",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Размер"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "none",
+      "buttoned": false,
+      "rows": [],
+      "rules": [
+        {
+          "id": "huge-b01-001",
+          "height": 156,
+          "weight": 45,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-002",
+          "height": 165,
+          "weight": 62,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-003",
+          "height": 168,
+          "weight": 59,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-004",
+          "height": 172,
+          "weight": 54,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-005",
+          "height": 167,
+          "weight": 64,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-006",
+          "height": 170,
+          "weight": 68,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-025",
+          "height": 175,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-008",
+          "height": 165,
+          "weight": 72,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-009",
+          "height": 173,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-010",
+          "height": 175,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-011",
+          "height": 178,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-012",
+          "height": 185,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-013",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-014",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "huge-b01-015",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-026",
+          "height": 164,
+          "weight": 49,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-027",
+          "height": 176,
+          "weight": 66,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": true
+    },
+    {
+      "id": "a92d78d6-90c1-4938-8d14-f01859925511",
+      "key": "alpaca-striped-buttons",
+      "name": "Лонгслив Альпака пуговицы (в полоску)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "dark-gray",
+          "name": "Тёмно-серый",
+          "aliases": [
+            "темный серый"
+          ]
+        },
+        {
+          "id": "light-gray",
+          "name": "Светло-серый"
+        },
+        {
+          "id": "light-beige",
+          "name": "Светло-бежевый",
+          "aliases": [
+            "бежевый",
+            "светлый бежевый"
+          ]
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "moderate",
+      "buttoned": false,
+      "rows": [],
+      "rules": [
+        {
+          "id": "alpaca-buttons-dark-b01-001",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-002",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-003",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-004",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-005",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-006",
+          "height": 180,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-007",
+          "height": 175,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-008",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-009",
+          "height": 185,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-010",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-011",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-012",
+          "height": 188,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-013",
+          "height": 180,
+          "weight": 98,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-014",
+          "height": 185,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-015",
+          "height": 190,
+          "weight": 95,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-016",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-017",
+          "height": 183,
+          "weight": 78,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-dark-b01-018",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-001",
+          "height": 150,
+          "weight": 45,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-001",
+          "height": 150,
+          "weight": 45,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-002",
+          "height": 155,
+          "weight": 48,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-002",
+          "height": 155,
+          "weight": 48,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-003",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-003",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-004",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-004",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-005",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-005",
+          "height": 170,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-006",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-006",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-007",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-007",
+          "height": 170,
+          "weight": 67,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-008",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-008",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-009",
+          "height": 180,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-009",
+          "height": 180,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-010",
+          "height": 175,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-010",
+          "height": 175,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-011",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-011",
+          "height": 180,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-012",
+          "height": 185,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-012",
+          "height": 185,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-013",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-013",
+          "height": 175,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-014",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-014",
+          "height": 183,
+          "weight": 88,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-015",
+          "height": 188,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-015",
+          "height": 188,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-016",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-016",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-017",
+          "height": 183,
+          "weight": 78,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-beige-b01-017",
+          "height": 183,
+          "weight": 78,
+          "fit": "closer",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "alpaca-buttons-light-gray-b01-018",
+          "height": 183,
+          "weight": 78,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-028",
+          "height": 184,
+          "weight": 79,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-029",
+          "height": 184,
+          "weight": 79,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "mixed-control-r01-030",
+          "height": 184,
+          "weight": 79,
+          "fit": "relaxed",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    },
+    {
+      "id": "4703b08c-593c-4ff0-ac6c-d9223011784a",
+      "key": "old-textured-collar-shirt",
+      "name": "Рубашка Старая Фактурная (ворот)",
+      "kind": "top",
+      "variants": [
+        {
+          "id": "all",
+          "name": "Оба цвета"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL"
+      ],
+      "unavailableSizes": [],
+      "stretch": "low",
+      "buttoned": true,
+      "rows": [
+        {
+          "tag": "M",
+          "measures": {
+            "shoulders": [
+              41,
+              41
+            ],
+            "chest": [
+              44,
+              44
+            ],
+            "length": [
+              66,
+              66
+            ],
+            "sleeve": [
+              57,
+              57
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "L",
+          "measures": {
+            "shoulders": [
+              43,
+              43
+            ],
+            "chest": [
+              48,
+              48
+            ],
+            "length": [
+              68,
+              68
+            ],
+            "sleeve": [
+              60,
+              60
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "XL",
+          "measures": {
+            "shoulders": [
+              45,
+              46
+            ],
+            "chest": [
+              50,
+              52
+            ],
+            "length": [
+              70,
+              70
+            ],
+            "sleeve": [
+              61,
+              61
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "2XL",
+          "measures": {
+            "shoulders": [
+              47,
+              49
+            ],
+            "chest": [
+              50,
+              52
+            ],
+            "length": [
+              72,
+              74
+            ],
+            "sleeve": [
+              63,
+              63
+            ]
+          },
+          "estimated": false
+        },
+        {
+          "tag": "3XL",
+          "measures": {
+            "shoulders": [
+              50,
+              50
+            ],
+            "chest": [
+              54,
+              54
+            ],
+            "length": [
+              75,
+              75
+            ],
+            "sleeve": [
+              64,
+              64
+            ]
+          },
+          "estimated": false
+        }
+      ],
+      "rules": [
+        {
+          "id": "textured-collar-b01-001",
+          "height": 160,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-002",
+          "height": 165,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 41,
+            "chest": 44,
+            "length": 66,
+            "sleeve": 57
+          },
+          "size": "M",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-003",
+          "height": 165,
+          "weight": 55,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-004",
+          "height": 175,
+          "weight": 60,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-005",
+          "height": 180,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-006",
+          "height": 175,
+          "weight": 70,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 46,
+            "chest": 51,
+            "length": 70,
+            "sleeve": 61
+          },
+          "size": "XL",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-007",
+          "height": 175,
+          "weight": 75,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-008",
+          "height": 183,
+          "weight": 78,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "shoulders": 48,
+            "chest": 51,
+            "length": 73,
+            "sleeve": 63
+          },
+          "size": "2XL",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-009",
+          "height": 185,
+          "weight": 85,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "3XL",
+          "manual": false
+        },
+        {
+          "id": "textured-collar-b01-010",
+          "height": 180,
+          "weight": 100,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "chest": 60
+          },
+          "size": "3XL",
+          "manual": true,
+          "reason": "Выбор магазина — 3XL, но грудь по сетке меньше любимой рубашки. Проверьте вещь застёгнутой перед отправкой."
+        }
+      ],
+      "checkWaistBeforeShipping": false
+    }
+  ]
+}

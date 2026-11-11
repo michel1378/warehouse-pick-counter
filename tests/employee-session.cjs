@@ -64,7 +64,7 @@ function load() {
   assert.equal(JSON.stringify((await session.getSession()).permissions), '["picking"]');
   employee.role = 'online';
   employee.permissions = ['reviews'];
-  assert.equal((await session.getSession()).permissions[0], 'reviews');
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '[]');
   employee.active = false;
   assert.equal(await session.getSession(), null);
   employee.active = true;

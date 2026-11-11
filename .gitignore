@@ -19,3 +19,6 @@ public/ScannerAgent.exe
 tests/fixtures/size-catalog-20261028.json
 tests/fixtures/size-blind-lock-20261028.json
 docs/size-evaluation-results.json
+
+# Also ignore an executor dependency symlink.
+/node_modules

@@ -5,7 +5,7 @@ import { sizeProductSchema } from "@/lib/sizes-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count";
+const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count,stock_details";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function GET() {
   const session = await getSession();
