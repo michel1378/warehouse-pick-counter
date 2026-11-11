@@ -4,5 +4,5 @@ import { SizeCatalog } from "@/components/sizes/SizeCatalog";
 export default async function AdminSizesPage() {
   const session = await getSession();
   if (session?.role !== "admin") redirect("/admin/login");
-  return <><p className="eyebrow">Каталог и рекомендации</p><h1>Размеры</h1><p className="size-hint">Подбор по цветам, посадке и замерам любимой вещи.</p><SizeCatalog admin detailed /></>;
+  return <><p className="eyebrow">Каталог и рекомендации</p><h1>Размеры</h1><SizeCatalog admin detailed /></>;
 }
