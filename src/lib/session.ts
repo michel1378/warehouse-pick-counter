@@ -47,11 +47,12 @@ export async function getSession(): Promise<AppSession | null> {
       return null;
     }
     if (!employee || employee.active !== true) return null;
-    const permissions = employee.permissions ?? (employee.role === "online" ? ["attendance"] : ["picking"]);
+    const permissions = employee.permissions ?? (employee.role === "online" ? [] : ["picking"]);
     if (!Array.isArray(permissions)) return null;
     const allowed = permissions.filter((permission): permission is string =>
-      typeof permission === "string" && ["attendance", "picking", "reviews"].includes(permission));
-    if (!allowed.length) return null;
+      typeof permission === "string" && ["picking", "reviews"].includes(permission));
+    // Active employees without extra permissions retain catalog access.
+    // Legacy attendance permission is ignored; it never grants picking or reviews.
     return { sub: employee.id, name: employee.name, role: "employee",
       employeeRole: employee.role === "online" ? "online" : "warehouse", permissions: allowed };
   } catch {

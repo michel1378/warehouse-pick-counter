@@ -53,7 +53,16 @@ function load() {
   assert.equal(payload.exp - payload.iat, 14 * 86400);
   assert.deepEqual(Object.keys(payload).sort(), ['exp', 'iat', 'role', 'sub']);
   session = load(); // New request/process with only the persisted cookie.
-  assert.equal((await session.getSession()).permissions[0], 'attendance');
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '[]');
+  employee.permissions = ['attendance', 'picking'];
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '["picking"]');
+  employee.permissions = [];
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '[]');
+  employee.permissions = null;
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '[]');
+  employee.role = 'warehouse';
+  assert.equal(JSON.stringify((await session.getSession()).permissions), '["picking"]');
+  employee.role = 'online';
   employee.permissions = ['reviews'];
   assert.equal((await session.getSession()).permissions[0], 'reviews');
   employee.active = false;

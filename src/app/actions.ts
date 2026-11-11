@@ -24,9 +24,9 @@ export async function loginEmployee(_: FormState, formData: FormData): Promise<F
   }
   for (const employee of data ?? []) {
     if (await bcrypt.compare(parsed.data, employee.pin_hash)) {
-      const permissions = employee.permissions ?? (employee.role === "online" ? ["attendance"] : ["picking"]);
+      const permissions = employee.permissions ?? (employee.role === "online" ? [] : ["picking"]);
       await createSession({ sub: employee.id, name: employee.name, role: "employee", employeeRole: employee.role, permissions });
-      redirect(permissions.includes("attendance") ? "/attendance" : permissions.includes("picking") ? "/scan" : "/reviews");
+      redirect(permissions.includes("picking") ? "/scan" : permissions.includes("reviews") ? "/reviews" : "/sizes");
     }
   }
   return { error: "Неверный PIN или сотрудник отключен" };
@@ -96,8 +96,7 @@ export async function saveEmployee(_: FormState, formData: FormData): Promise<Fo
   const { id, name, pin, role } = parsed.data;
   if (!id && !pinSchema.safeParse(pin).success) return { error: "Для нового сотрудника задайте PIN от 4 символов" };
   const db = createAdminClient();
-  const permissions = formData.getAll("permissions").filter((x): x is string => typeof x === "string");
-  if (!permissions.length) return { error: "Выберите хотя бы один доступ" };
+  const permissions = formData.getAll("permissions").filter((x): x is string => typeof x === "string" && ["picking", "reviews"].includes(x));
   const values: { name: string; role: string; permissions: string[]; pin_hash?: string } = { name, role, permissions };
   if (pin) values.pin_hash = await bcrypt.hash(pin, 12);
   const result = id
@@ -115,26 +114,6 @@ export async function toggleEmployee(formData: FormData) {
   const { error } = await createAdminClient().from("employees").update({ active }).eq("id", id);
   if (error) throw new Error("Не удалось изменить статус");
   revalidatePath("/admin/employees");
-}
-
-async function requireAttendanceEmployee() {
-  const session = await getSession();
-  if (!session || session.role !== "employee" || !session.permissions?.includes("attendance")) throw new Error("UNAUTHORIZED");
-  return session;
-}
-
-export async function startTimeSession() {
-  const session = await requireAttendanceEmployee();
-  const { error } = await createAdminClient().rpc("start_employee_time_session", { p_employee_id: session.sub });
-  if (error) throw new Error(error.message);
-  revalidatePath("/attendance");
-}
-
-export async function finishTimeSession() {
-  const session = await requireAttendanceEmployee();
-  const { error } = await createAdminClient().rpc("finish_employee_time_session", { p_employee_id: session.sub });
-  if (error) throw new Error(error.message);
-  revalidatePath("/attendance");
 }
 
 export async function updatePrice(_: FormState, formData: FormData): Promise<FormState> {

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   if (error) { logSupabaseError("agent employee resolve", error); return NextResponse.json({ message: "База недоступна" }, { status: 503 }); }
   for (const row of data ?? []) {
     if (!await bcrypt.compare(parsed.data.pin, row.pin_hash)) continue;
-    const permissions = row.permissions ?? (row.role === "online" ? ["attendance"] : ["picking"]);
+    const permissions = row.permissions ?? (row.role === "online" ? [] : ["picking"]);
     if (!permissions.includes("picking")) break;
     return NextResponse.json({ id: row.id, name: row.name, role: row.role, permissions }, { headers: { "Cache-Control": "no-store" } });
   }
