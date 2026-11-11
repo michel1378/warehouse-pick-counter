@@ -1,5 +1,5 @@
 {
-  "version": 46,
+  "version": 47,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1885,6 +1885,17 @@
           "colors": [],
           "reference": {},
           "size": "L",
+          "manual": false
+        },
+        {
+          "id": "best-owner-175-80-regular-2XL",
+          "height": 175,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
           "manual": false
         }
       ],

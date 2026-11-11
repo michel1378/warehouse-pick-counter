@@ -61,6 +61,8 @@ assert.equal(sharedCold.length, 1);
 assert.equal(sharedCold[0].colorName, 'Размер');
 assert.equal(sharedCold[0].size, 'S'); checks++;
 expect('best-distress-shirt', input(183, 78), '2XL');
+expect('best-distress-shirt', input(175, 80), '2XL');
+expect('best-distress-shirt', input(175, 80, { fit: 'relaxed' }), '2XL');
 expect('best-distress-shirt', input(183, 78, { fit: 'closer' }), 'XL');
 expect('best-distress-shirt', input(176, 72), 'XL');
 expect('best-distress-shirt', input(153, 50), 'M');
