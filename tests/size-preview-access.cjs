@@ -26,13 +26,17 @@ function findCatalog(node) {
 }
 (async () => {
   const preview = load('src/app/admin/sizes-preview/page.tsx');
+  const adminCatalog = load('src/app/admin/sizes/page.tsx');
   for (session of [null, { role: 'employee' }, { role: 'online' }]) {
     await assert.rejects(preview, e => e.redirect === '/admin/login');
+    await assert.rejects(adminCatalog, e => e.redirect === '/admin/login');
   }
   session = { role: 'admin' };
   assert.equal(findCatalog(await preview()).props.detailed, true);
+  assert.equal(findCatalog(await adminCatalog()).props.detailed, true);
+  assert.equal(findCatalog(await adminCatalog()).props.admin, true);
   session = { role: 'employee', permissions: [] };
   const ordinary = load('src/app/sizes/page.tsx');
   assert.equal(findCatalog(await ordinary()).props.detailed, undefined);
-  console.log('PASS preview access: admin only; ordinary employee picker remains unchanged.');
+  console.log('PASS admin catalog opens detailed picker; both admin routes protected; employee picker unchanged.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

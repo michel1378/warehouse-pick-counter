@@ -42,14 +42,14 @@ export function DetailedSizePicker({ product }: { product: DetailedSizeProduct }
     <label className="size-length-choice">По длине<select value={lengthPreference} onChange={e => setLengthPreference(e.target.value as "standard" | "cropped")}>
       <option value="standard">Обычная длина</option><option value="cropped">Хочет укороченную</option>
     </select></label>
-    <details className="size-reference-fields">
-      <summary>Замеры любимой вещи — необязательно</summary>
+    <fieldset className="size-reference-fields">
+      <legend>Замеры любимой вещи — необязательно</legend>
       <p className="size-hint">Измеряйте вещь, которая сидит как нужно, в разложенном виде. {pants ? "Пояс — без натяжения." : "Грудь — ширина от подмышки до подмышки, не обхват тела. Рубашку застегните."} Можно заполнить только известные мерки.</p>
       <div className="size-measurements">{fields.map(key => <label key={key}>{labels[key]}<input
         type="number" inputMode="decimal" min="1" max="160" step="0.5" value={measures[key] ?? ""}
         onChange={e => setMeasures(old => ({ ...old, [key]: e.target.value }))}
       /></label>)}</div>
-    </details>
+    </fieldset>
     <div className="size-color-results" aria-live="polite" aria-atomic="true">
       {!results ? <p className="size-hint">Введите рост и вес. Для каждого цвета появится отдельный ответ.</p> : results.map(result => <section key={result.colorId} className={`size-color-answer ${result.requiresCheck ? "needs-check" : ""}`}>
         <div className="size-color-answer-heading"><h3>{result.colorName}</h3><strong>{result.size ?? "Уточнить"}</strong></div>
