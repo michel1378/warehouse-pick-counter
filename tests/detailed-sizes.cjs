@@ -51,6 +51,7 @@ assert.equal(byKey.get('black-cold-gray-longsleeve').rows.find(r => r.tag === '5
 assert.equal(byKey.get('black-cold-gray-longsleeve').stretch, 'none'); checks += 2;
 expect('black-cold-gray-longsleeve', input(173, 60), 'S');
 expect('black-cold-gray-longsleeve', input(174, 64), 'M');
+expect('black-cold-gray-longsleeve', input(174, 69), 'M');
 expect('black-cold-gray-longsleeve', input(178, 80), 'L');
 expect('black-cold-gray-longsleeve', input(188, 90), '2XL');
 expect('black-cold-gray-longsleeve', input(172, 80), 'L');

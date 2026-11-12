@@ -1,5 +1,5 @@
 {
-  "version": 49,
+  "version": 51,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1739,6 +1739,18 @@
           "colors": [],
           "reference": {},
           "size": "L",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "blackcold-owner-174-69-regular-M",
+          "height": 174,
+          "weight": 69,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
           "manual": false,
           "source": "owner"
         }
@@ -5167,6 +5179,18 @@
           "colors": [],
           "reference": {},
           "size": "2XL",
+          "manual": false,
+          "source": "catalog"
+        },
+        {
+          "id": "old-textured-longsleeve-catalog-8",
+          "height": 170,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
           "manual": false,
           "source": "catalog"
         }
