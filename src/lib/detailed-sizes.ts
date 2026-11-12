@@ -84,7 +84,11 @@ function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: 
     if (ref.chest !== undefined && reliable(row, "chest") && row.measures.chest![1] < target.chest! - chestTolerance(def)) score += 100;
     return { row, score, fields };
   }).filter(r => r.fields);
-  scored.sort((a, b) => a.score - b.score || (a.row.tag === tieSize ? -1 : b.row.tag === tieSize ? 1 : 0) || def.sizes.indexOf(a.row.tag) - def.sizes.indexOf(b.row.tag));
+  const profileIndex = tieSize ? def.sizes.indexOf(tieSize) : -1;
+  const profileGap = (row: MeasureRow) => profileIndex < 0 ? 0 : Math.abs(def.sizes.indexOf(row.tag) - profileIndex);
+  // Equal measurements cannot distinguish overlapping labels (Cold S/M).
+  // Use proximity to the height/weight choice, not the first/smallest tag.
+  scored.sort((a, b) => a.score - b.score || profileGap(a.row) - profileGap(b.row) || def.sizes.indexOf(a.row.tag) - def.sizes.indexOf(b.row.tag));
   return scored[0]?.row;
 }
 

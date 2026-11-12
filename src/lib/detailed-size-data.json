@@ -1,5 +1,5 @@
 {
-  "version": 51,
+  "version": 52,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1750,6 +1750,20 @@
           "lengthPreference": "standard",
           "colors": [],
           "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "blackcold-owner-181-65-reference-chest44-M",
+          "height": 181,
+          "weight": 65,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {
+            "chest": 44
+          },
           "size": "M",
           "manual": false,
           "source": "owner"
