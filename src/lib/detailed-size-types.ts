@@ -21,7 +21,7 @@ export type ReviewedSizeRule = {
   lengthPreference: "standard" | "cropped";
   colors: string[]; reference: GarmentMeasures;
   size: string | null; manual: boolean; reason?: string;
-  source?: "owner" | "catalog" | "inference";
+  source?: "owner" | "catalog" | "inference" | "fitting";
 };
 export type DetailedSizeDefinition = {
   id: string; key: string; name: string; kind: "top" | "pants";
@@ -40,6 +40,6 @@ export type DetailedSizeProduct = SizeProduct & {
 };
 export type VariantSizeResult = {
   colorId: string; colorName: string; size: string | null;
-  basis: "owner" | "measurements" | "estimate" | "legacy" | "clarification" | "incompatible";
+  basis: "owner" | "measurements" | "estimate" | "legacy" | "clarification" | "incompatible" | "fitting";
   message: string; checks: string[]; requiresCheck: boolean;
 };

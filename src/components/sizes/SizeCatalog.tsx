@@ -68,7 +68,7 @@ export function SizeCatalog({ admin = false, detailed = false }: { admin?: boole
       <button type="button" className="size-card-button" aria-expanded={open === p.id} aria-controls={`picker-${p.id}`} onClick={() => setOpen(open === p.id ? null : p.id)}>
         <span className="size-card-caption"><strong>{p.name}</strong><small>{p.note || "Особенности посадки не указаны"}</small>{!p.active && <span className="badge">Скрыта от сотрудников</span>}<span className="size-card-action">{open === p.id ? "Свернуть ↑" : "Подобрать размер ↓"}</span></span>
       </button>
-      {open === p.id && (p.examples.length && p.sizes.length && p.photo_count > 0 ? detailed
+      {open === p.id && ((p.examples.length || p.fittings?.length) && p.sizes.length && p.photo_count > 0 ? detailed
         ? <DetailedSizePicker key={`${p.id}-${p.revision}`} product={p} />
         : <SizePicker key={`${p.id}-${p.revision}`} product={p} />
         : <p className="size-hint">Подбор пока недоступен. Заполните размеры, фотографии и примеры подбора.</p>)}

@@ -3,7 +3,10 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { FITS, FIT_LABELS, normalizeSize, parseExampleRows, type Fit, type SizeExample } from "@/lib/sizes";
 import type { CatalogSizeProduct as SizeProduct } from "@/lib/catalog-visibility";
 import { preparePhoto } from "@/lib/prepare-photo";
-import { SizePicker } from "./SizePicker";
+import { DetailedSizePicker } from "./DetailedSizePicker";
+import { FittingEditor, type FittingDraft } from "./FittingEditor";
+import { fittingInputSchema, snapshotFittings, type FitPerson } from "@/lib/size-fittings";
+import { isPantsProduct } from "@/lib/detailed-sizes";
 import { SizeConflicts } from "./SizeConflicts";
 
 type DraftRow = { height: string; weight: string; fit: Fit; size: string };
@@ -24,6 +27,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [people, setPeople] = useState<FitPerson[]>([]);
+  const [fittings, setFittings] = useState<FittingDraft[]>((product?.fittings ?? []).map(({ id, personId, size, colorId, fit, length, sleeve, notes }) => ({ id, personId, size, colorId, fit, length, sleeve, notes })));
   const formRef = useRef<HTMLFormElement>(null);
   const latestPhoto = useRef(0);
   const sizes = sizeText.split(/[,;\s]+/).filter(Boolean).map(normalizeSize);
@@ -59,7 +64,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
   async function save(e: FormEvent) {
     e.preventDefault(); setError("");
     try {
-      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photos.length ? { photos } : {}) };
+      const parsedFittings = fittings.map(r => { const result = fittingInputSchema.safeParse(r); if (!result.success) throw new Error("Заполните человека, размер и оценки каждой примерки."); return result.data; });
+      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), fittings: parsedFittings, active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photos.length ? { photos } : {}) };
       if (!product && !photos.length) throw new Error("Добавьте хотя бы одну фотографию вещи.");
       setSaving(true);
       const response = await fetch("/api/sizes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
@@ -70,7 +76,11 @@ export function SizeEditor({ product, onSaved, onClose }: {
     finally { setSaving(false); }
   }
   let preview: SizeProduct | null = null;
-  try { preview = { id: "preview", name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1 }; } catch { /* Incomplete rows are shown in the editor, not interpreted as examples. */ }
+  try {
+    preview = { id: product?.id ?? "preview", name, note, sizes, examples: examples(), active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1, stock_details: product?.stock_details };
+    const parsed = fittings.map(r => fittingInputSchema.parse(r));
+    if (parsed.length) preview.fittings = snapshotFittings(parsed, product?.fittings ?? [], people, isPantsProduct(preview));
+  } catch { preview = null; /* Incomplete entries must never become evidence. */ }
   return <form className="card size-editor" ref={formRef} onSubmit={save} onChange={() => setDirty(true)}>
     <div className="size-toolbar"><h2>{product ? "Редактировать вещь" : "Новая вещь"}</h2><button type="button" className="secondary" onClick={close} disabled={saving}>Закрыть</button></div>
     <fieldset disabled={saving} className="size-editor-fields">
@@ -95,7 +105,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
         {product && <label className="size-checkbox"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />Показывать в размерах</label>}
         <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Товар активен</label>
       </div></div>
-      <h3>Ваши рекомендации</h3><p className="size-hint">Начните с 10–20 разных примеров. Указывайте желаемую посадку и размер, который вы действительно положили бы. Для каждой посадки нужны свои примеры.</p>
+      <FittingEditor product={{ ...(product ?? { id: "preview", examples: [], revision: 1, updated_at: "", photo_count: 1 }), name, note, sizes, active }} sizes={sizes} rows={fittings} onChange={next => { setFittings(next); setDirty(true); }} onPeople={setPeople} />
+      <h3>Ваши рекомендации</h3><p className="size-hint">Сохранённые ориентиры магазина. Реальные примерки выше учитываются отдельно.</p>
       {preview && <SizeConflicts product={preview} />}
       <div className="table-wrap size-example-table"><table><thead><tr><th>Рост, см</th><th>Вес, кг</th><th>Посадка</th><th>По бирке</th><th><span className="visually-hidden">Удаление</span></th></tr></thead><tbody>
         {rows.map((row, i) => <tr key={i}>
@@ -113,7 +124,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
         <button type="button" className="secondary" onClick={pasteRows}>Добавить строки в таблицу</button>
       </details>
       <details className="size-test"><summary>Проверить подбор перед сохранением</summary>
-        {preview ? <SizePicker product={preview} /> : <p>Сначала заполните строки таблицы корректно.</p>}
+        {preview ? <DetailedSizePicker product={preview} /> : <p>Сначала заполните строки таблицы и примерки корректно.</p>}
       </details>
     </fieldset>
     {error && <p className="error" role="alert">{error}</p>}

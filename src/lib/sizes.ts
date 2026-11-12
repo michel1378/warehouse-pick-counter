@@ -9,6 +9,7 @@ export type SizeExample = { height: number; weight: number; fit: Fit; size: stri
 export type SizeProduct = {
   id: string; name: string; note: string; sizes: string[]; examples: SizeExample[];
   active: boolean; revision: number; updated_at: string; photo_count: number;
+  fittings?: import("./size-fittings").FittingRecord[];
 };
 export type SizeResult = {
   size: string | null; kind: "exact" | "estimated" | "uncertain";

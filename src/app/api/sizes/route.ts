@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient, logSupabaseError } from "@/lib/supabase";
 import { sizeProductSchema } from "@/lib/sizes-validation";
+import { snapshotFittings, type FitPerson, type FittingRecord } from "@/lib/size-fittings";
+import { getSizeVariants, isPantsProduct } from "@/lib/detailed-sizes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count,stock_details";
-const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+const fields = "id,name,note,sizes,examples,fittings,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count,stock_details";
+const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store", Vary: "Cookie" } });
 export async function GET() {
   const session = await getSession();
   if (!session) return json({ error: "Войдите на сайт заново." }, 401);
@@ -15,13 +17,13 @@ export async function GET() {
   const products = [];
   for (let offset = 0; ; offset += 200) {
     let query = db.from("size_products").select(fields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("examples", "[]").neq("sizes", "[]").gt("photo_count", 0);
+    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("sizes", "[]").gt("photo_count", 0);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("size catalog read", error);
       return json({ error: session.role === "admin" ? "Не удалось открыть каталог. Проверьте миграцию 20261004_size_catalog.sql в Supabase." : "Каталог временно недоступен. Сообщите администратору." }, 503);
     }
-    products.push(...(data ?? []));
+    products.push(...(data ?? []).filter(p => session.role === "admin" || p.examples.length || p.fittings.length));
     if (!data || data.length < 200) break;
   }
   return json({ products });
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   try { input = JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { return json({ error: "Некорректные данные карточки." }, 400); }
   const parsed = sizeProductSchema.safeParse(input);
   if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Проверьте поля." }, 400);
-  const { id, revision, photo, photos, ...values } = parsed.data;
+  const { id, revision, photo, photos, fittings, ...values } = parsed.data;
   const incomingPhotos = photos ?? (photo ? [photo] : undefined);
   if (!id && !incomingPhotos?.length) return json({ error: "Добавьте фотографию вещи." }, 400);
   if (incomingPhotos) for (const candidate of incomingPhotos) {
@@ -64,12 +66,26 @@ export async function POST(request: Request) {
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
+  let savedFittings: FittingRecord[] | undefined;
+  if (fittings !== undefined) {
+    const current = id ? await db.from("size_products").select("fittings,revision,stock_details").eq("id", id).maybeSingle() : null;
+    if (current?.error) { logSupabaseError("fittings current read", current.error); return json({ error: "Не удалось прочитать примерки." }, 503); }
+    if (id && (!current?.data || current.data.revision !== revision)) return json({ error: "Карточка уже изменена. Откройте её заново." }, 409);
+    const { data: people, error } = await db.from("size_fit_people").select("*");
+    if (error) { logSupabaseError("fitting snapshot profiles", error); return json({ error: "Не удалось проверить профили примерки." }, 503); }
+    try {
+      const candidate = { ...values, id: id ?? "preview", revision: revision ?? 1, updated_at: "", photo_count: 1, stock_details: current?.data?.stock_details };
+      const colors = getSizeVariants(candidate).map(v => v.id);
+      if (fittings.some(r => !colors.includes(r.colorId))) return json({ error: "Проверьте цвет каждой примерки: цвета карточки изменились." }, 400);
+      savedFittings = snapshotFittings(fittings, current?.data?.fittings ?? [], people as FitPerson[], isPantsProduct(candidate));
+    } catch (e) { return json({ error: e instanceof Error ? e.message : "Проверьте примерки." }, 400); }
+  }
   if (id && values.active && values.show_in_sizes !== false && !incomingPhotos?.length) {
     const { data: current, error } = await db.from("size_products").select("photo_count").eq("id", id).maybeSingle();
     if (error) { logSupabaseError("size catalog photo validation", error); return json({ error: "Не удалось проверить фотографии товара." }, 503); }
     if (current && current.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
   }
-  const row = { ...values, ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
+  const row = { ...values, ...(savedFittings !== undefined ? { fittings: savedFittings } : {}), ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
     ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
     : await db.from("size_products").insert({ ...row, show_in_availability: values.show_in_availability ?? false, show_in_sizes: values.show_in_sizes ?? true, revision: 1 }).select(fields).single();

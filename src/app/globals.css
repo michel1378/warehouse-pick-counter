@@ -126,3 +126,11 @@ tr:last-child td { border-bottom:0; }
 @media(max-width:700px){.scan-header{flex-wrap:wrap}}
 
 .stock-photo-edit{width:min(100%,280px);padding:12px;border:1px solid var(--line);border-radius:10px;display:grid;gap:12px}.stock-photo-edit input{max-width:100%}.stock-photo-edit .stock-actions{margin-top:0}.stock-photo-edit .stock-preview{width:100%}
+
+.fit-editor{margin:24px 0;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.fit-profiles{margin:12px 0 20px}.fit-profiles summary{cursor:pointer;font-weight:700}.fit-people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.fit-person,.fit-observation{border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}.fit-person h4{margin:0 0 6px}.fit-person-id{display:block;overflow-wrap:anywhere;color:var(--muted);margin-bottom:14px}
+.fit-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}.fit-fields input,.fit-fields select,.fit-person input{min-width:0;width:100%}.fit-fields label{min-width:0}
+.fit-observations{display:grid;gap:16px;margin:16px 0}.fit-observation legend{font-weight:700;padding:0 6px}.fit-observation>.danger{margin-top:12px}
+@media(max-width:900px){.fit-people{grid-template-columns:1fr}.fit-person .fit-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.fit-observation .fit-fields{grid-template-columns:1fr}.fit-person,.fit-observation{padding:12px}}

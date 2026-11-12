@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { FITS, normalizeSize } from "@/lib/sizes";
+import { fittingInputSchema, positiveFitting } from "./size-fittings";
 const label = z.string().trim().min(1).max(16).transform(normalizeSize);
 export const sizeProductSchema = z.object({
   id: z.string().uuid().optional(),
@@ -11,6 +12,7 @@ export const sizeProductSchema = z.object({
     height: z.number().min(100).max(230), weight: z.number().min(25).max(250),
     fit: z.enum(FITS), size: label,
   }).strict()).max(200),
+  fittings: z.array(fittingInputSchema).max(200).optional(),
   photos: z.array(z.string().max(400000)).min(1).max(6).optional(),
   photo: z.string().max(400000).optional(),
   active: z.boolean(),
@@ -20,9 +22,10 @@ export const sizeProductSchema = z.object({
   const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
   if (p.id && !p.revision) issue("Не указана версия карточки. Обновите страницу.");
   if (new Set(p.sizes).size !== p.sizes.length) issue("Размеры не должны повторяться.");
-  if (p.active && p.show_in_sizes !== false && !p.examples.length) issue("Добавьте хотя бы один пример перед публикацией.");
+  if (p.active && p.show_in_sizes !== false && !p.examples.length && !p.fittings?.some(positiveFitting)) issue("Добавьте рекомендацию или удачную примерку перед публикацией.");
   if (p.active && p.show_in_sizes !== false && !p.sizes.length) issue("Укажите размеры на бирке.");
   const seen = new Set<string>();
+  for (const r of p.fittings ?? []) if (!p.sizes.includes(r.size)) issue(`Примерка: размера ${r.size} нет в размерном ряду.`);
   for (const [index, e] of p.examples.entries()) {
     if (!p.sizes.includes(e.size)) issue(`Строка ${index + 1}: размера ${e.size} нет в размерном ряду.`);
     const key = `${e.height}/${e.weight}/${e.fit}`;

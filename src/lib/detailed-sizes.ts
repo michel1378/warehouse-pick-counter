@@ -1,6 +1,7 @@
 import snapshot from "./detailed-size-data.json";
 import { recommendSize } from "./sizes";
 import { profileDistance, profileWithFit } from "./detailed-size-model";
+import { positiveFitting } from "./size-fittings";
 import type {
   DetailedSizeDefinition, DetailedSizeInput, DetailedSizeProduct,
   GarmentMeasures, MeasureRow, ReviewedSizeRule, SizeCalibration, SizeVariant, VariantSizeResult,
@@ -42,6 +43,7 @@ function variantsFor(product: DetailedSizeProduct, def?: DetailedSizeDefinition)
   }
   return variants;
 }
+export const getSizeVariants = (product: DetailedSizeProduct) => variantsFor(product, definitions.get(product.id)).map(({ id, name }) => ({ id, name }));
 
 function invalidInput(input: DetailedSizeInput): string | null {
   if (!Number.isFinite(input.height) || input.height < 100 || input.height > 230 || !Number.isFinite(input.weight) || input.weight < 25 || input.weight > 250)
@@ -128,8 +130,13 @@ function compareMeasures(def: DetailedSizeDefinition, row: MeasureRow | undefine
 function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | undefined, variant: ResolvedVariant, input: DetailedSizeInput): VariantSizeResult {
   const base = { colorId: variant.id, colorName: variant.name };
   const clarification = (message: string, incompatible = false): VariantSizeResult => ({ ...base, size: null, basis: incompatible ? "incompatible" : "clarification", message, checks: [], requiresCheck: true });
-  if (!variant.supported) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
+  if (!variant.supported && !product.fittings?.some(r => r.colorId === variant.id && positiveFitting(r))) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
   const ref = input.reference ?? {};
+  if (!def && product.fittings?.length) def = {
+    id: product.id, key: product.id, name: product.name, kind: isPantsProduct(product) ? "pants" : "top",
+    variants: [], sizes: product.sizes, unavailableSizes: [], stretch: "unknown", buttoned: false,
+    rows: [], checkWaistBeforeShipping: false, catalogAnchors: true, rules: [],
+  };
   if (!def) {
     const result = recommendSize(product, input.height, input.weight, "regular");
     return { ...base, size: result.size, basis: "legacy", message: result.message,
@@ -140,6 +147,27 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     id: `catalog-${i}`, height: r.height, weight: r.weight, size: r.size, fit: r.fit === "tight" ? "closer" : r.fit === "loose" ? "relaxed" : "regular",
     colors: [], reference: {}, manual: false, lengthPreference: "standard", source: "catalog",
   }));
+  const observations = (product.fittings ?? []).filter(r => r.colorId === variant.id && def.sizes.includes(r.size));
+  const good = observations.filter(positiveFitting);
+  const groups = new Map<string, typeof good>();
+  for (const r of good) {
+    const key = `${r.body.height}/${r.body.weight}/${r.fit}`;
+    groups.set(key, [...(groups.get(key) ?? []), r]);
+  }
+  const observedRules: ReviewedSizeRule[] = [];
+  for (const group of groups.values()) {
+    if (new Set(group.map(r => r.size)).size > 1) {
+      const b = group[0].body;
+      if (!hasMeasures(ref) && group[0].fit === input.fit && profileDistance(b, input) <= 0.5) {
+        const chests = group.map(r => r.body.chestCircumference).filter((v): v is number => v !== null);
+        return clarification(`На близких реальных примерках подошли разные размеры${chests.length > 1 && Math.max(...chests) - Math.min(...chests) >= 4 ? ": при одинаковых росте и весе различается обхват груди" : ""}. Укажите мерки подходящей вещи.`);
+      }
+      continue; // Never average contradictory real bodies into a fictitious size.
+    }
+    const r = group[0];
+    observedRules.push({ id: `fitting-${r.id}`, height: r.body.height, weight: r.body.weight, fit: r.fit as "closer" | "regular" | "relaxed", lengthPreference: "standard", colors: [variant.id], reference: {}, size: r.size, manual: false, source: "fitting" });
+  }
+  rules = [...rules.filter(r => !observedRules.some(o => sameProfile(o, r) && o.fit === r.fit && !hasMeasures(r.reference) && r.lengthPreference === "standard")), ...observedRules];
   // A physically incompatible garment must not be sold as fitting merely because
   // an old height/weight example happened to carry its largest label.
   const chestRows = def.rows.filter(r => reliable(r, "chest") && !def.unavailableSizes.includes(r.tag));
@@ -171,7 +199,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   let manual = false;
   const checks: string[] = [];
   if (ownerRule) {
-    size = ownerRule.size; basis = ownerRule.source === "catalog" ? "legacy" : ownerRule.source === "inference" ? hasMeasures(ref) ? "measurements" : "estimate" : "owner";
+    size = ownerRule.size; basis = ownerRule.source === "fitting" ? "fitting" : ownerRule.source === "catalog" ? "legacy" : ownerRule.source === "inference" ? hasMeasures(ref) ? "measurements" : "estimate" : "owner";
     manual = ownerRule.manual;
     message = ownerRule.reason ?? "По рекомендациям магазина для этих параметров и посадки.";
     if (!size) return clarification(message);
@@ -203,6 +231,11 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
         checks.push("Следующая бирка не даёт подтверждённой прибавки по ширине. Для более свободной посадки сравните фактическую ширину вещи.");
       }
     }
+  }
+  const failed = observations.find(r => r.size === size && !positiveFitting(r) && profileDistance(r.body, input) <= 0.35);
+  if (failed && !hasMeasures(ref)) {
+    const reason = failed.sleeve === "short" ? "короток рукав" : failed.length === "short" ? "коротка вещь" : failed.length === "long" || failed.sleeve === "long" ? "лишняя длина" : failed.fit === "too_tight" ? "тесно" : "слишком велико";
+    return clarification(`На близкой реальной примерке у ${size}: ${reason}. Укажите мерки подходящей вещи; этот размер автоматически не подтверждаем.`);
   }
   const row = def.rows.find(r => r.tag === size);
   checks.push(...compareMeasures(def, row, ref));
