@@ -179,7 +179,8 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   if (ref.halfWaist !== undefined && waistRows.length && ref.halfWaist > Math.max(...waistRows.map(r => r.measures.halfWaist![1])) + 1)
     return clarification("Полупояс любимых брюк больше спокойного полупояса всех размеров этой модели. Растянутый максимум не заменяет нужную ширину.", true);
   // The owner's try-on found a real sleeve limit, not an ordinal label problem.
-  if (def.key === "samurai-shirt" && rules.some(r => r.manual && !r.size && sameProfile(r, input)) && ref.sleeve === undefined)
+  if (def.key === "samurai-shirt" && rules.some(r => r.manual && !r.size && sameProfile(r, input)) && ref.sleeve === undefined &&
+    !observedRules.some(r => sameProfile(r, input) && r.fit === input.fit))
     return clarification("Для этих параметров корпус Самурайки подходит, но рукава коротки. Нужна длина рукава подходящей вещи: у 2XL–5XL здесь всего 58–60 см.");
   const qualified = rules.filter(r => sameProfile(r, input) && r.fit === input.fit && r.lengthPreference === input.lengthPreference &&
     (hasMeasures(ref) ? hasMeasures(r.reference) && sameMeasures(r.reference, ref) : !hasMeasures(r.reference)));

@@ -45,6 +45,11 @@ let checks=0;const check=(condition,message)=>{assert.ok(condition,message);chec
  check(recommendAllColors(newProduct,parameters)[0].size==='XL','Fittings-only new product can recommend');
  const conflict={...p,fittings:[...snap,{...snap[0],id:'00000000-0000-4000-8000-000000000003',personId:'00000000-0000-4000-8000-000000000004',size:'2XL',body:{...snap[0].body,chestCircumference:114}}]};
  check(recommendAllColors(conflict,parameters)[0].size===null,'Different body shapes are not averaged into fictional label');
+ const samuraiDef=getDetailedSizeDefinition('a2bbcd7b-60d3-4248-934f-82ca1072c0f1');
+ const samurai={...p,id:samuraiDef.id,name:samuraiDef.name,sizes:samuraiDef.sizes,fittings:[{...snap[0],colorId:'black',size:'5XL',fit:'closer',body:{...snap[0].body,height:183,weight:80}}]};
+ const samuraiResult=recommendAllColors(samurai,{...parameters,weight:80,fit:'closer'});
+ check(samuraiResult.find(r=>r.colorId==='black').size==='5XL','A successful actual sleeve test supersedes the old manual guard');
+ check(samuraiResult.find(r=>r.colorId==='white').size===null,'That successful sleeve observation is not copied to another color');
  savedPeople=[structuredClone(person)];savedProducts=[structuredClone(p)];
  session=null;check((await peopleApi.GET()).status===403,'No anonymous profiles');check((await productsApi.GET()).status===401,'No anonymous catalog');
  session={role:'employee'};check((await peopleApi.POST(body({...person}))).status===403,'Employee cannot edit profiles');
