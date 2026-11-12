@@ -1,5 +1,5 @@
 {
-  "version": 53,
+  "version": 54,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -4346,6 +4346,48 @@
           "size": "2XL",
           "manual": false,
           "source": "inference"
+        },
+        {
+          "id": "alpaca-buttons-owner-178-58-regular-dark-gray-M",
+          "height": 178,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "dark-gray"
+          ],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "alpaca-buttons-owner-178-58-regular-light-gray-L",
+          "height": 178,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-gray"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "alpaca-buttons-owner-178-58-regular-light-beige-L",
+          "height": 178,
+          "weight": 58,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [
+            "light-beige"
+          ],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,

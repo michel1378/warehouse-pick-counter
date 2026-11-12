@@ -9,17 +9,17 @@ const fits: { id: DetailedFit; label: string }[] = [
   { id: "regular", label: "В размер" },
   { id: "relaxed", label: "Свободнее" },
 ];
-type PickerMeasure = "shoulders" | "chest" | "halfWaist";
+type PickerMeasure = "shoulders" | "length" | "halfWaist";
 const labels: Record<PickerMeasure, string> = {
-  shoulders: "Плечи, см", chest: "Грудь, см", halfWaist: "Полупояс, см",
+  shoulders: "Плечи, см", length: "Длина, см", halfWaist: "Полупояс, см",
 };
 const measureTitles: Record<PickerMeasure, string> = {
   shoulders: "Плечи любимой вещи в разложенном виде",
-  chest: "Ширина любимой вещи от подмышки до подмышки, не обхват тела",
+  length: "Полная длина любимой вещи в разложенном виде",
   halfWaist: "Полупояс любимых брюк без растяжения",
 };
-const topFields: PickerMeasure[] = ["shoulders", "chest"];
-const pantsFields: PickerMeasure[] = ["halfWaist"];
+const topFields: PickerMeasure[] = ["shoulders", "length"];
+const pantsFields: PickerMeasure[] = ["halfWaist", "length"];
 
 export function DetailedSizePicker({ product }: { product: DetailedSizeProduct }) {
   const [height, setHeight] = useState("");

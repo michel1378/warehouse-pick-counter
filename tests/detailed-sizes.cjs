@@ -27,6 +27,9 @@ for (const d of reviewedSizeData.products) {
 // Same input, three separate color-specific answers; no universal +1 fit offset.
 const colors = recommendAllColors(product('alpaca-striped-buttons'), input(183, 78));
 assert.deepEqual(colors.map(r => [r.colorId, r.size]), [['dark-gray', 'XL'], ['light-gray', '2XL'], ['light-beige', '2XL']]); checks++;
+expect('alpaca-striped-buttons', input(178, 58), 'M', 'dark-gray');
+expect('alpaca-striped-buttons', input(178, 58), 'L', 'light-gray');
+expect('alpaca-striped-buttons', input(178, 58), 'L', 'light-beige');
 expect('alpaca-striped-buttons', input(184, 79, { fit: 'relaxed' }), '2XL', 'light-beige');
 expect('alpaca-striped-buttons', input(183, 78, { fit: 'relaxed' }), '2XL', 'dark-gray');
 expect('alpaca-striped-buttons', input(183, 78, { fit: 'relaxed' }), '3XL', 'light-gray');

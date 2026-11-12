@@ -216,7 +216,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   } else {
     size = def.key === "huge-pants" && input.weight < 50 ? "L" : model?.size ?? null;
     if (model?.outside && !hasMeasures(ref) && !(def.key === "huge-pants" && input.weight < 50))
-      return clarification(`Для этих роста и веса нужны ${def.kind === "pants" ? "замеры полупояса подходящих брюк" : "плечи и ширина груди подходящей вещи"}: параметры выходят за ориентиры этой модели.`);
+      return clarification(`Для этих роста и веса нужны ${def.kind === "pants" ? "полупояс и длина подходящих брюк" : "плечи и длина подходящей вещи"}: параметры выходят за ориентиры этой модели.`);
     if (hasMeasures(ref) && !def.rows.length) checks.push("Полной сетки этой модели нет: указанный замер пока нельзя связать с биркой.");
   }
   if (!size || !def.sizes.includes(size) || def.unavailableSizes.includes(size)) return clarification("В размерном ряду нет подходящего размера по этим параметрам.");
