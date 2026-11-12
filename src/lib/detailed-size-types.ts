@@ -21,7 +21,7 @@ export type ReviewedSizeRule = {
   lengthPreference: "standard" | "cropped";
   colors: string[]; reference: GarmentMeasures;
   size: string | null; manual: boolean; reason?: string;
-  source?: "owner" | "catalog" | "inference" | "fitting";
+  source?: "owner" | "catalog" | "inference" | "fitting" | "editor";
 };
 export type DetailedSizeDefinition = {
   id: string; key: string; name: string; kind: "top" | "pants";

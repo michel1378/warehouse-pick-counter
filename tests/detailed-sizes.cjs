@@ -6,7 +6,10 @@ require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileMo
 }).outputText, filename);
 const { recommendAllColors, reviewedSizeData } = require('../src/lib/detailed-sizes.ts');
 const byKey = new Map(reviewedSizeData.products.map(p => [p.key, p]));
-const product = key => ({ id: byKey.get(key).id, name: byKey.get(key).name, sizes: byKey.get(key).sizes, examples: [], note: '', active: true, revision: 1, updated_at: '', photo_count: 1 });
+const product = key => {
+  const d = byKey.get(key);
+  return { id: d.id, name: d.name, sizes: d.sizes, examples: d.rules.filter(r => r.source === 'catalog').map(r => ({height:r.height,weight:r.weight,fit:r.fit==='closer'?'tight':r.fit==='relaxed'?'loose':'regular',size:r.size})), note: '', active: true, revision: 1, updated_at: '', photo_count: 1 };
+};
 const input = (height, weight, extra = {}) => ({ height, weight, fit: 'regular', lengthPreference: 'standard', ...extra });
 let checks = 0;
 function expect(key, parameters, expected, color) {

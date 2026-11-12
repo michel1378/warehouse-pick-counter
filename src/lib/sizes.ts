@@ -5,7 +5,12 @@ export type Fit = typeof FITS[number];
 export const FIT_LABELS: Record<Fit, string> = {
   tight: "В обтяг", regular: "Размер в размер", loose: "Немного оверсайз",
 };
-export type SizeExample = { height: number; weight: number; fit: Fit; size: string };
+export type SizeExample = {
+  height: number; weight: number; fit: Fit; size: string;
+  colorId?: string;
+  /** Assigned by the server only when this recommendation is added or changed. */
+  confirmedAt?: string;
+};
 export type SizeProduct = {
   id: string; name: string; note: string; sizes: string[]; examples: SizeExample[];
   active: boolean; revision: number; updated_at: string; photo_count: number;
@@ -35,7 +40,7 @@ export function findSizeConflicts(product: ProductTable): SizeConflict[] {
   const conflicts: SizeConflict[] = [];
   product.examples.forEach((a, i) => product.examples.slice(i + 1).forEach((b, j) => {
     const ai = product.sizes.indexOf(a.size), bi = product.sizes.indexOf(b.size);
-    if (a.fit !== b.fit || ai < 0 || bi < 0) return;
+    if (a.fit !== b.fit || (a.colorId ?? "all") !== (b.colorId ?? "all") || ai < 0 || bi < 0) return;
     if (a.height === b.height && a.weight === b.weight && ai !== bi) {
       conflicts.push({ firstRow: i + 1, secondRow: i + j + 2, first: a, second: b });
     }

@@ -3,7 +3,8 @@ import { getSession } from "@/lib/session";
 import { createAdminClient, logSupabaseError } from "@/lib/supabase";
 import { sizeProductSchema } from "@/lib/sizes-validation";
 import { snapshotFittings, type FitPerson, type FittingRecord } from "@/lib/size-fittings";
-import { getSizeVariants, isPantsProduct } from "@/lib/detailed-sizes";
+import { getDetailedSizeDefinition, getSizeVariants, isPantsProduct } from "@/lib/detailed-sizes";
+import { changedExampleWithoutColor, confirmSizeExamples, needsExampleColor } from "@/lib/size-examples";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,26 +67,29 @@ export async function POST(request: Request) {
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
+  const current = id ? await db.from("size_products").select("examples,fittings,revision,stock_details,photo_count").eq("id", id).maybeSingle() : null;
+  if (current?.error) { logSupabaseError("size catalog current read", current.error); return json({ error: "Не удалось прочитать карточку." }, 503); }
+  if (id && (!current?.data || current.data.revision !== revision)) return json({ error: "Карточка уже изменена. Откройте её заново." }, 409);
+  const examples = confirmSizeExamples(values.examples, current?.data?.examples ?? []);
+  const candidate = { ...values, id: id ?? "preview", revision: revision ?? 1, updated_at: "", photo_count: 1, stock_details: current?.data?.stock_details };
+  const colors = getSizeVariants(candidate).map(v => v.id);
+  if (examples.some(r => r.colorId && r.colorId !== "all" && !colors.includes(r.colorId)))
+    return json({ error: "Проверьте цвет каждой рекомендации: цвета карточки изменились." }, 400);
+  if (needsExampleColor(id ? getDetailedSizeDefinition(id) : undefined) && changedExampleWithoutColor(values.examples, current?.data?.examples ?? []))
+    return json({ error: "Для новой или изменённой рекомендации укажите цвет: у этой модели цвета отличаются по размеру." }, 400);
   let savedFittings: FittingRecord[] | undefined;
   if (fittings !== undefined) {
-    const current = id ? await db.from("size_products").select("fittings,revision,stock_details").eq("id", id).maybeSingle() : null;
-    if (current?.error) { logSupabaseError("fittings current read", current.error); return json({ error: "Не удалось прочитать примерки." }, 503); }
-    if (id && (!current?.data || current.data.revision !== revision)) return json({ error: "Карточка уже изменена. Откройте её заново." }, 409);
     const { data: people, error } = await db.from("size_fit_people").select("*");
     if (error) { logSupabaseError("fitting snapshot profiles", error); return json({ error: "Не удалось проверить профили примерки." }, 503); }
     try {
-      const candidate = { ...values, id: id ?? "preview", revision: revision ?? 1, updated_at: "", photo_count: 1, stock_details: current?.data?.stock_details };
-      const colors = getSizeVariants(candidate).map(v => v.id);
       if (fittings.some(r => !colors.includes(r.colorId))) return json({ error: "Проверьте цвет каждой примерки: цвета карточки изменились." }, 400);
       savedFittings = snapshotFittings(fittings, current?.data?.fittings ?? [], people as FitPerson[], isPantsProduct(candidate));
     } catch (e) { return json({ error: e instanceof Error ? e.message : "Проверьте примерки." }, 400); }
   }
   if (id && values.active && values.show_in_sizes !== false && !incomingPhotos?.length) {
-    const { data: current, error } = await db.from("size_products").select("photo_count").eq("id", id).maybeSingle();
-    if (error) { logSupabaseError("size catalog photo validation", error); return json({ error: "Не удалось проверить фотографии товара." }, 503); }
-    if (current && current.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
+    if (current?.data && current.data.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
   }
-  const row = { ...values, ...(savedFittings !== undefined ? { fittings: savedFittings } : {}), ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
+  const row = { ...values, examples, ...(savedFittings !== undefined ? { fittings: savedFittings } : {}), ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
     ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
     : await db.from("size_products").insert({ ...row, show_in_availability: values.show_in_availability ?? false, show_in_sizes: values.show_in_sizes ?? true, revision: 1 }).select(fields).single();

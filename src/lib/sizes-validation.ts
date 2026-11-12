@@ -10,7 +10,7 @@ export const sizeProductSchema = z.object({
   sizes: z.array(label).max(30),
   examples: z.array(z.object({
     height: z.number().min(100).max(230), weight: z.number().min(25).max(250),
-    fit: z.enum(FITS), size: label,
+    fit: z.enum(FITS), size: label, colorId: z.string().min(1).max(100).optional(),
   }).strict()).max(200),
   fittings: z.array(fittingInputSchema).max(200).optional(),
   photos: z.array(z.string().max(400000)).min(1).max(6).optional(),
@@ -28,7 +28,7 @@ export const sizeProductSchema = z.object({
   for (const r of p.fittings ?? []) if (!p.sizes.includes(r.size)) issue(`Примерка: размера ${r.size} нет в размерном ряду.`);
   for (const [index, e] of p.examples.entries()) {
     if (!p.sizes.includes(e.size)) issue(`Строка ${index + 1}: размера ${e.size} нет в размерном ряду.`);
-    const key = `${e.height}/${e.weight}/${e.fit}`;
+    const key = `${e.height}/${e.weight}/${e.fit}/${e.colorId && e.colorId !== "all" ? e.colorId : ""}`;
     if (seen.has(key)) issue(`Строка ${index + 1}: рост, вес и посадка уже встречаются. Оставьте одну рекомендацию.`);
     seen.add(key);
   }

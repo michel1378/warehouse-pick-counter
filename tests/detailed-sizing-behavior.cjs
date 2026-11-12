@@ -6,7 +6,7 @@ require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileMo
 }).outputText, filename);
 const { recommendAllColors, reviewedSizeData } = require('../src/lib/detailed-sizes.ts');
 const fits = ['closer', 'regular', 'relaxed'];
-const fixture = d => ({ id: d.id, name: d.name, sizes: d.sizes, examples: [], note: '', active: true, revision: 1, updated_at: '', photo_count: 1 });
+const fixture = d => ({ id: d.id, name: d.name, sizes: d.sizes, examples: d.rules.filter(r => r.source === 'catalog').map(r => ({height:r.height,weight:r.weight,fit:r.fit==='closer'?'tight':r.fit==='relaxed'?'loose':'regular',size:r.size})), note: '', active: true, revision: 1, updated_at: '', photo_count: 1 });
 const input = (height, weight, fit = 'regular', reference = {}) => ({ height, weight, fit, reference, lengthPreference: 'standard' });
 let checks = 0, calls = 0;
 const run = (p, x) => { calls++; return recommendAllColors(p, x); };

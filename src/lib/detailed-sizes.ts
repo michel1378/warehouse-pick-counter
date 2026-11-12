@@ -2,6 +2,7 @@ import snapshot from "./detailed-size-data.json";
 import { recommendSize } from "./sizes";
 import { profileDistance, profileWithFit } from "./detailed-size-model";
 import { positiveFitting } from "./size-fittings";
+import { combineSizeExamples, rulePriority } from "./size-examples";
 import type {
   DetailedSizeDefinition, DetailedSizeInput, DetailedSizeProduct,
   GarmentMeasures, MeasureRow, ReviewedSizeRule, SizeCalibration, SizeVariant, VariantSizeResult,
@@ -17,7 +18,6 @@ const normalizeColor = (s: string) => s.toLocaleLowerCase("ru").replace(/ё/g, "
 const hasMeasures = (r: GarmentMeasures) => measureKeys.some(k => r[k] !== undefined);
 const measureCount = (r: GarmentMeasures) => measureKeys.filter(k => r[k] !== undefined).length;
 const sameProfile = (r: ReviewedSizeRule, input: DetailedSizeInput) => r.height === input.height && r.weight === input.weight;
-const colorApplies = (r: ReviewedSizeRule, color: string) => !r.colors.length || r.colors.includes(color);
 const referenceMatches = (required: GarmentMeasures, actual: GarmentMeasures) =>
   measureKeys.every(k => required[k] === undefined || (actual[k] !== undefined && Math.abs(required[k]! - actual[k]!) <= 0.1));
 const sameMeasures = (a: GarmentMeasures, b: GarmentMeasures) => referenceMatches(a, b) && referenceMatches(b, a);
@@ -136,7 +136,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   const clarification = (message: string, incompatible = false): VariantSizeResult => ({ ...base, size: null, basis: incompatible ? "incompatible" : "clarification", message, checks: [], requiresCheck: true });
   if (!variant.supported && !product.fittings?.some(r => r.colorId === variant.id && positiveFitting(r))) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
   const ref = input.reference ?? {};
-  if (!def && product.fittings?.length) def = {
+  if (!def && (product.examples.length || product.fittings?.length)) def = {
     id: product.id, key: product.id, name: product.name, kind: isPantsProduct(product) ? "pants" : "top",
     variants: [], sizes: product.sizes, unavailableSizes: [], stretch: "unknown", buttoned: false,
     rows: [], checkWaistBeforeShipping: false, catalogAnchors: true, rules: [],
@@ -146,11 +146,6 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     return { ...base, size: result.size, basis: "legacy", message: result.message,
       checks: ["Для новой модели пока нет размерной сетки и правил посадки."], requiresCheck: true };
   }
-  let rules = def.rules.filter(r => colorApplies(r, variant.id));
-  if (def.catalogAnchors && product.examples.length) rules = product.examples.filter(r => def.sizes.includes(r.size)).map((r, i) => ({
-    id: `catalog-${i}`, height: r.height, weight: r.weight, size: r.size, fit: r.fit === "tight" ? "closer" : r.fit === "loose" ? "relaxed" : "regular",
-    colors: [], reference: {}, manual: false, lengthPreference: "standard", source: "catalog",
-  }));
   const observations = (product.fittings ?? []).filter(r => r.colorId === variant.id && def.sizes.includes(r.size));
   const good = observations.filter(positiveFitting);
   const groups = new Map<string, typeof good>();
@@ -171,7 +166,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     const r = group[0];
     observedRules.push({ id: `fitting-${r.id}`, height: r.body.height, weight: r.body.weight, fit: r.fit as "closer" | "regular" | "relaxed", lengthPreference: "standard", colors: [variant.id], reference: {}, size: r.size, manual: false, source: "fitting" });
   }
-  rules = [...rules.filter(r => !observedRules.some(o => sameProfile(o, r) && o.fit === r.fit && !hasMeasures(r.reference) && r.lengthPreference === "standard")), ...observedRules];
+  const rules = combineSizeExamples({ ...def, rules: [...def.rules, ...observedRules] }, product.examples, variant.id);
   // A physically incompatible garment must not be sold as fitting merely because
   // an old height/weight example happened to carry its largest label.
   const chestRows = def.rows.filter(r => reliable(r, "chest") && !def.unavailableSizes.includes(r.tag));
@@ -188,7 +183,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     return clarification("Для этих параметров корпус Самурайки подходит, но рукава коротки. Нужна длина рукава подходящей вещи: у 2XL–5XL здесь всего 58–60 см.");
   const qualified = rules.filter(r => sameProfile(r, input) && r.fit === input.fit && r.lengthPreference === input.lengthPreference &&
     (hasMeasures(ref) ? hasMeasures(r.reference) && sameMeasures(r.reference, ref) : !hasMeasures(r.reference)));
-  qualified.sort((a, b) => measureCount(b.reference) - measureCount(a.reference) || (b.colors.length ? 1 : 0) - (a.colors.length ? 1 : 0));
+  qualified.sort((a, b) => rulePriority(b) - rulePriority(a) || measureCount(b.reference) - measureCount(a.reference) || (b.colors.length ? 1 : 0) - (a.colors.length ? 1 : 0));
   const waistOverride = input.fit === "regular" && input.lengthPreference === "standard" && ref.halfWaist !== undefined && (
     (def.key === "dense-new-stripe-pants" && input.height === 183 && input.weight === 88) ||
     (def.key === "margiela-striped-pants" && input.height === 180 && input.weight === 60)

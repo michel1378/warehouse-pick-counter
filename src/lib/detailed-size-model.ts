@@ -1,6 +1,7 @@
 import type { DetailedFit, ReviewedSizeRule } from "./detailed-size-types";
 
-type Anchor = { height: number; weight: number; index: number };
+type Anchor = { height: number; weight: number; index: number; confidence: number };
+const confidence = (r: ReviewedSizeRule) => r.source === "catalog" ? 0.4 : r.source === "editor" ? 2 : r.source === "fitting" ? 3 : 1;
 const cache = new Map<string, ReturnType<typeof prepare>>();
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 export const profileDistance = (a: { height: number; weight: number }, b: { height: number; weight: number }) =>
@@ -9,19 +10,20 @@ export const profileDistance = (a: { height: number; weight: number }, b: { heig
 // One regular-fit surface, with nonnegative slopes and bounds from shop examples.
 // A single slim/loose example must never become an independent constant model.
 function prepare(anchors: Anchor[], count: number) {
-  const mh = anchors.reduce((n, a) => n + a.height, 0) / anchors.length;
-  const mw = anchors.reduce((n, a) => n + a.weight, 0) / anchors.length;
-  const my = anchors.reduce((n, a) => n + a.index, 0) / anchors.length;
+  const total = anchors.reduce((n, a) => n + a.confidence, 0);
+  const mh = anchors.reduce((n, a) => n + a.height * a.confidence, 0) / total;
+  const mw = anchors.reduce((n, a) => n + a.weight * a.confidence, 0) / total;
+  const my = anchors.reduce((n, a) => n + a.index * a.confidence, 0) / total;
   let hh = 0.25, ww = 0.25, hw = 0, hy = 0, wy = 0;
   for (const a of anchors) {
     const h = (a.height - mh) / 7, w = (a.weight - mw) / 10, y = a.index - my;
-    hh += h * h; ww += w * w; hw += h * w; hy += h * y; wy += w * y;
+    hh += h * h * a.confidence; ww += w * w * a.confidence; hw += h * w * a.confidence; hy += h * y * a.confidence; wy += w * y * a.confidence;
   }
   const determinant = hh * ww - hw * hw;
   const candidates = [[0, 0], [Math.max(0, hy / hh), 0], [0, Math.max(0, wy / ww)]];
   const joint = [(hy * ww - wy * hw) / determinant, (wy * hh - hy * hw) / determinant];
   if (joint.every(n => n >= 0 && Number.isFinite(n))) candidates.push(joint);
-  const loss = ([h, w]: number[]) => anchors.reduce((sum, a) => sum + (my + h * (a.height - mh) / 7 + w * (a.weight - mw) / 10 - a.index) ** 2, 0) + 0.25 * (h * h + w * w);
+  const loss = ([h, w]: number[]) => anchors.reduce((sum, a) => sum + (my + h * (a.height - mh) / 7 + w * (a.weight - mw) / 10 - a.index) ** 2 * a.confidence, 0) + 0.25 * (h * h + w * w);
   candidates.sort((a, b) => loss(a) - loss(b));
   const [sh, sw] = candidates[0];
   const hs = anchors.map(a => a.height), ws = anchors.map(a => a.weight);
@@ -32,7 +34,7 @@ function prepare(anchors: Anchor[], count: number) {
     const trend = my + sh * (height - mh) / 7 + sw * (weight - mw) / 10;
     let localSum = trend * 0.2, localWeight = 0.2;
     for (const a of anchors) {
-      const influence = 1 / Math.max(0.000001, profileDistance(a, { height, weight }) ** 2);
+      const influence = a.confidence / Math.max(0.000001, profileDistance(a, { height, weight }) ** 2);
       localSum += a.index * influence; localWeight += influence;
     }
     const local = localSum / localWeight;
@@ -65,7 +67,7 @@ function prepare(anchors: Anchor[], count: number) {
 
 export function regularProfile(rules: ReviewedSizeRule[], sizes: string[], height: number, weight: number) {
   const anchors = rules.filter(r => r.fit === "regular" && r.size && !r.manual && !Object.keys(r.reference).length && r.lengthPreference === "standard" && sizes.includes(r.size))
-    .map(r => ({ height: r.height, weight: r.weight, index: sizes.indexOf(r.size!) }));
+    .map(r => ({ height: r.height, weight: r.weight, index: sizes.indexOf(r.size!), confidence: confidence(r) }));
   if (!anchors.length) return null;
   const key = JSON.stringify([sizes, anchors]);
   let model = cache.get(key);
@@ -92,7 +94,7 @@ export function fitOffset(rules: ReviewedSizeRule[], sizes: string[], input: { h
     if (input.fit === "relaxed" ? delta < 0 : delta > 0) continue;
     const distance = profileDistance(row, input);
     if (distance === 0) return delta;
-    const weight = Math.exp(-distance * distance / 2) / (distance * distance);
+    const weight = confidence(row) * Math.exp(-distance * distance / 2) / (distance * distance);
     sum += delta * weight; total += weight;
   }
   return input.fit === "relaxed" ? clamp(sum / total, 0, 1) : clamp(sum / total, -1, 0);
