@@ -1,5 +1,5 @@
 {
-  "version": 52,
+  "version": 53,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -837,6 +837,18 @@
           "reference": {
             "halfWaist": 40
           },
+          "size": "L",
+          "manual": false,
+          "source": "owner"
+        },
+        {
+          "id": "margiela-owner-165-57-regular-L",
+          "height": 165,
+          "weight": 57,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
           "size": "L",
           "manual": false,
           "source": "owner"

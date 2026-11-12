@@ -33,6 +33,7 @@ expect('alpaca-striped-no-buttons', input(172, 74, { reference: { shoulders: 50,
 expect('alpaca-striped-no-buttons', input(183, 78), 'XL');
 expect('alpaca-striped-no-buttons', input(183, 78, { fit: 'relaxed' }), '2XL');
 expect('margiela-striped-pants', input(175, 70), 'XL');
+expect('margiela-striped-pants', input(165, 57), 'L');
 expect('margiela-striped-pants', input(180, 60, { reference: { halfWaist: 38 } }), 'L');
 assert.ok(expect('margiela-striped-pants', input(175, 70, { lengthPreference: 'cropped', reference: { halfWaist: 40 } }), 'XL').requiresCheck);
 expect('margiela-striped-pants', input(175, 70, { fit: 'closer', lengthPreference: 'cropped', reference: { halfWaist: 40 } }), 'L');
