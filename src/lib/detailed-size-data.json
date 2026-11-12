@@ -1,5 +1,5 @@
 {
-  "version": 48,
+  "version": 49,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1704,18 +1704,6 @@
           "source": "owner"
         },
         {
-          "id": "blackcold-owner-reported-172-85-M",
-          "height": 172,
-          "weight": 85,
-          "fit": "regular",
-          "lengthPreference": "standard",
-          "colors": [],
-          "reference": {},
-          "size": "M",
-          "manual": false,
-          "source": "owner"
-        },
-        {
           "id": "cold-derived-175-70-reference-M",
           "height": 175,
           "weight": 70,
@@ -1741,6 +1729,18 @@
           "size": "L",
           "manual": false,
           "source": "inference"
+        },
+        {
+          "id": "blackcold-owner-172-80-regular-L",
+          "height": 172,
+          "weight": 80,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "L",
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
