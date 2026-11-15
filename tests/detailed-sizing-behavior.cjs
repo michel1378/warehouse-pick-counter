@@ -5,6 +5,7 @@ require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileMo
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019, esModuleInterop: true },
 }).outputText, filename);
 const { recommendAllColors, reviewedSizeData } = require('../src/lib/detailed-sizes.ts');
+const { combineSizeExamples } = require('../src/lib/size-examples.ts');
 const fits = ['closer', 'regular', 'relaxed'];
 const fixture = d => ({ id: d.id, name: d.name, sizes: d.sizes, examples: d.rules.filter(r => r.source === 'catalog').map(r => ({height:r.height,weight:r.weight,fit:r.fit==='closer'?'tight':r.fit==='relaxed'?'loose':'regular',size:r.size})), note: '', active: true, revision: 1, updated_at: '', photo_count: 1 });
 const input = (height, weight, fit = 'regular', reference = {}) => ({ height, weight, fit, reference, lengthPreference: 'standard' });
@@ -26,6 +27,8 @@ for (const d of reviewedSizeData.products) {
   for (const r of d.rules) {
     const actual = run(p, { ...input(r.height, r.weight, r.fit, r.reference), lengthPreference: r.lengthPreference });
     for (const a of actual.filter(a => !r.colors.length || r.colors.includes(a.colorId))) {
+      // Old catalog examples that contradict a reviewed profile no longer participate.
+      if (r.source === 'catalog' && !combineSizeExamples(d, p.examples, a.colorId).some(x => x.source === 'catalog' && x.height === r.height && x.weight === r.weight && x.fit === r.fit && x.size === r.size)) continue;
       const expected = r.manual && r.reason?.includes('грудь') ? null : r.size;
       assert.equal(a.size, expected, `${d.key} ${r.id} ${a.colorId}`); checks++;
     }

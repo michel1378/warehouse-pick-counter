@@ -1,5 +1,5 @@
 {
-  "version": 54,
+  "version": 55,
   "products": [
     {
       "id": "60bb838a-f0b7-4242-9d2c-2df8da9a1c1f",
@@ -1129,6 +1129,18 @@
           "size": "3XL",
           "manual": false,
           "source": "owner"
+        },
+        {
+          "id": "samurai-shirt-owner-170-50-regular",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "2XL",
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
@@ -2078,6 +2090,18 @@
           "size": "3XL",
           "manual": false,
           "source": "inference"
+        },
+        {
+          "id": "best-distress-shirt-owner-170-50-regular",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
@@ -4671,6 +4695,18 @@
           "manual": true,
           "source": "owner",
           "reason": "Выбор магазина — 3XL, но грудь по сетке меньше любимой рубашки. Проверьте вещь застёгнутой перед отправкой."
+        },
+        {
+          "id": "old-textured-collar-shirt-owner-170-50-regular",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
         }
       ],
       "checkWaistBeforeShipping": false,
@@ -4817,6 +4853,18 @@
         }
       ],
       "rules": [
+        {
+          "id": "asym-shirt-owner-170-50-regular",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
+        },
         {
           "id": "asym-shirt-catalog-0",
           "height": 155,
@@ -5434,6 +5482,18 @@
       ],
       "rules": [
         {
+          "id": "flowers-shirt-owner-170-50-regular",
+          "height": 170,
+          "weight": 50,
+          "fit": "regular",
+          "lengthPreference": "standard",
+          "colors": [],
+          "reference": {},
+          "size": "M",
+          "manual": false,
+          "source": "owner"
+        },
+        {
           "id": "flowers-shirt-catalog-0",
           "height": 158,
           "weight": 44,
@@ -5525,7 +5585,7 @@
           "lengthPreference": "standard",
           "colors": [],
           "reference": {},
-          "size": "L",
+          "size": "M",
           "manual": false,
           "source": "catalog"
         },
