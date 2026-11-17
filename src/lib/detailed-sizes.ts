@@ -256,7 +256,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   }
   if (directRequest && def.key === "alpaca-striped-buttons" && input.fit === "regular" &&
       ((variant.id === "dark-gray" && input.height === 170 && input.weight === 65) ||
-       (["light-gray", "light-beige"].includes(variant.id) && input.height === 160 && input.weight === 55)) &&
+       (["light-gray", "light-beige"].includes(variant.id) && input.height === 160 && [55, 60].includes(input.weight))) &&
       input.lengthPreference === "standard" && !hasMeasures(ref)) {
     size = "M"; basis = "owner"; message = "Размер подтверждён владельцем для этих параметров.";
   }
