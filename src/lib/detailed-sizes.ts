@@ -232,6 +232,28 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
       }
     }
   }
+  // Bound estimates between reviewed profiles: a shorter, lighter customer
+  // should not jump above a larger customer's reviewed label.
+  if (def.key === "alpaca-striped-buttons" && ["dark-gray", "light-gray", "light-beige"].includes(variant.id) &&
+      input.fit !== "relaxed" && input.lengthPreference === "standard" && !hasMeasures(ref) &&
+      ownerRule?.source !== "fitting" && input.height >= 170 && input.height <= 185 &&
+      input.weight >= 75 && input.weight <= 88) {
+    const dark = variant.id === "dark-gray";
+    const anchors: [number, number, string][] = [
+      [173, 85, "XL"], [175, 85, "XL"], [180, 80, "XL"],
+      [182, 86, dark ? "XL" : "2XL"], [183, 88, dark ? "XL" : "2XL"], [185, 85, "2XL"],
+    ];
+    let lo = 0, hi = def.sizes.length - 1;
+    for (const [height, weight, regular] of anchors) {
+      const index = def.sizes.indexOf(regular) - (input.fit === "closer" ? 1 : 0);
+      if (input.height >= height && input.weight >= weight) lo = Math.max(lo, index);
+      if (input.height <= height && input.weight <= weight) hi = Math.min(hi, index);
+    }
+    const bounded = def.sizes[Math.max(lo, Math.min(hi, def.sizes.indexOf(size)))];
+    if (bounded !== size) {
+      size = bounded; basis = "estimate"; message = "По рекомендациям магазина для этого цвета и посадки.";
+    }
+  }
   if (directRequest && def.key === "alpaca-striped-buttons" && variant.id === "dark-gray" &&
       input.height === 170 && input.weight === 65 && input.fit === "regular" &&
       input.lengthPreference === "standard" && !hasMeasures(ref)) {
