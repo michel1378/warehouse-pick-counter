@@ -17,7 +17,7 @@ function load(filename) {
   const original = mod.require.bind(mod);
   mod.require = name => name === '@/lib/session' ? { getSession: async () => session }
     : name === '@/lib/supabase' ? { logSupabaseError() {}, createAdminClient: () => ({ from(table) {
-      assert.equal(table, 'size_products'); dbCalls++; let restricted = false, update;
+      assert.equal(table, 'availability_products'); dbCalls++; let restricted = false, update;
       const q = {
         select() { return q; }, order() { return q; }, range() { return q; },
         eq(field, value) { if (field === 'active') { assert.equal(value, true); restricted = true; } return q; },

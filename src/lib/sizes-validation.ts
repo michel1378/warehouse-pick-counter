@@ -16,14 +16,12 @@ export const sizeProductSchema = z.object({
   photos: z.array(z.string().max(400000)).min(1).max(6).optional(),
   photo: z.string().max(400000).optional(),
   active: z.boolean(),
-  show_in_availability: z.boolean().optional(),
-  show_in_sizes: z.boolean().optional(),
 }).strict().superRefine((p, ctx) => {
   const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
   if (p.id && !p.revision) issue("Не указана версия карточки. Обновите страницу.");
   if (new Set(p.sizes).size !== p.sizes.length) issue("Размеры не должны повторяться.");
-  if (p.active && p.show_in_sizes !== false && !p.examples.length && !p.fittings?.some(positiveFitting)) issue("Добавьте рекомендацию или удачную примерку перед публикацией.");
-  if (p.active && p.show_in_sizes !== false && !p.sizes.length) issue("Укажите размеры на бирке.");
+  if (p.active && !p.examples.length && !p.fittings?.some(positiveFitting)) issue("Добавьте рекомендацию или удачную примерку перед публикацией.");
+  if (p.active && !p.sizes.length) issue("Укажите размеры на бирке.");
   const seen = new Set<string>();
   for (const r of p.fittings ?? []) if (!p.sizes.includes(r.size)) issue(`Примерка: размера ${r.size} нет в размерном ряду.`);
   for (const [index, e] of p.examples.entries()) {

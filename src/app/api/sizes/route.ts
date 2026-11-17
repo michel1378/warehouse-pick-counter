@@ -8,7 +8,7 @@ import { changedExampleWithoutColor, confirmSizeExamples, needsExampleColor } fr
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const fields = "id,name,note,sizes,examples,fittings,active,show_in_availability,show_in_sizes,revision,updated_at,photo_count,stock_details";
+const fields = "id,name,note,sizes,examples,fittings,active,revision,updated_at,photo_count,stock_details";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store", Vary: "Cookie" } });
 export async function GET() {
   const session = await getSession();
@@ -17,8 +17,8 @@ export async function GET() {
   // Paginate explicitly: don't silently truncate at Supabase's default row limit.
   const products = [];
   for (let offset = 0; ; offset += 200) {
-    let query = db.from("size_products").select(fields).order("name").order("id").range(offset, offset + 199);
-    if (session.role !== "admin") query = query.eq("active", true).eq("show_in_sizes", true).neq("sizes", "[]").gt("photo_count", 0);
+    let query = db.from("size_products").select(fields).eq("show_in_sizes", true).order("name").order("id").range(offset, offset + 199);
+    if (session.role !== "admin") query = query.eq("active", true).neq("sizes", "[]").gt("photo_count", 0);
     const { data, error } = await query;
     if (error) {
       logSupabaseError("size catalog read", error);
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       return json({ error: "Некорректная фотография. Выберите другой файл." }, 400);
   }
   const db = createAdminClient();
-  const current = id ? await db.from("size_products").select("examples,fittings,revision,stock_details,photo_count").eq("id", id).maybeSingle() : null;
+  const current = id ? await db.from("size_products").select("examples,fittings,revision,stock_details,photo_count").eq("id", id).eq("show_in_sizes", true).maybeSingle() : null;
   if (current?.error) { logSupabaseError("size catalog current read", current.error); return json({ error: "Не удалось прочитать карточку." }, 503); }
   if (id && (!current?.data || current.data.revision !== revision)) return json({ error: "Карточка уже изменена. Откройте её заново." }, 409);
   const examples = confirmSizeExamples(values.examples, current?.data?.examples ?? []);
@@ -86,13 +86,13 @@ export async function POST(request: Request) {
       savedFittings = snapshotFittings(fittings, current?.data?.fittings ?? [], people as FitPerson[], isPantsProduct(candidate));
     } catch (e) { return json({ error: e instanceof Error ? e.message : "Проверьте примерки." }, 400); }
   }
-  if (id && values.active && values.show_in_sizes !== false && !incomingPhotos?.length) {
+  if (id && values.active && !incomingPhotos?.length) {
     if (current?.data && current.data.photo_count < 1) return json({ error: "Добавьте фотографию для подбора размеров." }, 400);
   }
   const row = { ...values, examples, ...(savedFittings !== undefined ? { fittings: savedFittings } : {}), ...(incomingPhotos ? { photo: incomingPhotos[0], photos: incomingPhotos, photo_count: incomingPhotos.length } : {}), updated_at: new Date().toISOString() };
   const { data, error } = id
-    ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("revision", revision!).select(fields).maybeSingle()
-    : await db.from("size_products").insert({ ...row, show_in_availability: values.show_in_availability ?? false, show_in_sizes: values.show_in_sizes ?? true, revision: 1 }).select(fields).single();
+    ? await db.from("size_products").update({ ...row, revision: revision! + 1 }).eq("id", id).eq("show_in_sizes", true).eq("revision", revision!).select(fields).maybeSingle()
+    : await db.from("size_products").insert({ ...row, show_in_availability: false, show_in_sizes: true, revision: 1 }).select(fields).single();
   if (error) { logSupabaseError("size catalog save", error); return json({ error: "Не удалось сохранить. Проверьте подключение и миграцию каталога." }, 503); }
   if (!data) return json({ error: "Карточку уже изменили в другом окне. Скопируйте свои правки, закройте редактор и откройте карточку заново." }, 409);
   return json({ product: data });

@@ -18,8 +18,6 @@ export function SizeEditor({ product, onSaved, onClose }: {
   const [name, setName] = useState(product?.name ?? "");
   const [note, setNote] = useState(product?.note ?? "Не маломерит");
   const [sizeText, setSizeText] = useState(product?.sizes.join(", ") ?? "");
-  const [showInAvailability, setShowInAvailability] = useState(product?.show_in_availability ?? false);
-  const [showInSizes, setShowInSizes] = useState(product?.show_in_sizes ?? true);
   const [active, setActive] = useState(product?.active ?? true);
   const [rows, setRows] = useState<DraftRow[]>(product?.examples.length ? product.examples.map(e => ({ ...e, height: String(e.height), weight: String(e.weight) })) : [emptyRow()]);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -68,7 +66,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
     e.preventDefault(); setError("");
     try {
       const parsedFittings = fittings.map(r => { const result = fittingInputSchema.safeParse(r); if (!result.success) throw new Error("Заполните человека, размер и оценки каждой примерки."); return result.data; });
-      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), fittings: parsedFittings, active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photos.length ? { photos } : {}) };
+      const input = { ...(product ? { id: product.id, revision: product.revision } : {}), name, note, sizes, examples: examples(), fittings: parsedFittings, active, ...(photos.length ? { photos } : {}) };
       if (!product && !photos.length) throw new Error("Добавьте хотя бы одну фотографию вещи.");
       setSaving(true);
       const response = await fetch("/api/sizes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
@@ -83,7 +81,7 @@ export function SizeEditor({ product, onSaved, onClose }: {
     const incoming = examples();
     const confirmed = confirmSizeExamples(incoming, product?.examples ?? []);
     if (colorRequired && changedExampleWithoutColor(incoming, product?.examples ?? [])) throw new Error("Укажите цвет новой рекомендации.");
-    preview = { id: product?.id ?? "preview", name, note, sizes, examples: confirmed, active, show_in_availability: showInAvailability, show_in_sizes: showInSizes, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1, stock_details: product?.stock_details };
+    preview = { id: product?.id ?? "preview", name, note, sizes, examples: confirmed, active, revision: 1, updated_at: "", photo_count: photos.length || product?.photo_count || 1, stock_details: product?.stock_details };
     const parsed = fittings.map(r => fittingInputSchema.parse(r));
     if (parsed.length) preview.fittings = snapshotFittings(parsed, product?.fittings ?? [], people, isPantsProduct(preview));
   } catch { preview = null; /* Incomplete entries must never become evidence. */ }
@@ -105,10 +103,8 @@ export function SizeEditor({ product, onSaved, onClose }: {
         <label>Название вещи<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Лонгслив Alpaca" /></label>
         <label>Подпись под названием<input maxLength={200} list="size-notes" value={note} onChange={e => setNote(e.target.value)} /></label>
         <datalist id="size-notes"><option value="Не маломерит" /><option value="Маломерит на размер" /><option value="Маломерит на два размера" /></datalist>
-        <label>Какие размеры привозим — от меньшего к большему<input required={showInSizes && active} value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL, 2XL, 3XL" /></label>
+        <label>Какие размеры привозим — от меньшего к большему<input required={active} value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL, 2XL, 3XL" /></label>
         <p className="size-hint">Именно маркировка на бирке. Подпись о маломерности не прибавляет размер повторно.</p>
-        <label className="size-checkbox"><input type="checkbox" checked={showInAvailability} onChange={e => setShowInAvailability(e.target.checked)} />{product ? "Показывать в наличии" : "Также показывать в наличии"}</label>
-        {product && <label className="size-checkbox"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />Показывать в размерах</label>}
         <label className="size-checkbox"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Товар активен</label>
       </div></div>
       <FittingEditor product={{ ...(product ?? { id: "preview", examples: [], revision: 1, updated_at: "", photo_count: 1 }), name, note, sizes, active }} sizes={sizes} rows={fittings} onChange={next => { setFittings(next); setDirty(true); }} onPeople={setPeople} />

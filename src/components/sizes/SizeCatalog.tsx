@@ -41,10 +41,8 @@ export function SizeCatalog({ admin = false, detailed = false }: { admin?: boole
     window.addEventListener("focus", refresh); document.addEventListener("visibilitychange", refresh);
     return () => { generation.current++; window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, [load]);
-  const [hidden, setHidden] = useState(false);
-  const visible = products.filter(p => hidden ? !p.show_in_sizes : p.show_in_sizes).filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
+  const visible = products.filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
   return <>
-    {admin && <label className="size-checkbox"><input type="checkbox" checked={hidden} onChange={e => setHidden(e.target.checked)} />Скрытые в размерах (включая скрытые в обоих разделах)</label>}
     <div className="size-toolbar"><label className="size-search"><span className="visually-hidden">Найти вещь</span><input type="search" placeholder="Найти вещь по названию…" value={query} onChange={e => setQuery(e.target.value)} /></label>
       <button type="button" className="secondary" onClick={() => void load()}>Обновить</button>
       {admin && <button type="button" className="primary" disabled={editor !== null} onClick={() => { setEditor("new"); setNotice(""); }}>+ Добавить вещь</button>}

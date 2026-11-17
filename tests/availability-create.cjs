@@ -11,7 +11,7 @@ let session = { role: 'admin' }, calls = 0;
 const cache = new Map();
 function client() {
   return { from(table) {
-    assert.equal(table, 'size_products'); calls++;
+    assert(['size_products','availability_products'].includes(table)); calls++;
     let fields = '*', operation = 'select', values, filters = [], paging = '', ordering = '';
     const params = [];
     const arg = value => { params.push(value && typeof value === 'object' ? JSON.stringify(value) : value); return '$' + params.length; };
@@ -28,9 +28,9 @@ function client() {
       async run(single) {
         let sql;
         const where = filters.length ? ' where ' + filters.join(' and ') : '';
-        if (operation === 'insert') sql = `insert into size_products (${Object.keys(values)}) values (${Object.values(values).map(arg)}) returning ${fields}`;
-        else if (operation === 'update') sql = `update size_products set ${Object.entries(values).map(([key, value]) => `${key}=${arg(value)}`).join(',')}${where} returning ${fields}`;
-        else sql = `select ${fields} from size_products${where}${ordering}${paging}`;
+        if (operation === 'insert') sql = `insert into ${table} (${Object.keys(values)}) values (${Object.values(values).map(arg)}) returning ${fields}`;
+        else if (operation === 'update') sql = `update ${table} set ${Object.entries(values).map(([key, value]) => `${key}=${arg(value)}`).join(',')}${where} returning ${fields}`;
+        else sql = `select ${fields} from ${table}${where}${ordering}${paging}`;
         try { const result = await db.query(sql, params); return { data: single ? result.rows[0] ?? null : result.rows, error: null }; }
         catch (error) { return { data: null, error }; }
       },
@@ -47,14 +47,15 @@ function load(filename) {
   mod.require = name => name === '@/lib/session' ? { getSession: async () => session }
     : name === '@/lib/supabase' ? { createAdminClient: client, logSupabaseError(_context, error) { console.error(error.message); } }
     : name.startsWith('@/') ? load('src/' + name.slice(2) + '.ts')
-    : name.startsWith('.') ? load(path.resolve(path.dirname(filename), name + '.ts')) : original(name);
+    : name.endsWith('.json') ? require(path.resolve(path.dirname(filename), name)) : name.startsWith('.') ? load(path.resolve(path.dirname(filename), name + '.ts')) : original(name);
   mod._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText, filename);
   return mod.exports;
 }
 const api = load('src/app/api/availability/route.ts');
 const sizes = load('src/app/api/sizes/route.ts');
 const editor = load('src/app/api/availability/[id]/route.ts');
-const productPhotos = load('src/app/api/sizes/[id]/photo/route.ts');
+const sizePhotos = load('src/app/api/sizes/[id]/photo/route.ts');
+const productPhotos = load('src/app/api/availability/[id]/gallery/route.ts');
 const extraPhotos = load('src/app/api/availability/[id]/photo/route.ts');
 const post = body => api.POST(new Request('https://warehouse.test/api/availability', { method: 'POST', headers: { origin: 'https://warehouse.test', host: 'warehouse.test' }, body: JSON.stringify(body) }));
 const details = { composition: 'Хлопок', material: 'Трикотаж', stretch: 'Тянется', colors: [{ name: 'Красный', sizes: ['M'] }] };
@@ -64,18 +65,20 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     for (const file of ['20261004_size_catalog.sql', '20261102_availability.sql']) await db.exec(fs.readFileSync('supabase/migrations/' + file, 'utf8'));
     await db.query("insert into size_products(name,sizes,examples,photo,photos,photo_count,active) values ('Original','[\"M\"]','[{\"height\":175,\"weight\":70,\"size\":\"M\",\"fit\":\"regular\"}]',$1,$2,1,true)", [image, JSON.stringify([image])]);
     await db.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
+    await db.exec(fs.readFileSync('supabase/migrations/20261112000220_size_fit_people_and_observations.sql','utf8'));
     const original = (await db.query('select * from size_products')).rows[0];
     const migration = fs.readFileSync('supabase/migrations/20261102_availability_create.sql', 'utf8');
     await db.exec(migration); await db.exec(migration);
+    await db.exec(fs.readFileSync('supabase/migrations/20261118000100_split_catalogs.sql','utf8'));
     assert.deepEqual((await db.query('select * from size_products')).rows[0], original);
     let response = await post({ name: '  Новая позиция  ' }); assert.equal(response.status, 201);
     const created = (await response.json()).product;
     assert.equal(created.name, 'Новая позиция'); assert.equal(created.photo_count, 0); assert.deepEqual(created.sizes, []);
-    const persisted = (await db.query('select * from size_products where id=$1', [created.id])).rows[0];
-    assert.deepEqual(persisted.examples, []); assert.equal(persisted.photo, ''); assert.equal(persisted.active, true);
+    const persisted = (await db.query('select * from availability_products where id=$1', [created.id])).rows[0];
+    assert.equal(persisted.photo, ''); assert.equal(persisted.active, true);
     // A fresh GET models the page reload: reads the persisted row, not client state.
     assert((await (await api.GET()).json()).products.some(p => p.id === created.id));
-    assert((await (await sizes.GET()).json()).products.some(p => p.id === created.id)); // Admin can complete examples.
+    assert(!(await (await sizes.GET()).json()).products.some(p => p.id === created.id));
     session = { role: 'employee' };
     assert((await (await api.GET()).json()).products.some(p => p.id === created.id));
     assert(!(await (await sizes.GET()).json()).products.some(p => p.id === created.id));
@@ -92,23 +95,23 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     response = await post({ name: 'Полная позиция', sizes: ['M','L'], photos: [image], stock_details: details, stock_chart: image, stock_models: [image] });
     assert.equal(response.status, 201); const full = (await response.json()).product;
     assert.equal(full.stock_has_chart, true); assert.equal(full.stock_model_count, 1); assert.equal(full.photo_count, 1);
-    assert.equal((await db.query('select count(*)::int as count from size_products')).rows[0].count, 3);
+    assert.equal((await db.query('select count(*)::int as count from availability_products')).rows[0].count, 3);
     response = await post({ id: created.id, revision: created.revision, name: 'Дополнено позже', sizes: ['M'], photos: [image], stock_details: details, stock_chart: image });
     assert.equal(response.status, 200);
     const updated = (await response.json()).product;
     const reloaded = (await (await api.GET()).json()).products.find(p => p.id === created.id);
     assert.equal(reloaded.name, 'Дополнено позже'); assert.deepEqual(reloaded.stock_details, details); assert.equal(reloaded.photo_count, 1); assert.equal(reloaded.stock_has_chart, true);
-    assert.deepEqual((await db.query('select examples from size_products where id=$1', [created.id])).rows[0].examples, []);
+    assert.equal((await db.query('select id from size_products where id=$1', [created.id])).rows.length, 0);
     session = { role: 'employee' }; assert(!(await (await sizes.GET()).json()).products.some(p => p.id === created.id));
     session = { role: 'admin' };
     const sizeRequest = body => sizes.POST(new Request('https://warehouse.test/api/sizes', { method: 'POST', headers: { origin: 'https://warehouse.test', host: 'warehouse.test' }, body: JSON.stringify(body) }));
-    response = await sizeRequest({ id: updated.id, revision: updated.revision, name: updated.name, sizes: ['M'], examples: original.examples, note: '', active: true, show_in_sizes: true });
-    assert.equal(response.status, 200);
-    session = { role: 'employee' }; assert((await (await sizes.GET()).json()).products.some(p => p.id === created.id));
+    response = await sizeRequest({ id: updated.id, revision: updated.revision, name: updated.name, sizes: ['M'], examples: original.examples, note: '', active: true });
+    assert.equal(response.status, 409);
+    session = { role: 'employee' }; assert(!(await (await sizes.GET()).json()).products.some(p => p.id === created.id));
     session = { role: 'admin' };
-    assert.equal((await post({ id: original.id, revision: original.revision, sizes: [], stock_details: original.stock_details })).status, 400);
+
     assert.deepEqual((await db.query('select * from size_products where id=$1', [original.id])).rows[0], original);
-    console.log('PASS creation: name-only and complete forms, real SQL persistence and reload, later edits, one shared catalog, admin-only mutations, picker excluded until ready, original examples/photos untouched, repeatable migration');
+    console.log('PASS creation: name-only and complete forms, real SQL persistence and reload, later edits, independent catalogs, admin-only mutations, picker excluded until ready, original examples/photos untouched, repeatable migration');
 
     const imageB = 'data:image/jpeg;base64,' + Buffer.from([255,216,255,1,255,217]).toString('base64');
     const imageC = 'data:image/jpeg;base64,' + Buffer.from([255,216,255,2,255,217]).toString('base64');
@@ -116,7 +119,7 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     const getEditor = () => editor.GET(new Request('https://warehouse.test/api/availability/' + original.id), context);
     const getPhoto = (index, etag) => productPhotos.GET(new Request(`https://warehouse.test/api/sizes/${original.id}/photo?index=${index}`, { headers: etag ? { 'if-none-match': etag } : {} }), context);
     const getExtra = kind => extraPhotos.GET(new Request(`https://warehouse.test/api/availability/${original.id}/photo?kind=${kind}`), context);
-    const row = async () => (await db.query('select * from size_products where id=$1', [original.id])).rows[0];
+    const row = async () => (await db.query('select * from availability_products where id=$1', [original.id])).rows[0];
     async function edit(patch) {
       const response = await getEditor(); assert.equal(response.status, 200);
       const product = (await response.json()).product;
@@ -125,8 +128,8 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
       assert.equal(saved.status, 200, JSON.stringify(await saved.clone().json()));
       assert.equal((await saved.json()).product.id, original.id);
       const persisted = await row();
-      for (const key of ['examples','sizes','note','active']) assert.deepEqual(persisted[key], original[key], key);
-      assert.equal((await db.query('select count(*)::int as count from size_products')).rows[0].count, 3);
+      for (const key of ['sizes','active']) assert.deepEqual(persisted[key], original[key], key);
+      assert.equal((await db.query('select count(*)::int as count from availability_products')).rows[0].count, 3);
       return persisted;
     }
     let changed = await edit({ photos: [{ index: 0 }, imageB] });
@@ -160,7 +163,7 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     assert.equal(calls, beforeEmployee);
     assert.equal((await getPhoto(0)).status, 200); assert.equal((await getExtra('chart')).status, 200); assert.equal((await getExtra('model')).status, 200);
     const pickerProduct = (await (await sizes.GET()).json()).products.find(p => p.id === original.id);
-    assert.equal(pickerProduct.name, 'Переименовано'); assert.equal(pickerProduct.photo_count, 1); assert.deepEqual(pickerProduct.examples, original.examples);
+    assert.equal(pickerProduct.name, original.name); assert.equal(pickerProduct.photo_count, 1); assert.deepEqual(pickerProduct.examples, original.examples);
     session = null; assert.equal((await getEditor()).status, 401);
     session = { role: 'admin' };
     changed = await edit({ photos: [], stock_chart: null, stock_models: [] });
@@ -168,45 +171,24 @@ const details = { composition: 'Хлопок', material: 'Трикотаж', str
     assert.deepEqual(changed.stock_models, []); assert.equal(changed.stock_model_count, 0); assert.equal(changed.stock_chart, null); assert.equal(changed.stock_has_chart, false);
     assert.equal((await getPhoto(0)).status, 404); assert.equal((await getExtra('chart')).status, 404); assert.equal((await getExtra('model')).status, 404);
     // Legacy single-photo rows must survive appending without requiring a re-upload.
-    await db.query('update size_products set photo=$1, photos=\'[]\'::jsonb, photo_count=1 where id=$2', [image, original.id]);
+    await db.query('update availability_products set photo=$1, photos=\'[]\'::jsonb, photo_count=1 where id=$2', [image, original.id]);
     changed = await edit({ photos: [{ index: 0 }, imageB] });
     assert.deepEqual(changed.photos, [image,imageB]); assert.equal(changed.photo, image);
-    console.log('PASS editing: fresh admin-only editor, append/reorder/replace/delete product and model photos, chart replacement/deletion, legacy photo fallback, persisted reload, shared picker photo bytes, revision conflicts, unchanged examples and no copies');
+    console.log('PASS editing: fresh admin-only editor, append/reorder/replace/delete product and model photos, chart replacement/deletion, legacy photo fallback, persisted reload, independent photo bytes, revision conflicts, unchanged examples and no copies');
 
-    // Independent flags, creation in sizes, persisted reload, and recovery from both off.
+    const originalPhoto = await sizePhotos.GET(new Request('https://warehouse.test/api/sizes/' + original.id + '/photo'), context);
+    assert.deepEqual(Buffer.from(await originalPhoto.arrayBuffer()), Buffer.from(image.split(',')[1],'base64'));
+    const stockBefore = await row();
+    response = await sizeRequest({ id: original.id, revision: original.revision, name: 'Sizes edit', note: '', sizes: ['M'], examples: original.examples, photos: [imageC], active: true });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await row(), stockBefore);
     response = await sizeRequest({ name: 'Sizes only', note: '', sizes: ['M'], examples: original.examples, photos: [image], active: true });
     assert.equal(response.status, 200);
     const sizeOnly = (await response.json()).product;
-    assert.equal(sizeOnly.show_in_sizes, true); assert.equal(sizeOnly.show_in_availability, false);
-    assert.equal(created.show_in_availability, true); assert.equal(created.show_in_sizes, false);
-    response = await sizeRequest({ id: sizeOnly.id, revision: sizeOnly.revision, name: sizeOnly.name, note: '', sizes: sizeOnly.sizes, examples: sizeOnly.examples, active: true, show_in_availability: true, show_in_sizes: false });
-    assert.equal(response.status, 200);
-    assert.equal((await response.json()).product.show_in_sizes, false);
-    const baseline = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
-    for (const availability of [false, true]) for (const sizing of [false, true]) {
-      session = { role: 'admin' };
-      const current = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
-      response = await post({ id: current.id, revision: current.revision, stock_details: current.stock_details, show_in_availability: availability, show_in_sizes: sizing });
-      assert.equal(response.status, 200);
-      session = { role: 'employee' };
-      assert.equal((await (await api.GET()).json()).products.some(p => p.id === sizeOnly.id), availability);
-      assert.equal((await (await sizes.GET()).json()).products.some(p => p.id === sizeOnly.id), sizing);
-      const beforeDenied = calls;
-      assert.equal((await sizeRequest({ ...sizeOnly, show_in_sizes: !sizing })).status, 403);
-      assert.equal(calls, beforeDenied);
-      session = { role: 'admin' };
-      const reload = (await (await api.GET()).json()).products.find(p => p.id === sizeOnly.id);
-      assert.equal(reload.show_in_availability, availability); assert.equal(reload.show_in_sizes, sizing);
-      assert((await (await sizes.GET()).json()).products.some(p => p.id === sizeOnly.id));
-      const persisted = (await db.query('select * from size_products where id=$1', [sizeOnly.id])).rows[0];
-      for (const key of Object.keys(baseline).filter(k => !['show_in_availability', 'show_in_sizes', 'revision', 'updated_at'].includes(k))) assert.deepEqual(persisted[key], baseline[key], key);
-    }
-    // Saved examples must never re-enable a flag after the one-time migration.
-    await db.query('update size_products set show_in_sizes=false, show_in_availability=false where id=$1', [sizeOnly.id]);
-    const snapshot = (await db.query('select * from size_products order by id')).rows;
-    await db.exec(fs.readFileSync('supabase/migrations/20261103064143_independent_catalog_visibility.sql', 'utf8'));
-    assert.deepEqual((await db.query('select * from size_products order by id')).rows, snapshot);
-    console.log('PASS independent visibility: both creation defaults, four persisted combinations, hidden admin recovery, server rejects employee writes, data unchanged, migration never resets choices');
+    assert(!(await (await api.GET()).json()).products.some(p => p.id === sizeOnly.id));
+    assert.equal((await post({ id: original.id, revision: stockBefore.revision, sizes: [], stock_details: { ...details, colors: [] } })).status, 200);
+    assert.deepEqual((await db.query('select sizes from size_products where id=$1',[original.id])).rows[0].sizes, ['M']);
+    console.log('PASS independent creates, updates, photos, revisions and size lists in both directions');
     const legacyDb = new PGlite();
     try {
       await legacyDb.exec('create role anon; create role authenticated; create role service_role;');

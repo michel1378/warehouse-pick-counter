@@ -10,7 +10,7 @@ function ZoomImage({ src, alt }: { src: string; alt: string }) {
     <dialog ref={dialog} className="stock-zoom" onClick={e => { if (e.target === e.currentTarget) dialog.current?.close(); }}><form method="dialog"><button autoFocus className="secondary">Закрыть</button></form><p>{alt} · прокрутите для просмотра в полном размере</p><div><img src={src} alt={alt} /></div></dialog></>;
 }
 
-const emptyProduct: AvailabilityProduct = { id: "", name: "", sizes: [], active: true, show_in_availability: true, show_in_sizes: false, revision: 1, photo_count: 0, stock_details: { composition: "", material: "", stretch: "", colors: [] }, stock_has_chart: false, stock_model_count: 0 };
+const emptyProduct: AvailabilityProduct = { id: "", name: "", sizes: [], active: true, revision: 1, photo_count: 0, stock_details: { composition: "", material: "", stretch: "", colors: [] }, stock_has_chart: false, stock_model_count: 0 };
 function AvailabilityEditor({ product = emptyProduct, onSaved, onClose }: { product?: AvailabilityProduct; onSaved: (product: AvailabilityProduct) => void; onClose: () => void }) {
   const [current, setCurrent] = useState<AvailabilityProduct | null>(product.id ? null : product);
   const [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
@@ -46,8 +46,6 @@ function PhotoListEditor({ title, images, source, onChange, onUpload }: {
 
 function AvailabilityForm({ product, onSaved, onClose }: { product: AvailabilityProduct; onSaved: (product: AvailabilityProduct) => void; onClose: () => void }) {
   const creating = !product.id;
-  const [showInAvailability, setShowInAvailability] = useState(product.show_in_availability);
-  const [showInSizes, setShowInSizes] = useState(product.show_in_sizes);
   const [name, setName] = useState(product.name);
   const [sizeText, setSizeText] = useState(product.sizes.join(", "));
   const [photos, setPhotos] = useState<AvailabilityImage[]>(() => Array.from({ length: product.photo_count }, (_, index) => ({ index })));
@@ -83,7 +81,7 @@ function AvailabilityForm({ product, onSaved, onClose }: { product: Availability
   return <form className="stock-editor" onSubmit={async e => {
     e.preventDefault(); setSaving(true); setError("");
     try {
-      const bodyText = JSON.stringify({ ...(creating ? {} : { id: product.id, revision: product.revision }), name, sizes, show_in_availability: showInAvailability, show_in_sizes: showInSizes, ...(photosChanged ? { photos } : {}), stock_details: { ...details, colors: details.colors.filter(color => color.name.trim()) }, ...(chart !== undefined ? { stock_chart: chart } : {}), ...(modelsChanged ? { stock_models: models } : {}) });
+      const bodyText = JSON.stringify({ ...(creating ? {} : { id: product.id, revision: product.revision }), name, sizes, ...(photosChanged ? { photos } : {}), stock_details: { ...details, colors: details.colors.filter(color => color.name.trim()) }, ...(chart !== undefined ? { stock_chart: chart } : {}), ...(modelsChanged ? { stock_models: models } : {}) });
       if (new Blob([bodyText]).size > 4300000) throw new Error("Суммарный размер фотографий слишком большой. Загрузите часть фото сейчас, остальные — после сохранения.");
       const response = await fetch("/api/availability", { method: "POST", headers: { "Content-Type": "application/json" }, body: bodyText });
       const body = await response.json(); if (!response.ok) throw new Error(body.error || "Не удалось сохранить.");
@@ -91,12 +89,10 @@ function AvailabilityForm({ product, onSaved, onClose }: { product: Availability
     } catch (e) { setError(e instanceof Error ? e.message : "Не удалось сохранить."); }
     finally { setSaving(false); }
   }} onChange={() => setDirty(true)}>
-    <h3>{creating ? "Добавить позицию" : "Редактировать"}</h3><p className="size-hint">Обязательно только название. Товар сохраняется в общем каталоге. Для подбора размеров позже заполните примеры в разделе «Размеры».</p>
+    <h3>{creating ? "Добавить позицию" : "Редактировать"}</h3><p className="size-hint">Обязательно только название. Позиция сохранится в разделе «Наличие».</p>
     <fieldset disabled={busy || saving}>
-      {!creating && <label className="stock-check"><input type="checkbox" checked={showInAvailability} onChange={e => setShowInAvailability(e.target.checked)} />Показывать в наличии</label>}
-      <label className="stock-check"><input type="checkbox" checked={showInSizes} onChange={e => setShowInSizes(e.target.checked)} />{creating ? "Также показывать в размерах" : "Показывать в размерах"}</label>
       <label>Название<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} /></label>
-      <PhotoListEditor title="Фотографии товара" images={photos} onChange={changePhotos} onUpload={(files, index) => void upload(files, "product", index)} source={image => typeof image === "string" ? image : `/api/sizes/${product.id}/photo?index=${image.index}&v=${product.revision}`} />
+      <PhotoListEditor title="Фотографии товара" images={photos} onChange={changePhotos} onUpload={(files, index) => void upload(files, "product", index)} source={image => typeof image === "string" ? image : `/api/availability/${product.id}/gallery?index=${image.index}&v=${product.revision}`} />
       <label>Размерный ряд — от меньшего к большему<input value={sizeText} onChange={e => setSizeText(e.target.value)} placeholder="S, M, L, XL (можно заполнить позже)" /></label>
       {([ ["composition", "Состав"], ["material", "Описание материала"], ["stretch", "Растяжимость"] ] as const).map(([key, label]) => <label key={key}>{label}<textarea rows={3} maxLength={key === "material" ? 4000 : 2000} value={details[key]} onChange={e => setDetails({ ...details, [key]: e.target.value })} /></label>)}
       <h4>Доступные размеры по цветам</h4>
@@ -131,16 +127,15 @@ export function AvailabilityCatalog({ admin = false }: { admin?: boolean }) {
     }).catch(e => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [attempt]);
-  const [hidden, setHidden] = useState(false);
-  const visible = products.filter(p => hidden ? !p.show_in_availability : p.show_in_availability).filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
-  return <>{admin && <label className="stock-check"><input type="checkbox" checked={hidden} onChange={e => setHidden(e.target.checked)} />Скрытые в наличии (включая скрытые в обоих разделах)</label>}<label className="stock-search">Поиск по названию<input type="search" disabled={editor !== null} value={query} onChange={e => setQuery(e.target.value)} placeholder="Название товара" /></label>
+  const visible = products.filter(p => p.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru")));
+  return <><label className="stock-search">Поиск по названию<input type="search" disabled={editor !== null} value={query} onChange={e => setQuery(e.target.value)} placeholder="Название товара" /></label>
     {admin && <button type="button" className="primary" disabled={editor !== null || loading || Boolean(error)} onClick={() => { setEditor("new"); setNotice(""); }}>Добавить позицию</button>}
     {admin && editor === "new" && <AvailabilityEditor onClose={() => setEditor(null)} onSaved={saved => { setProducts(old => [...old.filter(p => p.id !== saved.id), saved].sort((a, b) => a.name.localeCompare(b.name, "ru"))); setQuery(""); setEditor(null); setNotice(`«${saved.name}»: позиция добавлена.`); }} />}
     {notice && <p role="status">{notice}</p>}{loading && <p role="status">Загружаем товары…</p>}
     {error && <div role="alert"><p className="error">{error}</p><button className="secondary" onClick={() => setAttempt(a => a + 1)}>Повторить загрузку</button></div>}
     {!loading && !error && !visible.length && <p>{products.length ? "По этому названию ничего не найдено." : "В каталоге пока нет товаров."}</p>}
     {!error && <div className="stock-grid">{visible.map(product => {
-      const photo = (index: number) => `/api/sizes/${product.id}/photo?index=${index}&v=${product.revision}`;
+      const photo = (index: number) => `/api/availability/${product.id}/gallery?index=${index}&v=${product.revision}`;
       const extra = (kind: "chart" | "model", index = 0) => `/api/availability/${product.id}/photo?kind=${kind}&index=${index}&v=${product.revision}`;
       return <details className="card stock-card" key={product.id}><summary>{product.photo_count > 0 ? <img src={photo(0)} alt={product.name} loading="lazy" width={600} height={600} /> : <div className="size-photo-placeholder">Фото не добавлено</div>}<span><strong>{product.name}</strong>{!product.active && <small>Скрыт от сотрудников</small>}<small>Фото, описание и наличие · раскрыть</small></span></summary>
         <div className="stock-content"><h3>Галерея товара</h3>{product.photo_count > 0 ? <div className="stock-gallery">{Array.from({ length: product.photo_count }, (_, i) => <ZoomImage key={i} src={photo(i)} alt={`${product.name}, фото ${i + 1}`} />)}</div> : <p>Фото не добавлено</p>}

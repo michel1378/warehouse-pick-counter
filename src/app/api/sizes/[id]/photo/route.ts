@@ -11,8 +11,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!z.string().uuid().safeParse(id).success) return failure(400);
   const indexValue = Number(new URL(request.url).searchParams.get("index") ?? "0");
   const index = Number.isInteger(indexValue) && indexValue >= 0 && indexValue < 6 ? indexValue : 0;
-  let query = createAdminClient().from("size_products").select(index === 0 ? "revision,photo" : `revision,selected:photos->>${index}`).eq("id", id);
-  if (session.role !== "admin") query = query.eq("active", true).or("show_in_availability.eq.true,show_in_sizes.eq.true");
+  let query = createAdminClient().from("size_products").select(index === 0 ? "revision,photo" : `revision,selected:photos->>${index}`).eq("id", id).eq("show_in_sizes", true);
+  if (session.role !== "admin") query = query.eq("active", true);
   const { data, error } = await query.maybeSingle();
   if (error) return failure(503);
   // Only the requested JSON element crosses the database connection, not the gallery.
