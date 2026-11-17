@@ -254,8 +254,9 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
       size = bounded; basis = "estimate"; message = "По рекомендациям магазина для этого цвета и посадки.";
     }
   }
-  if (directRequest && def.key === "alpaca-striped-buttons" && variant.id === "dark-gray" &&
-      input.height === 170 && input.weight === 65 && input.fit === "regular" &&
+  if (directRequest && def.key === "alpaca-striped-buttons" && input.fit === "regular" &&
+      ((variant.id === "dark-gray" && input.height === 170 && input.weight === 65) ||
+       (["light-gray", "light-beige"].includes(variant.id) && input.height === 160 && input.weight === 55)) &&
       input.lengthPreference === "standard" && !hasMeasures(ref)) {
     size = "M"; basis = "owner"; message = "Размер подтверждён владельцем для этих параметров.";
   }
