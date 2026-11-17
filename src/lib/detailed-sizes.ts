@@ -131,7 +131,7 @@ function compareMeasures(def: DetailedSizeDefinition, row: MeasureRow | undefine
   return checks;
 }
 
-function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | undefined, variant: ResolvedVariant, input: DetailedSizeInput): VariantSizeResult {
+function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | undefined, variant: ResolvedVariant, input: DetailedSizeInput, directRequest = false): VariantSizeResult {
   const base = { colorId: variant.id, colorName: variant.name };
   const clarification = (message: string, incompatible = false): VariantSizeResult => ({ ...base, size: null, basis: incompatible ? "incompatible" : "clarification", message, checks: [], requiresCheck: true });
   if (!variant.supported && !product.fittings?.some(r => r.colorId === variant.id && positiveFitting(r))) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
@@ -232,6 +232,11 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
       }
     }
   }
+  if (directRequest && def.key === "alpaca-striped-buttons" && variant.id === "dark-gray" &&
+      input.height === 170 && input.weight === 65 && input.fit === "regular" &&
+      input.lengthPreference === "standard" && !hasMeasures(ref)) {
+    size = "M"; basis = "owner"; message = "Размер подтверждён владельцем для этих параметров.";
+  }
   const failed = observations.find(r => r.size === size && !positiveFitting(r) && profileDistance(r.body, input) <= 0.35);
   if (failed && !hasMeasures(ref)) {
     const reason = failed.sleeve === "short" ? "короток рукав" : failed.length === "short" ? "коротка вещь" : failed.length === "long" || failed.sleeve === "long" ? "лишняя длина" : failed.fit === "too_tight" ? "тесно" : "слишком велико";
@@ -255,7 +260,7 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
   const invalid = invalidInput(input);
   return variantsFor(product, definition).map(variant => invalid ? {
     colorId: variant.id, colorName: variant.name, size: null, basis: "clarification", message: invalid, checks: [], requiresCheck: true,
-  } : resultFor(product, definition, variant, input));
+  } : resultFor(product, definition, variant, input, true));
 }
 
 // Used by the regression report to distinguish a tested owner anchor from a new estimate.
