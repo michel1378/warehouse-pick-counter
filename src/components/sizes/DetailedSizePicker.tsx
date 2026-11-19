@@ -9,16 +9,16 @@ const fits: { id: DetailedFit; label: string }[] = [
   { id: "regular", label: "В размер" },
   { id: "relaxed", label: "Свободнее" },
 ];
-type PickerMeasure = "shoulders" | "length" | "halfWaist";
+type PickerMeasure = "chest" | "shoulders" | "length" | "halfWaist";
 const labels: Record<PickerMeasure, string> = {
-  shoulders: "Плечи, см", length: "Длина, см", halfWaist: "Полупояс, см",
+  chest: "Ширина по груди, см", shoulders: "Плечи, см", length: "Длина, см", halfWaist: "Полупояс, см",
 };
 const measureTitles: Record<PickerMeasure, string> = {
-  shoulders: "Плечи любимой вещи в разложенном виде",
+  chest: "От подмышки до подмышки на разложенной вещи", shoulders: "Плечи любимой вещи в разложенном виде",
   length: "Полная длина любимой вещи в разложенном виде",
   halfWaist: "Полупояс любимых брюк без растяжения",
 };
-const topFields: PickerMeasure[] = ["shoulders", "length"];
+const topFields: PickerMeasure[] = ["chest", "length", "shoulders"];
 const pantsFields: PickerMeasure[] = ["halfWaist", "length"];
 
 export function DetailedSizePicker({ product }: { product: DetailedSizeProduct }) {
@@ -41,6 +41,7 @@ export function DetailedSizePicker({ product }: { product: DetailedSizeProduct }
       <label>Рост, см<input type="number" inputMode="decimal" min="100" max="230" step="0.5" value={height} onChange={e => setHeight(e.target.value)} /></label>
       <label>Вес, кг<input type="number" inputMode="decimal" min="25" max="250" step="0.5" value={weight} onChange={e => setWeight(e.target.value)} /></label>
     </div>
+    <p className="size-hint">{pants ? "Замерьте удобные брюки: пояс без растяжения и длину по боковому шву." : "Замерьте удобную вещь в разложенном виде: ширину от подмышки до подмышки и длину от плеча до низа."}</p>
     <div className="size-measurements">{fields.map(key => <label key={key}>{labels[key]}<input
       type="number" inputMode="decimal" min="1" max="160" step="0.5" title={measureTitles[key]} value={measures[key] ?? ""}
       onChange={e => setMeasures(old => ({ ...old, [key]: e.target.value }))}

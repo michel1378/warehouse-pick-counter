@@ -75,6 +75,8 @@ function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: 
   if (target.halfWaist !== undefined) target.halfWaist += shift;
   const scored = def.rows.filter(row => !def.unavailableSizes.includes(row.tag)).map(row => {
     let score = 0, fields = 0;
+    const volumeKey = def.kind === "pants" ? "halfWaist" : "chest";
+    if (ref[volumeKey] !== undefined && !reliable(row,volumeKey)) return {row,score:Infinity,fields:0};
     for (const k of relevant) if (target[k] !== undefined && reliable(row, k)) {
       score += rangeDistance(target[k]!, row.measures[k]!) ** 2 * weights[k]!; fields++;
     }
@@ -92,14 +94,159 @@ function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: 
   return scored[0]?.row;
 }
 
+// November warehouse review, regular fit at 165 cm (50 through 75 kg).
+// These are estimates; live confirmed corrections and fitting records take precedence.
+const reviewed165: Record<string,string[]> = {
+ "alpaca-striped-buttons": [
+  "M",
+  "M",
+  "M",
+  "M/L",
+  "L",
+  "L"
+ ],
+ "alpaca-striped-no-buttons": [
+  "M",
+  "M",
+  "M",
+  "M",
+  "L",
+  "L"
+ ],
+ "wooden-buttons-longsleeve": [
+  "S",
+  "S",
+  "S",
+  "S",
+  "M",
+  "M"
+ ],
+ "black-cold-gray-longsleeve": [
+  "S",
+  "S",
+  "S",
+  "S",
+  "M",
+  "M"
+ ],
+ "black-cold-tshirt": [
+  "M",
+  "M",
+  "M",
+  "M",
+  "M",
+  "M"
+ ],
+ "muzhik-longsleeve": [
+  "M",
+  "M",
+  "M",
+  "M",
+  "M",
+  "M"
+ ],
+ "old-textured-longsleeve": [
+  "M",
+  "M",
+  "M",
+  "M",
+  "M",
+  "L"
+ ],
+ "asym-shirt": [
+  "M",
+  "M",
+  "L",
+  "L",
+  "L",
+  "XL"
+ ],
+ "best-distress-shirt": [
+  "M",
+  "M",
+  "L",
+  "L",
+  "L",
+  "XL"
+ ],
+ "flowers-shirt": [
+  "M",
+  "M",
+  "L",
+  "L",
+  "L",
+  "L"
+ ],
+ "old-textured-collar-shirt": [
+  "M",
+  "L",
+  "L",
+  "L",
+  "XL",
+  "XL"
+ ],
+ "samurai-shirt": [
+  "2XL",
+  "2XL",
+  "2XL",
+  "2XL",
+  "3XL",
+  "4XL"
+ ],
+ "margiela-striped-pants": [
+  "M",
+  "M",
+  "L",
+  "L",
+  "XL",
+  "2XL"
+ ],
+ "huge-pants": [
+  "XL",
+  "XL",
+  "XL",
+  "XL",
+  "2XL",
+  "3XL"
+ ],
+ "dense-new-stripe-pants": [
+  "M",
+  "M",
+  "M",
+  "L",
+  "XL",
+  "XL"
+ ]
+};
+
+const reviewed160: Record<string,string[]> = {"alpaca-striped-buttons":["M","M/L","M/L","L"],"alpaca-striped-no-buttons":["M","M","L","L"],"wooden-buttons-longsleeve":["S","S","M","M"],"black-cold-gray-longsleeve":["S","S","M","M"],"black-cold-tshirt":["M","M","M","M"],"muzhik-longsleeve":["M","M","M","M"],"old-textured-longsleeve":["M","M","M","L"],"asym-shirt":["L","L","L","XL"],"best-distress-shirt":["L","L","L","XL"],"flowers-shirt":["L","L","L","L"],"old-textured-collar-shirt":["M","L","XL","XL"],"samurai-shirt":["2XL","2XL","3XL","4XL"],"margiela-striped-pants":["L","L","XL","XL"],"huge-pants":["XL","2XL","2XL","2XL"],"dense-new-stripe-pants":["M","L","XL","XL"]};
 function modelSize(def: DetailedSizeDefinition, rules: ReviewedSizeRule[], input: DetailedSizeInput) {
   const sizes = def.sizes.filter(s => !def.unavailableSizes.includes(s));
   const policy = def.fitPolicy ?? { closerStep: -0.7, relaxedStep: 0.8 };
   const prior = input.fit === "closer" ? policy.closerStep : policy.relaxedStep;
   const profile = profileWithFit(rules, sizes, input, prior);
   if (!profile) return null;
-  const index = Math.max(0, Math.min(sizes.length - 1, Math.round(profile.score)));
-  return { size: sizes[index], outside: profile.outside };
+  let index = Math.max(0, Math.min(sizes.length - 1, Math.round(profile.score)));
+  const near = rules.filter(r => r.fit === "regular" && r.size && sizes.includes(r.size) && !r.manual && !hasMeasures(r.reference) && r.lengthPreference === "standard")
+    .map(r=>({r,d:profileDistance(r,input)})).sort((a,b)=>a.d-b.d);
+  // Estimate garment dimensions from known good labels, never from invented body measurements.
+  if (reviewed165[def.key] && input.fit === "regular" && near.length && near[0].d <= 1.6) {
+    const key = def.kind === "pants" ? "halfWaist" : "chest";
+    const samples = near.slice(0,5).flatMap(({r,d})=>{
+      const row = def.rows.find(x=>x.tag===r.size);
+      return row && !row.estimated && reliable(row,key) && reliable(row,"length") ? [{row,w:(r.source==="fitting"?3:r.source==="editor"?2:1)/Math.max(0.02,d*d)}] : [];
+    });
+    if (samples.length >= 2) {
+      const w = samples.reduce((n,x)=>n+x.w,0);
+      const mean = (k: typeof key | "length") => samples.reduce((n,x)=>n+x.w*midpoint(x.row.measures[k]!),0)/w;
+      const volume=mean(key),length=mean("length");
+      const options = def.rows.filter(r=>sizes.includes(r.tag) && Math.abs(sizes.indexOf(r.tag)-profile.score)<=0.85 && !r.estimated && reliable(r,key) && reliable(r,"length"));
+      const score = (r:MeasureRow) => 2*rangeDistance(volume,r.measures[key]!)**2 + 0.4*rangeDistance(length,r.measures.length!)**2 + (sizes.indexOf(r.tag)-profile.score)**2;
+      options.sort((a,b)=>score(a)-score(b)||sizes.indexOf(a.tag)-sizes.indexOf(b.tag));
+      if(options.length>1) index=sizes.indexOf(options[0].tag);
+    }
+  }
+  return { size: sizes[index], outside: profile.outside || (!!reviewed165[def.key] && (!near.length || near[0].d>2.8)) };
 }
 
 // A larger label is useful for a looser fit only if it adds actual volume.
@@ -166,7 +313,16 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     const r = group[0];
     observedRules.push({ id: `fitting-${r.id}`, height: r.body.height, weight: r.body.weight, fit: r.fit as "closer" | "regular" | "relaxed", lengthPreference: "standard", colors: [variant.id], reference: {}, size: r.size, manual: false, source: "fitting" });
   }
-  const rules = combineSizeExamples({ ...def, rules: [...def.rules, ...observedRules] }, product.examples, variant.id);
+  const calibrated = reviewed165[def.key];
+  const review: ReviewedSizeRule[] = (calibrated ?? []).map((entry, i) => ({
+    id: "nov-review-" + i, height:165, weight:50+i*5, fit:"regular", lengthPreference:"standard",
+    colors:[variant.id], reference:{}, size:entry.split("/")[variant.id.startsWith("light-") && entry.includes("/") ? 1 : 0], manual:false, source:"inference"
+  }));
+  const recent = calibrated ? product.examples.filter(e => e.confirmedAt && Date.parse(e.confirmedAt) >= Date.UTC(2026,10,12))
+    .sort((a,b) => Date.parse(b.confirmedAt!) - Date.parse(a.confirmedAt!)) : product.examples;
+  for (const [i,entry] of (reviewed160[def.key] ?? []).entries()) review.push({ id:"review-160-"+i,height:160,weight:60+i*5,fit:"regular",lengthPreference:"standard",colors:[variant.id],reference:{},size:entry.split("/")[variant.id.startsWith("light-") && entry.includes("/") ? 1 : 0],manual:false,source:"inference" });
+  const retained = calibrated ? def.rules.filter(r => r.manual || hasMeasures(r.reference) || (r.source==="owner" && r.height===183 && r.weight===78)) : def.rules;
+  const rules = combineSizeExamples({ ...def, rules: [...review,...retained,...observedRules] }, recent, variant.id);
   // A physically incompatible garment must not be sold as fitting merely because
   // an old height/weight example happened to carry its largest label.
   const chestRows = def.rows.filter(r => reliable(r, "chest") && !def.unavailableSizes.includes(r.tag));
@@ -215,8 +371,8 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     }
   } else {
     size = def.key === "huge-pants" && input.weight < 50 ? "L" : model?.size ?? null;
-    if (model?.outside && !hasMeasures(ref) && !(def.key === "huge-pants" && input.weight < 50))
-      return clarification(`Для этих роста и веса нужны ${def.kind === "pants" ? "полупояс и длина подходящих брюк" : "плечи и длина подходящей вещи"}: параметры выходят за ориентиры этой модели.`);
+    if (model?.outside && (!hasMeasures(ref) || !def.rows.length) && !(def.key === "huge-pants" && input.weight < 50))
+      return clarification(`Для этих роста и веса нужны ${def.kind === "pants" ? "полупояс и длина подходящих брюк" : "ширина по груди и длина подходящей вещи"}: параметры выходят за ориентиры этой модели.`);
     if (hasMeasures(ref) && !def.rows.length) checks.push("Полной сетки этой модели нет: указанный замер пока нельзя связать с биркой.");
   }
   if (!size || !def.sizes.includes(size) || def.unavailableSizes.includes(size)) return clarification("В размерном ряду нет подходящего размера по этим параметрам.");
