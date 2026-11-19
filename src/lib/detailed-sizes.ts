@@ -306,7 +306,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   // Owner's regular-fit floor for the narrow Samurai cut, in either reviewed colour.
   // A supplied garment measurement or an exact fitting still takes precedence.
   if (def.key === "samurai-shirt" && ["black", "white"].includes(variant.id) &&
-      ((input.height >= 180 && input.weight >= 75) || (input.height >= 186 && input.weight >= 68)) && input.fit !== "closer" &&
+      ((input.height >= 180 && input.weight >= 75) || (input.height >= 184 && input.height + input.weight >= 253)) && input.fit !== "closer" &&
       input.lengthPreference === "standard" && !hasMeasures(ref) &&
       !good.some(r => r.body.height === input.height && r.body.weight === input.weight && r.fit === input.fit)) {
     const checks = ["Сверьте длину рукава: у Самурайки прибавка по ширине не гарантирует прибавку по длине."];
@@ -331,6 +331,13 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     const checks = ["Сетка 3XL: полупояс без растяжения 43 см, длина 112 см. Пояс тянется."];
     if (!(variant.stockSizes ?? product.sizes).includes(size)) checks.push("Проверьте наличие 3XL.");
     return { ...base, size, basis: "owner", message: "По рекомендации магазина для высоких покупателей.", checks, requiresCheck: true };
+  }
+  // Transition into the 5XL fitting through 4XL, including adjacent heights.
+  if (def.key === "samurai-shirt" && ["black","white"].includes(variant.id) &&
+      input.height >= 180 && input.height + input.weight >= 245 &&
+      input.weight < 75 && input.fit === "regular" && input.lengthPreference === "standard" &&
+      !hasMeasures(ref) && !good.some(r => r.body.height === input.height && r.body.weight === input.weight && r.fit === input.fit)) {
+    return { ...base, size: "4XL", basis: "estimate", message: "По соседним примеркам для этого роста.", checks: ["Сверьте длину рукава."], requiresCheck: true };
   }
   const groups = new Map<string, typeof good>();
   for (const r of good) {
@@ -526,7 +533,7 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     }
     // For taller builds the L collar shirt is short (68 cm body, 60 cm sleeve).
     if (definition.key === "old-textured-collar-shirt" && input.height >= 185) {
-      const minimum = input.height >= 186 && input.weight >= 68 ? "2XL" : "XL";
+      const minimum = input.height >= 186 && input.weight >= 65 ? "2XL" : "XL";
       if (labels.indexOf(floor) < labels.indexOf(minimum)) floor = minimum;
     }
     if (floor === result.size) return result;
