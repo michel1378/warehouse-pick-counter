@@ -494,7 +494,7 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     colorId: variant.id, colorName: variant.name, size: null, basis: "clarification", message: invalid, checks: [], requiresCheck: true,
   } : (() => {
     const result = resultFor(product, definition, variant, input, true);
-    const floors: Record<string, string> = { "wooden-buttons-longsleeve": "L", "black-cold-gray-longsleeve": "XL", "old-textured-collar-shirt": "2XL" };
+    const floors: Record<string, string> = { "wooden-buttons-longsleeve": "L", "black-cold-gray-longsleeve": "XL", "black-cold-tshirt": "L", "old-textured-collar-shirt": "2XL" };
     const floor = definition && floors[definition.key];
     if (!definition || !floor || !variant.supported || input.height < 189 || input.weight < 79 ||
         input.fit === "closer" || input.lengthPreference !== "standard" || hasMeasures(input.reference ?? {}) ||
