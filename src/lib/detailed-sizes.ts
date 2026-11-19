@@ -492,7 +492,17 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
   const invalid = invalidInput(input);
   return variantsFor(product, definition).map(variant => invalid ? {
     colorId: variant.id, colorName: variant.name, size: null, basis: "clarification", message: invalid, checks: [], requiresCheck: true,
-  } : resultFor(product, definition, variant, input, true));
+  } : (() => {
+    const result = resultFor(product, definition, variant, input, true);
+    const floors: Record<string, string> = { "wooden-buttons-longsleeve": "L", "black-cold-gray-longsleeve": "XL", "old-textured-collar-shirt": "2XL" };
+    const floor = definition && floors[definition.key];
+    if (!definition || !floor || !variant.supported || input.height < 189 || input.weight < 79 ||
+        input.fit === "closer" || input.lengthPreference !== "standard" || hasMeasures(input.reference ?? {}) ||
+        definition.sizes.indexOf(result.size ?? "") >= definition.sizes.indexOf(floor)) return result;
+    const checks = ["Сверьте длину изделия и рукава выбранного экземпляра."];
+    if (!(variant.stockSizes ?? product.sizes).includes(floor)) checks.push("Проверьте наличие выбранного размера.");
+    return { ...result, size: floor, basis: "estimate" as const, message: "Размер с учётом длины при высоком росте.", checks, requiresCheck: true };
+  })());
 }
 
 // Used by the regression report to distinguish a tested owner anchor from a new estimate.
