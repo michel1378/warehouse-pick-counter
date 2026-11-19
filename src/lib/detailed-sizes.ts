@@ -280,9 +280,16 @@ function compareMeasures(def: DetailedSizeDefinition, row: MeasureRow | undefine
 
 function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | undefined, variant: ResolvedVariant, input: DetailedSizeInput, directRequest = false): VariantSizeResult {
   const base = { colorId: variant.id, colorName: variant.name };
-  const clarification = (message: string, incompatible = false): VariantSizeResult => ({ ...base, size: null, basis: incompatible ? "incompatible" : "clarification", message, checks: [], requiresCheck: true });
-  if (!variant.supported && !product.fittings?.some(r => r.colorId === variant.id && positiveFitting(r))) return clarification("Для этого цвета нет сетки. Нельзя переносить размер другого цвета.");
   const ref = input.reference ?? {};
+  let estimate = () => recommendSize(product, input.height, input.weight, "regular").size;
+  const clarification = (message: string, incompatible = false, preferred?: string | null): VariantSizeResult => {
+    const sizes = def ? def.sizes.filter(s => !def!.unavailableSizes.includes(s)) : product.sizes;
+    const predicted = preferred ?? estimate();
+    const measured = def && hasMeasures(ref) ? closestRow(def, ref, predicted, input)?.tag : undefined;
+    const size = [measured, predicted, ...sizes].find(s => s != null && sizes.includes(s)) ?? null;
+    return { ...base, size, basis: "estimate", message: incompatible ? "Ближайший размер по сетке; по указанным меркам посадка не подходит." : "Ориентировочный размер.", checks: [message], requiresCheck: true };
+  };
+  if (!variant.supported && !product.fittings?.some(r => r.colorId === variant.id && positiveFitting(r))) return clarification("Для этого цвета пока нет отдельной сетки. Проверьте замеры экземпляра.");
   if (!def && (product.examples.length || product.fittings?.length)) def = {
     id: product.id, key: product.id, name: product.name, kind: isPantsProduct(product) ? "pants" : "top",
     variants: [], sizes: product.sizes, unavailableSizes: [], stretch: "unknown", buttoned: false,
@@ -290,6 +297,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   };
   if (!def) {
     const result = recommendSize(product, input.height, input.weight, "regular");
+    if (!result.size) return clarification("Нет примеров для этой модели.");
     return { ...base, size: result.size, basis: "legacy", message: result.message,
       checks: ["Для новой модели пока нет размерной сетки и правил посадки."], requiresCheck: true };
   }
@@ -306,7 +314,8 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
       const b = group[0].body;
       if (!hasMeasures(ref) && group[0].fit === input.fit && profileDistance(b, input) <= 0.5) {
         const chests = group.map(r => r.body.chestCircumference).filter((v): v is number => v !== null);
-        return clarification(`На близких реальных примерках подошли разные размеры${chests.length > 1 && Math.max(...chests) - Math.min(...chests) >= 4 ? ": при одинаковых росте и весе различается обхват груди" : ""}. Укажите мерки подходящей вещи.`);
+        const ordered = group.map(r => r.size).sort((a,b) => def!.sizes.indexOf(a) - def!.sizes.indexOf(b));
+        return clarification(`На близких реальных примерках подошли разные размеры${chests.length > 1 && Math.max(...chests) - Math.min(...chests) >= 4 ? ": при одинаковых росте и весе различается обхват груди" : ""}. Укажите мерки подходящей вещи.`, false, ordered[Math.floor((ordered.length-1)/2)]);
       }
       continue; // Never average contradictory real bodies into a fictitious size.
     }
@@ -323,6 +332,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   for (const [i,entry] of (reviewed160[def.key] ?? []).entries()) review.push({ id:"review-160-"+i,height:160,weight:60+i*5,fit:"regular",lengthPreference:"standard",colors:[variant.id],reference:{},size:entry.split("/")[variant.id.startsWith("light-") && entry.includes("/") ? 1 : 0],manual:false,source:"inference" });
   const retained = calibrated ? def.rules.filter(r => r.manual || hasMeasures(r.reference) || (r.source==="owner" && r.height===183 && r.weight===78)) : def.rules;
   const rules = combineSizeExamples({ ...def, rules: [...review,...retained,...observedRules] }, recent, variant.id);
+  estimate = () => modelSize(def!, rules, input)?.size ?? null;
   // A physically incompatible garment must not be sold as fitting merely because
   // an old height/weight example happened to carry its largest label.
   const chestRows = def.rows.filter(r => reliable(r, "chest") && !def.unavailableSizes.includes(r.tag));
@@ -430,7 +440,10 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   const failed = observations.find(r => r.size === size && !positiveFitting(r) && profileDistance(r.body, input) <= 0.35);
   if (failed && !hasMeasures(ref)) {
     const reason = failed.sleeve === "short" ? "короток рукав" : failed.length === "short" ? "коротка вещь" : failed.length === "long" || failed.sleeve === "long" ? "лишняя длина" : failed.fit === "too_tight" ? "тесно" : "слишком велико";
-    return clarification(`На близкой реальной примерке у ${size}: ${reason}. Укажите мерки подходящей вещи; этот размер автоматически не подтверждаем.`);
+    const tags = def.sizes.filter(t => !def.unavailableSizes.includes(t));
+    const step = failed.fit === "too_tight" || reason.startsWith("корот") ? 1 : -1;
+    const adjacent = tags[tags.indexOf(size) + step] ?? size;
+    return clarification(`На близкой реальной примерке у ${size}: ${reason}. Укажите мерки подходящей вещи; сверьте экземпляр перед отправкой.`, false, adjacent);
   }
   const row = def.rows.find(r => r.tag === size);
   checks.push(...compareMeasures(def, row, ref));
