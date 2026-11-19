@@ -494,12 +494,29 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   return { ...base, size, basis, message, checks: [...new Set(checks)], requiresCheck: manual || checks.length > 0 };
 }
 
+const ownerSheet: Record<string,string[]> = {"asym-shirt":["112223344","112223345","112233345","112223345","122333455","222334445","233334445"],"wooden-buttons-longsleeve":["000011223","000012234","000011234","000011234","000112234","001122234","222233344"],"alpaca-striped-no-buttons":["111122334","111122334","111222334","111222334","122223334","222233334","233334445"],"alpaca-striped-buttons:dark-gray":["111122333","111122333","111122333","111222333","122233345","122233344","223333445"],"alpaca-striped-buttons:light":["111223445","111223344","112223344","112223334","122233445","222333445","333334445"],"muzhik-longsleeve":["111112223","111112223","111112233","111112223","111122234","112222223","222222334"],"old-textured-longsleeve":["111122234","111122334","111122234","111122234","112222445","222223445","333334455"],"best-distress-shirt":["112233445","112233345","112223345","112233345","122233445","223334445","333344455"],"samurai-shirt":["444556677","444556677","445566677","445566677","556667777","666677777","677777777"],"old-textured-collar-shirt":["112234455","112234455","112233455","122233445","233334445","233334445","334444455"],"flowers-shirt":["112223345","112223345","112233345","112233344","122233445","223334445","223334455"],"black-cold-tshirt":["111112234","111122234","111122234","111122234","122222334","112222334","222333345"],"black-cold-gray-longsleeve":["000112235","000112345","000011234","000011123","001122334","111222334","222333345"],"margiela-striped-pants":["112234555","112234455","112234455","112234455","223334455","223334455","333444455"],"huge-pants":["223455555","333445555","333455555","333455555","334455555","334555555","444555555"],"dense-new-stripe-pants":["112234455","112234455","112234455","112233455","223334455","223334455","223344555"]};
+const ownerTags = ["S","M","L","XL","2XL","3XL","4XL","5XL"];
+// Nearest supplied row/column; ties use lower coordinate. Never smooth a supplied cell.
+const sheetIndex = (v:number, start:number, end:number) => Math.max(0,Math.min(end, Math.ceil((v-start)/5-0.5)));
+
 export function recommendAllColors(product: DetailedSizeProduct, input: DetailedSizeInput): VariantSizeResult[] {
   const definition = definitions.get(product.id);
   const invalid = invalidInput(input);
   return variantsFor(product, definition).map(variant => invalid ? {
     colorId: variant.id, colorName: variant.name, size: null, basis: "clarification", message: invalid, checks: [], requiresCheck: true,
   } : (() => {
+    if (definition && variant.supported && input.fit === "regular" && input.lengthPreference === "standard") {
+      const key = definition.key === "alpaca-striped-buttons" ? definition.key + (variant.id === "dark-gray" ? ":dark-gray" : ":light") : definition.key;
+      const table = ownerSheet[key];
+      if (table) {
+        const h=sheetIndex(input.height,160,6), w=sheetIndex(input.weight,50,8);
+        const size = ownerTags[Number(table[h][w])];
+        const exact = input.height === 160+5*h && input.weight === 50+5*w;
+        const checks = (variant.stockSizes ?? product.sizes).includes(size) ? [] : ["Проверьте наличие выбранного размера."];
+        return {colorId:variant.id,colorName:variant.name,size,basis:"owner" as const,
+          message: (exact ? "По таблице магазина: " : "По ближайшей ячейке таблицы: ") + (160+5*h) + " см / " + (50+5*w) + " кг.",checks,requiresCheck:checks.length>0};
+      }
+    }
     const result = resultFor(product, definition, variant, input, true);
     const floors: Record<string, string> = { "wooden-buttons-longsleeve": "L", "black-cold-gray-longsleeve": "XL", "black-cold-tshirt": "L", "old-textured-collar-shirt": "2XL" };
     if (!definition || !variant.supported || input.fit === "closer" || input.lengthPreference !== "standard" ||
