@@ -67,7 +67,7 @@ const chestTolerance = (def: DetailedSizeDefinition) => def.stretch === "moderat
 
 function closestRow(def: DetailedSizeDefinition, ref: GarmentMeasures, tieSize: string | null, input: DetailedSizeInput): MeasureRow | undefined {
   const relevant = def.kind === "pants" ? ["halfWaist", "length"] as const : ["shoulders", "chest", "length", "sleeve"] as const;
-  const weights: Partial<Record<keyof GarmentMeasures, number>> = def.kind === "pants" ? { halfWaist: 2, length: 0.4 } : { shoulders: def.fitPolicy?.shouldersWeight ?? 0.8, chest: 1.5, length: 0.4, sleeve: 0.6 };
+  const weights: Partial<Record<keyof GarmentMeasures, number>> = def.kind === "pants" ? { halfWaist: 2, length: 0.4 } : { shoulders: def.fitPolicy?.shouldersWeight ?? 0.8, chest: 1.5, length: 1.25, sleeve: 1.0 };
   const shift = input.fit === "relaxed" ? 1 : input.fit === "closer" ? -1 : 0;
   const target = { ...ref };
   if (target.chest !== undefined) target.chest += shift * 2;
@@ -306,7 +306,7 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   // Owner's regular-fit floor for the narrow Samurai cut, in either reviewed colour.
   // A supplied garment measurement or an exact fitting still takes precedence.
   if (def.key === "samurai-shirt" && ["black", "white"].includes(variant.id) &&
-      input.height >= 180 && input.weight >= 75 && input.fit !== "closer" &&
+      ((input.height >= 180 && input.weight >= 75) || (input.height >= 186 && input.weight >= 68)) && input.fit !== "closer" &&
       input.lengthPreference === "standard" && !hasMeasures(ref) &&
       !good.some(r => r.body.height === input.height && r.body.weight === input.weight && r.fit === input.fit)) {
     const checks = ["Сверьте длину рукава: у Самурайки прибавка по ширине не гарантирует прибавку по длине."];
@@ -510,9 +510,9 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     const volume = definition.kind === "pants" ? "halfWaist" : "chest";
     let floor = result.size;
     if (input.height > 175 && baseline && current && reliable(baseline,"length") && reliable(current,"length") && reliable(current,volume)) {
-      const desired = midpoint(baseline.measures.length!) + Math.min(5,(input.height-165)*0.13);
+      const desired = midpoint(baseline.measures.length!) + Math.min(definition.kind === "top" ? 6 : 5,(input.height-165)*(definition.kind === "top" ? 0.18 : 0.13));
       const next = definition.rows.find(r=>r.tag===labels[idx+1]);
-      if (next && reliable(next,"length") && reliable(next,volume) &&
+      if (next && (definition.kind !== "top" || ((!reliable(current,"shoulders") || !reliable(next,"shoulders") || midpoint(next.measures.shoulders!) - midpoint(current.measures.shoulders!) <= 3) && (!reliable(current,"sleeve") || !reliable(next,"sleeve") || midpoint(next.measures.sleeve!) >= midpoint(current.measures.sleeve!)))) && reliable(next,"length") && reliable(next,volume) &&
           desired > midpoint(current.measures.length!)+0.8 &&
           Math.abs(midpoint(next.measures.length!)-desired)<Math.abs(midpoint(current.measures.length!)-desired) &&
           midpoint(next.measures[volume]!)-midpoint(current.measures[volume]!) <= (definition.kind==="pants"?1:3))
@@ -526,7 +526,7 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     }
     // For taller builds the L collar shirt is short (68 cm body, 60 cm sleeve).
     if (definition.key === "old-textured-collar-shirt" && input.height >= 185) {
-      const minimum = input.height >= 189 && input.weight >= 79 ? "2XL" : "XL";
+      const minimum = input.height >= 186 && input.weight >= 68 ? "2XL" : "XL";
       if (labels.indexOf(floor) < labels.indexOf(minimum)) floor = minimum;
     }
     if (floor === result.size) return result;
