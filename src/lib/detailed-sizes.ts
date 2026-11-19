@@ -495,11 +495,37 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
   } : (() => {
     const result = resultFor(product, definition, variant, input, true);
     const floors: Record<string, string> = { "wooden-buttons-longsleeve": "L", "black-cold-gray-longsleeve": "XL", "black-cold-tshirt": "L", "old-textured-collar-shirt": "2XL" };
-    const floor = definition && floors[definition.key];
-    if (!definition || !floor || !variant.supported || input.height < 189 || input.weight < 79 ||
-        input.fit === "closer" || input.lengthPreference !== "standard" || hasMeasures(input.reference ?? {}) ||
-        definition.sizes.indexOf(result.size ?? "") >= definition.sizes.indexOf(floor)) return result;
-    const checks = ["Сверьте длину изделия и рукава выбранного экземпляра."];
+    if (!definition || !variant.supported || input.fit === "closer" || input.lengthPreference !== "standard" ||
+        hasMeasures(input.reference ?? {}) || !result.size || result.basis === "fitting" || result.basis === "owner") return result;
+    const labels = definition.sizes.filter(x => !definition.unavailableSizes.includes(x));
+    const idx = labels.indexOf(result.size);
+    if (idx < 0) return result;
+    // Use the reviewed 165 cm profile as a width reference. Length gains are
+    // deliberately modest; do not gain several sizes solely to get a longer hem.
+    const entries = reviewed165[definition.key];
+    const slot = 0; // Length floor from the narrowest reviewed fit; the existing prediction handles width.
+    const baseTag = entries?.[slot]?.split("/")[0];
+    const baseline = definition.rows.find(r => r.tag === baseTag);
+    const current = definition.rows.find(r => r.tag === result.size);
+    const volume = definition.kind === "pants" ? "halfWaist" : "chest";
+    let floor = result.size;
+    if (input.height > 175 && baseline && current && reliable(baseline,"length") && reliable(current,"length") && reliable(current,volume)) {
+      const desired = midpoint(baseline.measures.length!) + Math.min(5,(input.height-165)*0.13);
+      const next = definition.rows.find(r=>r.tag===labels[idx+1]);
+      if (next && reliable(next,"length") && reliable(next,volume) &&
+          desired > midpoint(current.measures.length!)+0.8 &&
+          Math.abs(midpoint(next.measures.length!)-desired)<Math.abs(midpoint(current.measures.length!)-desired) &&
+          midpoint(next.measures[volume]!)-midpoint(current.measures[volume]!) <= (definition.kind==="pants"?1:3))
+        floor = next.tag;
+    }
+    // The tall try-on sets the minimum length. For the tee this is L even
+    // on a lean build; there is no reason to add the width of XL just for height.
+    const tall = floors[definition.key];
+    if (input.height>=189 && tall && (input.weight>=79 || definition.key==="black-cold-tshirt")) {
+      floor = labels[Math.max(idx,labels.indexOf(tall))];
+    }
+    if (floor === result.size) return result;
+    const checks = [definition.kind === "pants" ? "Сверьте полупояс и длину выбранной пары." : "Сверьте ширину и длину выбранной вещи."];
     if (!(variant.stockSizes ?? product.sizes).includes(floor)) checks.push("Проверьте наличие выбранного размера.");
     return { ...result, size: floor, basis: "estimate" as const, message: "Размер с учётом длины при высоком росте.", checks, requiresCheck: true };
   })());
