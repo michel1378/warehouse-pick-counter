@@ -517,7 +517,14 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     const volume = definition.kind === "pants" ? "halfWaist" : "chest";
     let floor = result.size;
     if (input.height > 175 && baseline && current && reliable(baseline,"length") && reliable(current,"length") && reliable(current,volume)) {
-      const desired = midpoint(baseline.measures.length!) + Math.min(definition.kind === "top" ? 6 : 5,(input.height-165)*(definition.kind === "top" ? 0.18 : 0.13));
+      // Calibrate the length target to accepted garment lengths, not a common
+      // growth rate: these two cuts gain substantial width at the next label.
+      const accepted = input.fit === "regular" ? definition.rows.find(r => r.tag ===
+        (definition.key === "muzhik-longsleeve" ? "L" : definition.key === "alpaca-striped-no-buttons" ? "XL" : "")) : undefined;
+      const slope = accepted && reliable(accepted,"length") ?
+        Math.max(0, midpoint(accepted.measures.length!) - midpoint(baseline.measures.length!)) / (187-165) :
+        definition.kind === "top" ? 0.18 : 0.13;
+      const desired = midpoint(baseline.measures.length!) + Math.min(definition.kind === "top" ? 6 : 5,(input.height-165)*slope);
       const next = definition.rows.find(r=>r.tag===labels[idx+1]);
       if (next && (definition.kind !== "top" || ((!reliable(current,"shoulders") || !reliable(next,"shoulders") || midpoint(next.measures.shoulders!) - midpoint(current.measures.shoulders!) <= 3) && (!reliable(current,"sleeve") || !reliable(next,"sleeve") || midpoint(next.measures.sleeve!) >= midpoint(current.measures.sleeve!)))) && reliable(next,"length") && reliable(next,volume) &&
           desired > midpoint(current.measures.length!)+0.8 &&
