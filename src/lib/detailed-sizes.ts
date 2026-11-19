@@ -313,6 +313,15 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     if (!(variant.stockSizes ?? product.sizes).includes("5XL")) checks.push("Проверьте наличие 5XL для этого цвета.");
     return { ...base, size: "5XL", basis: "owner", message: "По ширине этой модели магазин рекомендует 5XL.", checks, requiresCheck: true };
   }
+  // Stable regular-fit band around the warehouse review (190 cm / 80–85 kg).
+  if (def.key === "dense-new-stripe-pants" && input.height >= 188 &&
+      input.weight >= 79 && input.fit !== "closer" && input.lengthPreference === "standard" &&
+      !hasMeasures(ref)) {
+    const size = "3XL";
+    const checks = ["Сетка 3XL: полупояс без растяжения 43 см, длина 112 см. Пояс тянется."];
+    if (!(variant.stockSizes ?? product.sizes).includes(size)) checks.push("Проверьте наличие 3XL.");
+    return { ...base, size, basis: "owner", message: "По рекомендации магазина для высоких покупателей.", checks, requiresCheck: true };
+  }
   const groups = new Map<string, typeof good>();
   for (const r of good) {
     const key = `${r.body.height}/${r.body.weight}/${r.fit}`;
