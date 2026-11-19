@@ -313,6 +313,16 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
     if (!(variant.stockSizes ?? product.sizes).includes("5XL")) checks.push("Проверьте наличие 5XL для этого цвета.");
     return { ...base, size: "5XL", basis: "owner", message: "По ширине этой модели магазин рекомендует 5XL.", checks, requiresCheck: true };
   }
+  // Owner tried 2XL at 185/80; nearby regular-fit profiles are estimates.
+  if (def.key === "dense-new-stripe-pants" && input.height >= 184 && input.height < 188 &&
+      input.weight >= 79 && input.weight <= 82 && input.fit === "regular" &&
+      input.lengthPreference === "standard" && !hasMeasures(ref)) {
+    const exact = input.height === 185 && input.weight === 80;
+    const checks = (variant.stockSizes ?? product.sizes).includes("2XL") ? [] : ["Проверьте наличие 2XL."];
+    return { ...base, size: "2XL", basis: exact ? "owner" : "estimate",
+      message: exact ? "По личной примерке: 2XL." : "По близкой примерке 185 см / 80 кг.",
+      checks, requiresCheck: checks.length > 0 };
+  }
   // Stable regular-fit band around the warehouse review (190 cm / 80–85 kg).
   if (def.key === "dense-new-stripe-pants" && input.height >= 188 &&
       input.weight >= 79 && input.fit !== "closer" && input.lengthPreference === "standard" &&
