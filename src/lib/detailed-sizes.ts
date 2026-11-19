@@ -303,6 +303,16 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
   }
   const observations = (product.fittings ?? []).filter(r => r.colorId === variant.id && def.sizes.includes(r.size));
   const good = observations.filter(positiveFitting);
+  // Owner's regular-fit floor for the narrow Samurai cut, in either reviewed colour.
+  // A supplied garment measurement or an exact fitting still takes precedence.
+  if (def.key === "samurai-shirt" && ["black", "white"].includes(variant.id) &&
+      input.height >= 180 && input.weight >= 75 && input.fit !== "closer" &&
+      input.lengthPreference === "standard" && !hasMeasures(ref) &&
+      !good.some(r => r.body.height === input.height && r.body.weight === input.weight && r.fit === input.fit)) {
+    const checks = ["Сверьте длину рукава: у Самурайки прибавка по ширине не гарантирует прибавку по длине."];
+    if (!(variant.stockSizes ?? product.sizes).includes("5XL")) checks.push("Проверьте наличие 5XL для этого цвета.");
+    return { ...base, size: "5XL", basis: "owner", message: "По ширине этой модели магазин рекомендует 5XL.", checks, requiresCheck: true };
+  }
   const groups = new Map<string, typeof good>();
   for (const r of good) {
     const key = `${r.body.height}/${r.body.weight}/${r.fit}`;
