@@ -524,6 +524,11 @@ export function recommendAllColors(product: DetailedSizeProduct, input: Detailed
     if (input.height>=189 && tall && (input.weight>=79 || definition.key==="black-cold-tshirt")) {
       floor = labels[Math.max(idx,labels.indexOf(tall))];
     }
+    // For taller builds the L collar shirt is short (68 cm body, 60 cm sleeve).
+    if (definition.key === "old-textured-collar-shirt" && input.height >= 185) {
+      const minimum = input.height >= 189 && input.weight >= 79 ? "2XL" : "XL";
+      if (labels.indexOf(floor) < labels.indexOf(minimum)) floor = minimum;
+    }
     if (floor === result.size) return result;
     const checks = [definition.kind === "pants" ? "Сверьте полупояс и длину выбранной пары." : "Сверьте ширину и длину выбранной вещи."];
     if (!(variant.stockSizes ?? product.sizes).includes(floor)) checks.push("Проверьте наличие выбранного размера.");
