@@ -365,6 +365,17 @@ function resultFor(product: DetailedSizeProduct, def: DetailedSizeDefinition | u
       size = model?.size ?? null;
       message = "Размер по объёму; укороченную длину проверяем отдельно.";
     } else {
+      const widthKey = def.kind === "pants" ? "halfWaist" : "chest";
+      const width = ref[widthKey];
+      const widthRows = def.kind === "pants" ? waistRows : chestRows;
+      if (width !== undefined && widthRows.length) {
+        const min = Math.min(...widthRows.map(r => r.measures[widthKey]![0]));
+        const allowance = (def.kind === "pants" ? 2 : 3) + (input.fit === "relaxed" ? 2 : 0);
+        if (width + allowance < min) {
+          const label = def.kind === "pants" ? "Полупояс" : "Ширина по груди";
+          return clarification(`${label} подходящей вещи — ${width} см. В проверенной сетке минимум ${min} см. Перед отправкой перемерьте ширину конкретного экземпляра.`);
+        }
+      }
       const row = closestRow(def, ref, model?.size ?? null, input);
       if (!row) return clarification("Нет достоверной сетки для введённого замера.");
       size = row.tag; basis = "measurements"; message = "Размер по меркам вещи с учётом выбранной посадки.";
